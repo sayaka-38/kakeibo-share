@@ -1,0 +1,129 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { t } from "@/lib/i18n";
+
+export default function NewGroupPage() {
+  const router = useRouter();
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    const supabase = createClient();
+
+    // Get current user
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      setError(t("auth.errors.loginRequired"));
+      setLoading(false);
+      return;
+    }
+
+    // Create group
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: group, error: groupError } = await (supabase as any)
+      .from("groups")
+      .insert({
+        name,
+        description: description || null,
+        created_by: user.id,
+      })
+      .select()
+      .single();
+
+    if (groupError || !group) {
+      setError(groupError?.message || t("groups.errors.createFailed"));
+      setLoading(false);
+      return;
+    }
+
+    // Add creator as owner
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: memberError } = await (supabase as any).from("group_members").insert({
+      group_id: group.id,
+      user_id: user.id,
+      role: "owner",
+    });
+
+    if (memberError) {
+      setError(t("groups.errors.addOwnerFailed") + memberError.message);
+      setLoading(false);
+      return;
+    }
+
+    router.push("/groups");
+    router.refresh();
+  };
+
+  return (
+    <div className="max-w-lg mx-auto">
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">
+        {t("groups.createGroup")}
+      </h1>
+
+      <div className="bg-white rounded-lg shadow p-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+
+          <div>
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-gray-700"
+            >
+              {t("groups.form.groupName")}
+            </label>
+            <input
+              id="name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder={t("groups.form.groupNamePlaceholder")}
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="description"
+              className="block text-sm font-medium text-gray-700"
+            >
+              {t("groups.form.description")}
+            </label>
+            <textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder={t("groups.form.descriptionPlaceholder")}
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? t("groups.form.creating") : t("groups.form.create")}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}

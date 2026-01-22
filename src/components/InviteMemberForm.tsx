@@ -1,0 +1,107 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { t } from "@/lib/i18n";
+
+type InviteMemberFormProps = {
+  groupId: string;
+};
+
+export default function InviteMemberForm({ groupId }: InviteMemberFormProps) {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
+
+    const supabase = createClient();
+
+    // Find user by email
+    const { data: profile } = (await supabase
+      .from("profiles")
+      .select("id")
+      .eq("email", email)
+      .single()) as { data: { id: string } | null };
+
+    if (!profile) {
+      setError(t("groups.invite.errors.userNotFound"));
+      setLoading(false);
+      return;
+    }
+
+    // Check if already a member
+    const { data: existingMember } = (await supabase
+      .from("group_members")
+      .select("id")
+      .eq("group_id", groupId)
+      .eq("user_id", profile.id)
+      .single()) as { data: { id: string } | null };
+
+    if (existingMember) {
+      setError(t("groups.invite.errors.alreadyMember"));
+      setLoading(false);
+      return;
+    }
+
+    // Add member
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: addError } = await (supabase as any).from("group_members").insert({
+      group_id: groupId,
+      user_id: profile.id,
+      role: "member",
+    });
+
+    if (addError) {
+      setError(t("groups.invite.errors.addFailed") + addError.message);
+      setLoading(false);
+      return;
+    }
+
+    setSuccess(true);
+    setEmail("");
+    setLoading(false);
+    router.refresh();
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <label className="block text-sm font-medium text-gray-700">
+        {t("groups.invite.addMember")}
+      </label>
+
+      {error && (
+        <p className="text-sm text-red-600">{error}</p>
+      )}
+
+      {success && (
+        <p className="text-sm text-green-600">{t("groups.invite.success")}</p>
+      )}
+
+      <div className="flex gap-2">
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          placeholder={t("groups.invite.emailPlaceholder")}
+          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        />
+        <button
+          type="submit"
+          disabled={loading}
+          className="px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading ? t("groups.invite.adding") : t("groups.invite.add")}
+        </button>
+      </div>
+    </form>
+  );
+}

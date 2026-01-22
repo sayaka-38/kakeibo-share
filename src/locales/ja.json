@@ -1,0 +1,182 @@
+{
+  "common": {
+    "appName": "Kakeibo Share",
+    "loading": "読み込み中...",
+    "error": "エラーが発生しました",
+    "save": "保存",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "edit": "編集",
+    "add": "追加",
+    "back": "戻る",
+    "viewAll": "すべて表示",
+    "logout": "ログアウト",
+    "owner": "オーナー",
+    "member": "メンバー",
+    "total": "合計",
+    "currency": "¥"
+  },
+  "landing": {
+    "tagline": "ルームメイトやパートナーと簡単に支出を共有。誰がいくら払ったかを記録し、月末に清算しましょう。",
+    "getStarted": "はじめる",
+    "signIn": "ログイン",
+    "features": {
+      "easyRecording": {
+        "title": "かんたん記録",
+        "description": "支払いがあったらスマホやPCからすぐに支出を追加できます。"
+      },
+      "autoSettlement": {
+        "title": "自動清算",
+        "description": "誰が誰にいくら払えばいいか自動で計算します。"
+      },
+      "groupSharing": {
+        "title": "グループ共有",
+        "description": "家庭やプロジェクトごとにグループを作成。全員が同じデータを共有できます。"
+      }
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "ログイン",
+      "subtitle": "共有家計簿を管理する",
+      "signingIn": "ログイン中...",
+      "noAccount": "アカウントをお持ちでないですか？",
+      "signUpLink": "新規登録"
+    },
+    "signup": {
+      "title": "新規登録",
+      "subtitle": "アカウントを作成",
+      "creatingAccount": "アカウント作成中...",
+      "createAccount": "アカウントを作成",
+      "hasAccount": "すでにアカウントをお持ちですか？",
+      "signInLink": "ログイン",
+      "checkEmail": {
+        "title": "メールを確認してください",
+        "description": "確認リンクをお送りしました。メールを確認して登録を完了してください。",
+        "backToLogin": "ログインに戻る"
+      }
+    },
+    "form": {
+      "email": "メールアドレス",
+      "emailPlaceholder": "you@example.com",
+      "password": "パスワード",
+      "passwordPlaceholder": "パスワードを入力",
+      "displayName": "表示名",
+      "displayNamePlaceholder": "お名前",
+      "passwordHint": "6文字以上"
+    },
+    "errors": {
+      "loginRequired": "ログインが必要です"
+    }
+  },
+  "dashboard": {
+    "title": "ダッシュボード",
+    "welcome": {
+      "title": "Kakeibo Share へようこそ！",
+      "description": "ルームメイトやパートナーとの支出共有を始めるには、グループを作成するか参加してください。",
+      "createGroup": "グループを作成"
+    },
+    "quickActions": {
+      "addPayment": "支払いを追加",
+      "viewPayments": "支払い一覧",
+      "settlement": "清算",
+      "groups": "グループ"
+    },
+    "sections": {
+      "myGroups": "マイグループ",
+      "recentPayments": "最近の支払い"
+    },
+    "noPayments": "支払いがありません"
+  },
+  "groups": {
+    "title": "グループ",
+    "createGroup": "グループを作成",
+    "createFirstGroup": "最初のグループを作成",
+    "noGroups": "まだグループに参加していません",
+    "memberCount": "{count}人のメンバー",
+    "backToGroups": "グループ一覧に戻る",
+    "detail": {
+      "totalExpenses": "支出合計",
+      "members": "メンバー",
+      "recentPayments": "最近の支払い",
+      "joined": "参加日"
+    },
+    "form": {
+      "groupName": "グループ名",
+      "groupNamePlaceholder": "我が家",
+      "description": "説明（任意）",
+      "descriptionPlaceholder": "アパートの共有費用",
+      "creating": "作成中...",
+      "create": "グループを作成"
+    },
+    "invite": {
+      "addMember": "メンバーを追加",
+      "emailPlaceholder": "email@example.com",
+      "adding": "...",
+      "add": "追加",
+      "success": "メンバーを追加しました！",
+      "errors": {
+        "userNotFound": "ユーザーが見つかりません。先にサインアップが必要です。",
+        "alreadyMember": "このユーザーは既にグループのメンバーです。",
+        "addFailed": "メンバーの追加に失敗しました: "
+      }
+    },
+    "errors": {
+      "createFailed": "グループの作成に失敗しました",
+      "addOwnerFailed": "グループは作成されましたが、オーナーとしての追加に失敗しました: "
+    }
+  },
+  "payments": {
+    "title": "支払い",
+    "addPayment": "支払いを追加",
+    "addFirstPayment": "最初の支払いを追加",
+    "noPayments": "支払いがありません",
+    "form": {
+      "group": "グループ",
+      "amount": "金額（円）",
+      "amountPlaceholder": "1000",
+      "description": "説明",
+      "descriptionPlaceholder": "スーパーで買い物",
+      "category": "カテゴリ",
+      "selectCategory": "カテゴリを選択",
+      "date": "日付",
+      "split": "割り勘",
+      "splitEqually": "均等に分ける",
+      "customSplit": "カスタム",
+      "splitAmounts": "負担額",
+      "adding": "追加中...",
+      "add": "支払いを追加"
+    },
+    "errors": {
+      "invalidAmount": "有効な金額を入力してください",
+      "createFailed": "支払いの作成に失敗しました",
+      "splitFailed": "支払いは作成されましたが、割り勘の追加に失敗しました: ",
+      "noGroup": "支払いを追加する前に、グループに参加または作成してください。"
+    }
+  },
+  "settlement": {
+    "title": "清算",
+    "noGroups": "清算計算を見るにはグループに参加してください",
+    "totalExpenses": "支出合計",
+    "balanceSummary": "収支サマリー",
+    "paid": "支払済",
+    "requiredSettlements": "必要な清算",
+    "allSettled": "すべて清算済みです！支払いは不要です。"
+  },
+  "navigation": {
+    "dashboard": "ダッシュボード",
+    "payments": "支払い",
+    "settlement": "清算",
+    "groups": "グループ"
+  },
+  "categories": {
+    "foodGroceries": "食費・日用品",
+    "utilities": "光熱費",
+    "rent": "家賃",
+    "internetPhone": "通信費",
+    "transportation": "交通費",
+    "entertainment": "娯楽費",
+    "healthcare": "医療費",
+    "other": "その他"
+  }
+}

@@ -1,0 +1,182 @@
+{
+  "common": {
+    "appName": "Kakeibo Share",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "back": "Back",
+    "viewAll": "View all",
+    "logout": "Logout",
+    "owner": "Owner",
+    "member": "Member",
+    "total": "Total",
+    "currency": "¥"
+  },
+  "landing": {
+    "tagline": "Share expenses easily with your housemates or partner. Track who paid what and settle up at the end of each month.",
+    "getStarted": "Get Started",
+    "signIn": "Sign In",
+    "features": {
+      "easyRecording": {
+        "title": "Easy Recording",
+        "description": "Quickly add expenses from your phone or PC whenever you make a payment."
+      },
+      "autoSettlement": {
+        "title": "Auto Settlement",
+        "description": "Automatically calculate who owes whom and how much to settle up."
+      },
+      "groupSharing": {
+        "title": "Group Sharing",
+        "description": "Create groups for different households or projects. Everyone sees the same data."
+      }
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Sign In",
+      "subtitle": "Sign in to manage your shared expenses",
+      "signingIn": "Signing in...",
+      "noAccount": "Don't have an account?",
+      "signUpLink": "Sign up"
+    },
+    "signup": {
+      "title": "Sign Up",
+      "subtitle": "Create your account",
+      "creatingAccount": "Creating account...",
+      "createAccount": "Create Account",
+      "hasAccount": "Already have an account?",
+      "signInLink": "Sign in",
+      "checkEmail": {
+        "title": "Check your email",
+        "description": "We've sent you a confirmation link. Please check your email to complete registration.",
+        "backToLogin": "Back to login"
+      }
+    },
+    "form": {
+      "email": "Email",
+      "emailPlaceholder": "you@example.com",
+      "password": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "displayName": "Display Name",
+      "displayNamePlaceholder": "Your name",
+      "passwordHint": "At least 6 characters"
+    },
+    "errors": {
+      "loginRequired": "You must be logged in"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": {
+      "title": "Welcome to Kakeibo Share!",
+      "description": "Get started by creating or joining a group to share expenses with your housemates or partner.",
+      "createGroup": "Create a Group"
+    },
+    "quickActions": {
+      "addPayment": "Add Payment",
+      "viewPayments": "View Payments",
+      "settlement": "Settlement",
+      "groups": "Groups"
+    },
+    "sections": {
+      "myGroups": "My Groups",
+      "recentPayments": "Recent Payments"
+    },
+    "noPayments": "No payments yet"
+  },
+  "groups": {
+    "title": "Groups",
+    "createGroup": "Create Group",
+    "createFirstGroup": "Create your first group",
+    "noGroups": "You haven't joined any groups yet",
+    "memberCount": "{count} member(s)",
+    "backToGroups": "Back to Groups",
+    "detail": {
+      "totalExpenses": "Total Expenses",
+      "members": "Members",
+      "recentPayments": "Recent Payments",
+      "joined": "Joined"
+    },
+    "form": {
+      "groupName": "Group Name",
+      "groupNamePlaceholder": "Our House",
+      "description": "Description (optional)",
+      "descriptionPlaceholder": "Shared expenses for our apartment",
+      "creating": "Creating...",
+      "create": "Create Group"
+    },
+    "invite": {
+      "addMember": "Add Member",
+      "emailPlaceholder": "email@example.com",
+      "adding": "...",
+      "add": "Add",
+      "success": "Member added successfully!",
+      "errors": {
+        "userNotFound": "User not found. They need to sign up first.",
+        "alreadyMember": "This user is already a member of this group.",
+        "addFailed": "Failed to add member: "
+      }
+    },
+    "errors": {
+      "createFailed": "Failed to create group",
+      "addOwnerFailed": "Group created but failed to add you as owner: "
+    }
+  },
+  "payments": {
+    "title": "Payments",
+    "addPayment": "Add Payment",
+    "addFirstPayment": "Add your first payment",
+    "noPayments": "No payments yet",
+    "form": {
+      "group": "Group",
+      "amount": "Amount (¥)",
+      "amountPlaceholder": "1000",
+      "description": "Description",
+      "descriptionPlaceholder": "Groceries from supermarket",
+      "category": "Category",
+      "selectCategory": "Select a category",
+      "date": "Date",
+      "split": "Split",
+      "splitEqually": "Split equally",
+      "customSplit": "Custom split",
+      "splitAmounts": "Split amounts",
+      "adding": "Adding...",
+      "add": "Add Payment"
+    },
+    "errors": {
+      "invalidAmount": "Please enter a valid amount",
+      "createFailed": "Failed to create payment",
+      "splitFailed": "Payment created but failed to add splits: ",
+      "noGroup": "You need to join or create a group before adding payments."
+    }
+  },
+  "settlement": {
+    "title": "Settlement",
+    "noGroups": "Join a group to see settlement calculations",
+    "totalExpenses": "Total expenses",
+    "balanceSummary": "Balance Summary",
+    "paid": "Paid",
+    "requiredSettlements": "Required Settlements",
+    "allSettled": "All settled! No payments needed."
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "payments": "Payments",
+    "settlement": "Settlement",
+    "groups": "Groups"
+  },
+  "categories": {
+    "foodGroceries": "Food & Groceries",
+    "utilities": "Utilities",
+    "rent": "Rent",
+    "internetPhone": "Internet & Phone",
+    "transportation": "Transportation",
+    "entertainment": "Entertainment",
+    "healthcare": "Healthcare",
+    "other": "Other"
+  }
+}
