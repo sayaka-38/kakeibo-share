@@ -4,21 +4,190 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { t } from "@/lib/i18n";
+import { validatePayment, type PaymentInput } from "@/lib/validation/payment";
 import type { Category, Group, Profile } from "@/types/database";
 
+// ============================================
+// インライン用シンプルフォーム（/groups/[id] で使用）
+// ============================================
+
+export type PaymentFormData = {
+  amount: number;
+  description: string;
+  paymentDate: Date;
+};
+
 type PaymentFormProps = {
+  onSubmit: (data: PaymentFormData) => Promise<void>;
+};
+
+export function PaymentForm({ onSubmit }: PaymentFormProps) {
+  const [amount, setAmount] = useState("");
+  const [description, setDescription] = useState("");
+  const [paymentDate, setPaymentDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+  const [errors, setErrors] = useState<{
+    amount?: string;
+    description?: string;
+    paymentDate?: string;
+  }>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // 入力値を変換
+    const input: PaymentInput = {
+      amount: amount === "" ? 0 : parseFloat(amount),
+      description,
+      paymentDate: new Date(paymentDate),
+    };
+
+    // バリデーション
+    const result = validatePayment(input);
+    if (!result.success) {
+      setErrors(result.errors);
+      return;
+    }
+
+    // エラーをクリア
+    setErrors({});
+    setIsSubmitting(true);
+
+    try {
+      await onSubmit({
+        amount: input.amount,
+        description: input.description.trim(),
+        paymentDate: input.paymentDate,
+      });
+
+      // フォームをリセット
+      setAmount("");
+      setDescription("");
+      setPaymentDate(new Date().toISOString().split("T")[0]);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* 金額 */}
+      <div>
+        <label
+          htmlFor="payment-amount"
+          className="block text-sm font-medium text-gray-700"
+        >
+          {t("payments.form.amount")}
+        </label>
+        <div className="mt-1 relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+            {t("common.currency")}
+          </span>
+          <input
+            id="payment-amount"
+            type="text"
+            inputMode="numeric"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value.replace(/[^0-9]/g, ""))}
+            placeholder={t("payments.form.amountPlaceholder")}
+            className={`block w-full pl-8 pr-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              errors.amount ? "border-red-500" : "border-gray-300"
+            }`}
+            aria-invalid={!!errors.amount}
+            aria-describedby={errors.amount ? "amount-error" : undefined}
+          />
+        </div>
+        {errors.amount && (
+          <p id="amount-error" className="mt-1 text-sm text-red-600">
+            {errors.amount}
+          </p>
+        )}
+      </div>
+
+      {/* 説明 */}
+      <div>
+        <label
+          htmlFor="payment-description"
+          className="block text-sm font-medium text-gray-700"
+        >
+          {t("payments.form.description")}
+        </label>
+        <input
+          id="payment-description"
+          type="text"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder={t("payments.form.descriptionPlaceholder")}
+          className={`mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+            errors.description ? "border-red-500" : "border-gray-300"
+          }`}
+          aria-invalid={!!errors.description}
+          aria-describedby={errors.description ? "description-error" : undefined}
+        />
+        {errors.description && (
+          <p id="description-error" className="mt-1 text-sm text-red-600">
+            {errors.description}
+          </p>
+        )}
+      </div>
+
+      {/* 日付 */}
+      <div>
+        <label
+          htmlFor="payment-date"
+          className="block text-sm font-medium text-gray-700"
+        >
+          {t("payments.form.date")}
+        </label>
+        <input
+          id="payment-date"
+          type="date"
+          value={paymentDate}
+          onChange={(e) => setPaymentDate(e.target.value)}
+          className={`mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+            errors.paymentDate ? "border-red-500" : "border-gray-300"
+          }`}
+          aria-invalid={!!errors.paymentDate}
+          aria-describedby={errors.paymentDate ? "date-error" : undefined}
+        />
+        {errors.paymentDate && (
+          <p id="date-error" className="mt-1 text-sm text-red-600">
+            {errors.paymentDate}
+          </p>
+        )}
+      </div>
+
+      {/* 登録ボタン */}
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
+        {isSubmitting ? t("payments.form.submitting") : t("payments.form.submit")}
+      </button>
+    </form>
+  );
+}
+
+// ============================================
+// フルフォーム（/payments/new で使用）- 既存互換
+// ============================================
+
+type FullPaymentFormProps = {
   groups: Group[];
   categories: Category[];
   members: { [groupId: string]: Profile[] };
   currentUserId: string;
 };
 
-export default function PaymentForm({
+export default function FullPaymentForm({
   groups,
   categories,
   members,
   currentUserId,
-}: PaymentFormProps) {
+}: FullPaymentFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -296,7 +465,7 @@ export default function PaymentForm({
         disabled={loading}
         className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {loading ? t("payments.form.adding") : t("payments.form.add")}
+        {loading ? t("payments.form.submitting") : t("payments.form.submit")}
       </button>
     </form>
   );

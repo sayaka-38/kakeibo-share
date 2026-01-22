@@ -133,10 +133,10 @@
     "noPayments": "支払いがありません",
     "form": {
       "group": "グループ",
-      "amount": "金額（円）",
-      "amountPlaceholder": "1000",
+      "amount": "金額",
+      "amountPlaceholder": "例: 1500",
       "description": "説明",
-      "descriptionPlaceholder": "スーパーで買い物",
+      "descriptionPlaceholder": "例: スーパーで買い物",
       "category": "カテゴリ",
       "selectCategory": "カテゴリを選択",
       "date": "日付",
@@ -144,8 +144,17 @@
       "splitEqually": "均等に分ける",
       "customSplit": "カスタム",
       "splitAmounts": "負担額",
-      "adding": "追加中...",
-      "add": "支払いを追加"
+      "submit": "登録する",
+      "submitting": "登録中..."
+    },
+    "validation": {
+      "amountMin": "金額は1円以上で入力してください",
+      "amountMax": "金額は100万円以下で入力してください",
+      "amountInteger": "金額は整数で入力してください",
+      "descriptionRequired": "説明を入力してください",
+      "descriptionMax": "説明は100文字以内で入力してください",
+      "dateFuture": "未来の日付は指定できません",
+      "dateTooOld": "1年以上前の日付は指定できません"
     },
     "errors": {
       "invalidAmount": "有効な金額を入力してください",

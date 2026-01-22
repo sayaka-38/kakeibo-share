@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
 import InviteMemberForm from "@/components/InviteMemberForm";
+import { GroupPaymentForm } from "@/components/GroupPaymentForm";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -154,6 +155,22 @@ export default async function GroupDetailPage({ params }: Props) {
               </p>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* 支払い登録フォーム */}
+      <div className="bg-white rounded-lg shadow mb-6">
+        <div className="px-4 py-3 border-b border-gray-200">
+          <h2 className="text-lg font-medium text-gray-900">
+            {t("payments.addPayment")}
+          </h2>
+        </div>
+        <div className="px-4 py-4 sm:p-6">
+          <GroupPaymentForm
+            groupId={id}
+            currentUserId={user?.id || ""}
+            memberIds={members?.map((m) => m.profiles?.id).filter((id): id is string => !!id) || []}
+          />
         </div>
       </div>
 

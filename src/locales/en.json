@@ -133,10 +133,10 @@
     "noPayments": "No payments yet",
     "form": {
       "group": "Group",
-      "amount": "Amount (¥)",
-      "amountPlaceholder": "1000",
+      "amount": "Amount",
+      "amountPlaceholder": "e.g. 1500",
       "description": "Description",
-      "descriptionPlaceholder": "Groceries from supermarket",
+      "descriptionPlaceholder": "e.g. Groceries from supermarket",
       "category": "Category",
       "selectCategory": "Select a category",
       "date": "Date",
@@ -144,8 +144,17 @@
       "splitEqually": "Split equally",
       "customSplit": "Custom split",
       "splitAmounts": "Split amounts",
-      "adding": "Adding...",
-      "add": "Add Payment"
+      "submit": "Add Payment",
+      "submitting": "Adding..."
+    },
+    "validation": {
+      "amountMin": "Amount must be at least ¥1",
+      "amountMax": "Amount must be ¥1,000,000 or less",
+      "amountInteger": "Amount must be a whole number",
+      "descriptionRequired": "Please enter a description",
+      "descriptionMax": "Description must be 100 characters or less",
+      "dateFuture": "Date cannot be in the future",
+      "dateTooOld": "Date cannot be more than 1 year ago"
     },
     "errors": {
       "invalidAmount": "Please enter a valid amount",
