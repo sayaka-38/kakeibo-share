@@ -204,7 +204,7 @@ export default async function SettlementPage() {
                     {group.name}
                   </h2>
                   <p className="text-sm text-gray-500">
-                    {t("settlement.totalExpenses")}: ¥{totalExpenses.toLocaleString()}
+                    {t("settlement.totalExpenses")}: {t("common.currency")}{totalExpenses.toLocaleString()}
                   </p>
                 </div>
 
@@ -225,7 +225,7 @@ export default async function SettlementPage() {
                           </span>
                           <div className="text-right">
                             <span className="text-gray-500 mr-4">
-                              {t("settlement.paid")}: ¥{balance.totalPaid.toLocaleString()}
+                              {t("settlement.paid")}: {t("common.currency")}{balance.totalPaid.toLocaleString()}
                             </span>
                             <span
                               className={
@@ -237,7 +237,7 @@ export default async function SettlementPage() {
                               {balance.totalPaid - balance.totalOwed >= 0
                                 ? "+"
                                 : ""}
-                              ¥
+                              {t("common.currency")}
                               {(
                                 balance.totalPaid - balance.totalOwed
                               ).toLocaleString()}
@@ -282,7 +282,7 @@ export default async function SettlementPage() {
                               </span>
                             </div>
                             <span className="text-lg font-semibold text-blue-600">
-                              ¥{settlement.amount.toLocaleString()}
+                              {t("common.currency")}{settlement.amount.toLocaleString()}
                             </span>
                           </div>
                         ))}

@@ -8,19 +8,8 @@ const locales = {
   en,
 } as const;
 
-// Default locale
-const DEFAULT_LOCALE: Locale = "ja";
-
-// Current locale (can be extended to use context/cookie/etc.)
-let currentLocale: Locale = DEFAULT_LOCALE;
-
-export function setLocale(locale: Locale): void {
-  currentLocale = locale;
-}
-
-export function getLocale(): Locale {
-  return currentLocale;
-}
+// Current locale (fixed to Japanese for now)
+const currentLocale: Locale = "ja";
 
 /**
  * Get a nested value from an object using dot notation
@@ -61,19 +50,6 @@ export function t(key: string, params?: Record<string, string | number>): string
     const paramValue = params[paramKey];
     return paramValue !== undefined ? String(paramValue) : `{${paramKey}}`;
   });
-}
-
-/**
- * Create a scoped translation function
- * @param namespace - The namespace prefix (e.g., "auth.login")
- * @returns A function that accepts a key and returns the translation
- */
-export function useTranslation(namespace: string) {
-  return {
-    t: (key: string, params?: Record<string, string | number>): string => {
-      return t(`${namespace}.${key}`, params);
-    },
-  };
 }
 
 // Type-safe keys (for IDE autocomplete)

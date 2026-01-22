@@ -1,30 +1,27 @@
 # CLAUDE.md - Kakeibo Share 開発ガイド
 
-このファイルは Claude Code がこのリポジトリで作業する際のガイドラインです。
-
 ## プロジェクト概要
 
 **Kakeibo Share** は、ルームシェアやパートナーと家計を共有し、清算処理を行うためのWebアプリケーションです。
 
-- **Frontend**: Next.js 16 (App Router) + TypeScript
-- **Styling**: Tailwind CSS v4
-- **Database & Auth**: Supabase
-- **Package Manager**: npm
+### 技術スタック
+
+| カテゴリ | 技術 |
+|---------|------|
+| Frontend | Next.js 16 (App Router), TypeScript |
+| Styling | Tailwind CSS v4 |
+| Database & Auth | Supabase (PostgreSQL) |
+| Testing | Vitest, React Testing Library |
+| Package Manager | npm |
 
 ## よく使うコマンド
 
 ```bash
-# 開発サーバー起動
-npm run dev
-
-# プロダクションビルド
-npm run build
-
-# プロダクションサーバー起動
-npm run start
-
-# ESLint 実行
-npm run lint
+npm run dev       # 開発サーバー起動
+npm run build     # プロダクションビルド
+npm run lint      # ESLint 実行
+npm run test      # テスト実行（ウォッチモード）
+npm run test:run  # テスト実行（単発）
 ```
 
 ## プロジェクト構造
@@ -32,232 +29,193 @@ npm run lint
 ```
 src/
 ├── app/                    # App Router ページ
-│   ├── (protected)/        # 認証必須ページ（dashboard, payments, settlement, groups）
+│   ├── (protected)/        # 認証必須ページ
 │   ├── auth/               # 認証コールバック
 │   ├── login/              # ログイン
-│   ├── signup/             # サインアップ
-│   └── page.tsx            # トップページ
+│   └── signup/             # サインアップ
 ├── components/             # 再利用可能なコンポーネント
-├── lib/supabase/           # Supabase クライアント設定
-│   ├── client.ts           # ブラウザ用クライアント
-│   ├── server.ts           # サーバー用クライアント
-│   └── middleware.ts       # 認証ミドルウェア
+├── lib/
+│   ├── i18n/               # 国際化（翻訳関数）
+│   └── supabase/           # Supabase クライアント
+├── locales/                # 辞書ファイル（ja.json, en.json）
+├── test/                   # テストファイル
 └── types/                  # 型定義
-    └── database.ts         # Supabase データベース型
 ```
 
-## コーディング規約
+---
 
-### TypeScript
+## 開発哲学
 
-- **strict モードを厳守**: `tsconfig.json` で `"strict": true` が有効
-- **`any` 型の使用は最小限に**: やむを得ない場合は `eslint-disable` コメントを付与
-- **型アサーションよりも型ガードを優先**: `as` より `is` や型の絞り込みを使用
-- **インポートエイリアス**: `@/*` を使用（例: `import { createClient } from "@/lib/supabase/client"`）
+このプロジェクトで守るべき3つの原則：
+
+### 1. モバイルアプリのような高速な操作感
+
+- **即時フィードバック**: ボタン押下後は即座に視覚的変化を与える（loading状態、disabled化）
+- **楽観的UI更新**: 可能な場合はサーバー応答を待たずにUIを先行更新
+- **最小限の画面遷移**: モーダルやインライン編集を活用し、ページ遷移を減らす
+- **スケルトンローディング**: 空白画面を見せない
+
+### 2. ルームメイトに配慮したUI表現
+
+- **非攻撃的な言葉選び**: 「未払い」より「清算待ち」、「借金」より「立替」
+- **金額の見せ方**: 赤字表示は最小限に、ポジティブな表現を優先
+- **プライバシー配慮**: 個人の支出パターンが他メンバーに過度に見えないよう設計
+- **公平性の可視化**: 誰かが損している印象を与えない清算提案
+
+### 3. オブジェクト指向を意識したクリーンなコード
+
+- **単一責任**: 1ファイル1責任、関数は1つのことだけを行う
+- **依存性の方向**: UI → ビジネスロジック → データアクセス の一方向
+- **型による制約**: `string` より `"owner" | "member"` のようなリテラル型
+- **副作用の分離**: 純粋関数と副作用を持つ関数を明確に分ける
+
+---
+
+## テスト駆動開発（TDD）
+
+### 基本方針：異常系ファースト
+
+**重要**: 新機能を実装する際は、正常系より先に異常系（バリデーションエラー）のテストを書く。
 
 ```typescript
-// Good
-const user = data as User | null;
-if (user) {
-  console.log(user.name);
-}
+// 1. まず異常系のテストを書く
+describe("PaymentForm validation", () => {
+  it("金額が0以下の場合エラーを表示する", () => { ... });
+  it("金額が100万円を超える場合エラーを表示する", () => { ... });
+  it("未来の日付の場合エラーを表示する", () => { ... });
+  it("説明が空の場合エラーを表示する", () => { ... });
+});
 
-// Avoid
-const user = data as any;
+// 2. その後に正常系を書く
+describe("PaymentForm submission", () => {
+  it("有効な入力で支払いを登録できる", () => { ... });
+});
 ```
 
-### Next.js App Router
+### テストの優先順位
 
-- **Server Components を優先**: データフェッチはサーバーコンポーネントで行う
-- **Client Components は最小限に**: `"use client"` は必要な場合のみ使用
-- **Route Groups**: 認証が必要なページは `(protected)` グループに配置
-- **ページコンポーネントは `page.tsx`**: レイアウトは `layout.tsx`
+1. **バリデーションエラー** - ユーザー入力の境界値
+2. **認証・認可エラー** - 権限チェック
+3. **ネットワークエラー** - API失敗時のハンドリング
+4. **正常系** - 期待通りの動作
 
-```typescript
-// Server Component（デフォルト）
-export default async function Page() {
-  const data = await fetchData(); // サーバーで実行
-  return <div>{data}</div>;
-}
+---
 
-// Client Component（インタラクティブな機能が必要な場合のみ）
-"use client";
-export default function InteractiveComponent() {
-  const [state, setState] = useState();
-  // ...
-}
-```
+## Development Workflow（3つの開発コアテーマ）
 
-### Tailwind CSS
+以下の3つのテーマは**厳格なルール**として遵守すること。
 
-- **ユーティリティファーストで記述**: カスタム CSS は最小限に
-- **レスポンシブ対応**: `sm:`, `md:`, `lg:` プレフィックスを活用
-- **ダークモード**: `dark:` プレフィックスで対応（CSS 変数で定義済み）
-- **カラーは CSS 変数を使用**: `globals.css` の `--background`, `--foreground` を参照
+### 1. 品質重視（Strict TDD）
 
-```tsx
-// Good - Tailwind ユーティリティクラスを使用
-<button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-  Click
-</button>
+**Red-Green-Refactor サイクルの徹底**
 
-// Avoid - インラインスタイルやカスタム CSS
-<button style={{ padding: "8px 16px" }}>Click</button>
-```
-
-### コンポーネント設計
-
-- **Props の型定義は明示的に**: `type` または `interface` で定義
-- **コンポーネントは単一責任**: 1つのコンポーネントは1つの役割
-- **ファイル名はPascalCase**: `PaymentForm.tsx`, `Header.tsx`
-
-```typescript
-type ButtonProps = {
-  label: string;
-  onClick: () => void;
-  disabled?: boolean;
-};
-
-export default function Button({ label, onClick, disabled }: ButtonProps) {
-  // ...
-}
-```
-
-### Supabase
-
-- **サーバーコンポーネントでは `createClient` from `@/lib/supabase/server`**
-- **クライアントコンポーネントでは `createClient` from `@/lib/supabase/client`**
-- **型安全なクエリ**: `Database` 型を活用、必要に応じて型アサーションを使用
-
-## 開発の基本ルール
-
-### 1. 変更前にプランを提示すること
-
-新機能の追加や大きな変更を行う前に、必ず以下を含むプランを提示してください：
-
-- **変更の目的**: 何を達成しようとしているか
-- **影響範囲**: どのファイル/機能に影響があるか
-- **実装アプローチ**: どのように実装するか
-- **潜在的なリスク**: 考慮すべき問題点
-
-```
-例:
-「支払い編集機能を追加します」
-
-1. 目的: ユーザーが既存の支払いを編集できるようにする
-2. 影響範囲:
-   - src/app/(protected)/payments/[id]/edit/page.tsx（新規）
-   - src/components/PaymentForm.tsx（編集モード対応）
-3. 実装アプローチ:
-   - PaymentForm に編集モードを追加
-   - 支払い詳細ページから編集ページへのリンクを追加
-4. リスク:
-   - payment_splits の更新ロジックが複雑になる可能性
-```
-
-### 2. 小さな変更から始める
-
-- 大きな変更は小さなステップに分割
-- 各ステップでビルドが通ることを確認
-- `npm run build` でエラーがないことを確認してからコミット
-
-### 3. 既存のパターンに従う
-
-- 新しいページは既存のページ構造を参考に
-- コンポーネントは既存のスタイルガイドに従う
-- Supabase クエリは既存のパターンを踏襲
-
-## 環境設定
-
-### 必要な環境変数（`.env.local`）
+| フェーズ | 内容 |
+|---------|------|
+| **Red** | 実装前に必ず vitest を用いたテストコードを先行作成し、テストが**失敗することを確認**する |
+| **Green** | テストを通すための**最小限の実装**のみを行う |
+| **Refactor** | テストが通った後、リファクタリング案を**必ず提示**する |
 
 ```bash
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+# TDD サイクルの実行例
+npm run test:run -- --watch  # テストをウォッチモードで実行しながら開発
 ```
 
-### データベースセットアップ
+**禁止事項:**
+- テストを書かずに実装を開始すること
+- 最初からテストが通る状態で実装すること（Red フェーズのスキップ）
+- リファクタリングの検討を省略すること
 
-`supabase/schema.sql` を Supabase SQL Editor で実行してテーブルを作成してください。
+### 2. 協調型承認フロー（Human-in-the-Loop）
 
-## トラブルシューティング
+**独断での進行を禁止する場面:**
 
-### Supabase の型エラー
+| 場面 | 必須アクション |
+|------|---------------|
+| **ファイルの新規作成** | プランを提示し、ユーザーの承認を得る |
+| **破壊的な変更**（既存機能の削除・大幅な変更） | 影響範囲を説明し、ユーザーの承認を得る |
+| **アーキテクチャの決定**（新技術導入、設計パターン変更） | 選択肢とトレードオフを提示し、ユーザーの承認を得る |
 
-Supabase のリレーションクエリで型エラーが発生する場合は、明示的な型アサーションを使用：
+**フロー:**
+```
+1. 変更内容のプランを提示
+2. ユーザーの承認を待つ
+3. 承認後に実装を開始
+```
+
+### 3. 自律型ツールの活用（Autonomous Automation）
+
+以下のツールを**積極的かつ自律的に**活用すること:
+
+| ツール | 活用場面 |
+|--------|---------|
+| **GitHub CLI (`gh`)** | PR作成、Issue管理、リポジトリ状態の確認 |
+| **MCP ツール** | 外部ドキュメントの参照、API連携 |
+| **自動化スクリプト** | 繰り返しタスクの効率化、CI/CDパイプラインの活用 |
+
+**推奨行動:**
+- `git status` / `git diff` でリポジトリの状態を常に把握
+- 外部ドキュメントやAPIリファレンスを積極的に参照
+- 手作業で繰り返す処理は自動化を検討
+
+---
+
+## 設計ドキュメント
+
+| ドキュメント | パス | 内容 |
+|-------------|------|------|
+| **設計書** | `docs/design.md` | 機能仕様、DB設計、バリデーション定義、清算アルゴリズム |
+| **UI ガイドライン** | `docs/ui-guidelines.md` | スペーシング、カラー、コンポーネントパターン |
+
+---
+
+## 実装前チェックリスト
+
+すべての実装タスクを開始する前に確認：
+
+| チェック項目 | 確認内容 |
+|-------------|---------|
+| **TDD手順** | テストコードを先に書いているか？Red-Green-Refactorを守っているか？ |
+| **機能仕様** | `docs/design.md` の機能一覧に存在するか？ |
+| **DB設計** | テーブル・カラムはER図と一致しているか？ |
+| **バリデーション** | `docs/design.md` のバリデーション定義に従っているか？ |
+| **RLSポリシー** | データアクセスはRLSポリシーの範囲内か？ |
+| **承認フロー** | 新規ファイル作成や破壊的変更の場合、ユーザー承認を得たか？ |
+
+**判断基準:**
+- すべてOK → 実装開始
+- 不明点あり → ユーザーに確認
+- 設計書に記載なし → 設計書の更新を提案
+
+---
+
+## Supabase 固有の注意点
+
+### クライアント使い分け
 
 ```typescript
-type ResultType = {
-  id: string;
-  name: string;
-};
+// Server Component
+import { createClient } from "@/lib/supabase/server";
+
+// Client Component
+import { createClient } from "@/lib/supabase/client";
+```
+
+### リレーションクエリの型エラー対処
+
+```typescript
+type ResultType = { id: string; name: string };
 
 const { data } = (await supabase
   .from("table")
   .select("id, name")) as { data: ResultType[] | null };
 ```
 
-### ビルドエラー
+---
+
+## 環境変数
 
 ```bash
-# キャッシュをクリアして再ビルド
-rm -rf .next
-npm run build
+# .env.local
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 ```
-
-## 開発の指針（Development Guidance）
-
-**重要**: すべての実装タスクを開始する前に、このセクションの手順に従うこと。
-
-### 設計ドキュメントの場所
-
-| ドキュメント | パス | 内容 |
-|-------------|------|------|
-| **プロジェクト設計書** | `docs/design.md` | 機能一覧、ER図、テーブル定義、画面一覧、清算アルゴリズム、セキュリティ設計 |
-| **UI ガイドライン** | `docs/ui-guidelines.md` | Tailwind クラス並び順、スペーシング、レスポンシブ、カラーパレット、コンポーネントパターン |
-
-### 実装前の必須セルフチェック
-
-**すべての実装タスクを開始する前に、以下の手順を実行すること:**
-
-```
-1. docs/design.md を読み込む
-2. docs/ui-guidelines.md を読み込む
-3. 以下のセルフチェックを実施
-```
-
-#### セルフチェック項目
-
-| カテゴリ | チェック内容 |
-|---------|-------------|
-| **機能仕様** | 実装しようとしている機能は `docs/design.md` の機能一覧に存在するか？ |
-| **DB設計** | 使用するテーブル・カラムは ER図/テーブル定義と一致しているか？ |
-| **RLSポリシー** | データアクセスは RLS ポリシーの範囲内か？ |
-| **画面設計** | 新規ページの URL は画面一覧のパターンに従っているか？ |
-| **UIルール** | Tailwind クラスの並び順を守れるか？ |
-| **スペーシング** | 余白は 4px 単位、8pt グリッドに従うか？ |
-| **レスポンシブ** | モバイルファーストで実装できるか？ |
-
-#### チェック結果の判断
-
-- **すべて OK** → 実装を開始
-- **不明点あり** → ユーザーに確認してから実装
-- **設計書に記載なし** → 設計書の更新を提案してから実装
-
-### 実装後の更新
-
-機能実装が完了したら:
-
-1. `docs/design.md` の該当機能の「状態」を「実装済」に更新
-2. 新規コンポーネントを追加した場合は `docs/ui-guidelines.md` にパターンを追記（必要に応じて）
-
-### 設計書の活用シーン
-
-| シーン | 参照ドキュメント | 確認セクション |
-|--------|-----------------|---------------|
-| 新機能追加 | `docs/design.md` | 機能一覧、画面一覧 |
-| DB操作 | `docs/design.md` | ER図、テーブル定義、RLSポリシー |
-| 清算ロジック変更 | `docs/design.md` | 清算アルゴリズム |
-| UI実装 | `docs/ui-guidelines.md` | 全セクション |
-| スタイリング | `docs/ui-guidelines.md` | クラス並び順、スペーシング、カラー |
-| レスポンシブ対応 | `docs/ui-guidelines.md` | レスポンシブデザイン |

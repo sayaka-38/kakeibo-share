@@ -105,7 +105,7 @@ export default async function PaymentsPage() {
                 <div className="px-4 py-3 border-b border-gray-200 flex justify-between items-center">
                   <h2 className="font-medium text-gray-900">{monthName}</h2>
                   <span className="text-sm font-medium text-gray-600">
-                    {t("common.total")}: ¥{monthTotal.toLocaleString()}
+                    {t("common.total")}: {t("common.currency")}{monthTotal.toLocaleString()}
                   </span>
                 </div>
                 <ul className="divide-y divide-gray-200">
@@ -133,7 +133,7 @@ export default async function PaymentsPage() {
                           </p>
                         </div>
                         <span className="font-medium text-gray-900 ml-4">
-                          ¥{Number(payment.amount).toLocaleString()}
+                          {t("common.currency")}{Number(payment.amount).toLocaleString()}
                         </span>
                       </div>
                     </li>
