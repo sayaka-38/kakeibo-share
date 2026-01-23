@@ -33,7 +33,7 @@ export function GroupPaymentForm({
       .from("payments")
       .insert({
         group_id: groupId,
-        paid_by: currentUserId,
+        payer_id: currentUserId,
         amount: data.amount,
         description: data.description,
         payment_date: data.paymentDate.toISOString().split("T")[0],

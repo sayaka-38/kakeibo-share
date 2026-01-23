@@ -196,7 +196,29 @@ erDiagram
         uuid user_id FK "NOT NULL"
         decimal amount "NOT NULL"
     }
+
+    demo_sessions {
+        uuid id PK "NOT NULL"
+        uuid user_id FK "NOT NULL, CASCADE"
+        uuid group_id FK "NOT NULL, CASCADE"
+        timestamptz expires_at "NOT NULL"
+        timestamptz created_at "NOT NULL, DEFAULT now()"
+    }
 ```
+
+### NULL 許容の厳格化
+
+以下のフィールドは **NOT NULL** 必須です。アプリケーション層とDB層の両方でバリデーションを行います。
+
+| テーブル | 必須フィールド（NOT NULL） | 任意フィールド（NULL可） |
+|---------|--------------------------|------------------------|
+| profiles | id, email, created_at | display_name, avatar_url |
+| groups | id, name, created_by, created_at | description |
+| group_members | id, group_id, user_id, role, joined_at | - |
+| categories | id, name, is_default | icon, color, group_id |
+| payments | id, group_id, paid_by, amount, description, payment_date, created_at | category_id |
+| payment_splits | id, payment_id, user_id, amount | - |
+| demo_sessions | id, user_id, group_id, expires_at, created_at | - |
 
 ### テーブル制約
 
@@ -262,15 +284,38 @@ amount DECIMAL(12,2) NOT NULL CHECK (amount >= 0),
 UNIQUE(payment_id, user_id)
 ```
 
+#### demo_sessions
+
+```sql
+id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+group_id UUID NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+expires_at TIMESTAMPTZ NOT NULL DEFAULT (now() + interval '24 hours'),
+created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+```
+
 ### 削除時の挙動（Cascade）
+
+**重要**: 親データ削除時に子データを自動削除することで、孤立データを防ぎます。
 
 | 親テーブル | 子テーブル | 挙動 | 説明 |
 |-----------|-----------|------|------|
-| groups | group_members | CASCADE | グループ削除時、所属メンバー情報も削除 |
-| groups | payments | CASCADE | グループ削除時、支払い履歴も削除 |
-| payments | payment_splits | CASCADE | 支払い削除時、割り勘データも削除 |
-| categories | payments.category_id | SET NULL | カテゴリ削除時、支払いのカテゴリをNULLに |
-| profiles | - | 削除不可 | ユーザーは削除せず、退会時は論理削除を検討 |
+| groups | group_members | CASCADE | グループ削除時 → 所属メンバー情報も削除 |
+| groups | payments | CASCADE | グループ削除時 → 支払い履歴も削除 |
+| groups | demo_sessions | CASCADE | グループ削除時 → デモセッションも削除 |
+| payments | payment_splits | CASCADE | 支払い削除時 → 割り勘データも削除 |
+| profiles | demo_sessions | CASCADE | ユーザー削除時 → デモセッションも削除 |
+| categories | payments.category_id | SET NULL | カテゴリ削除時 → 支払いのカテゴリをNULLに |
+| profiles | groups, payments など | 削除不可 | ユーザーは削除せず、退会時は論理削除を検討 |
+
+**Cascade 削除の連鎖例:**
+```
+グループ削除
+├── group_members → 全メンバー情報削除
+├── payments → 全支払い削除
+│   └── payment_splits → 全割り勘データ削除
+└── demo_sessions → デモセッション削除
+```
 
 ### RLSポリシー要約
 

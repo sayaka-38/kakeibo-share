@@ -33,7 +33,17 @@
         "title": "Group Sharing",
         "description": "Create groups for different households or projects. Everyone sees the same data."
       }
+    },
+    "demo": {
+      "button": "Try Demo",
+      "subtitle": "Experience the app in about 1 minute",
+      "starting": "Preparing demo..."
     }
+  },
+  "demo": {
+    "banner": "Demo Mode",
+    "expirationNotice": "This data will be automatically reset",
+    "signUpPrompt": "Create an account to get started for real"
   },
   "auth": {
     "login": {

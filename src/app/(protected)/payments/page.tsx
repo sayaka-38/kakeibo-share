@@ -21,7 +21,7 @@ export default async function PaymentsPage() {
   type PaymentWithRelations = {
     id: string;
     group_id: string;
-    paid_by: string;
+    payer_id: string;
     amount: number;
     description: string;
     category_id: string | null;

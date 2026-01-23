@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { t } from "@/lib/i18n";
+import { DemoButton } from "@/components/demo/DemoButton";
 
 export default async function Home() {
   const supabase = await createClient();
@@ -29,7 +30,7 @@ export default async function Home() {
         </header>
 
         {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
           <Link
             href="/signup"
             className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors"
@@ -42,6 +43,11 @@ export default async function Home() {
           >
             {t("landing.signIn")}
           </Link>
+        </div>
+
+        {/* Demo Button */}
+        <div className="mb-16">
+          <DemoButton />
         </div>
 
         {/* Features */}

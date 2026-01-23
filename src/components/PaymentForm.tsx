@@ -226,7 +226,7 @@ export default function FullPaymentForm({
       .from("payments")
       .insert({
         group_id: groupId,
-        paid_by: currentUserId,
+        payer_id: currentUserId,
         amount: numAmount,
         description,
         category_id: categoryId || null,
