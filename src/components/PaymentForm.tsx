@@ -82,7 +82,7 @@ export function PaymentForm({ onSubmit }: PaymentFormProps) {
           {t("payments.form.amount")}
         </label>
         <div className="mt-1 relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-700">
             {t("common.currency")}
           </span>
           <input

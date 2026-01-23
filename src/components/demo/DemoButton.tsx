@@ -37,7 +37,7 @@ export function DemoButton() {
       >
         {loading ? t("landing.demo.starting") : t("landing.demo.button")}
       </button>
-      <p className="text-sm text-gray-500">{t("landing.demo.subtitle")}</p>
+      <p className="text-sm text-gray-700">{t("landing.demo.subtitle")}</p>
       {error && (
         <p className="text-sm text-red-600 mt-2" role="alert">
           {error}

@@ -27,7 +27,7 @@ export default function Navigation() {
               className={`flex-1 flex flex-col items-center py-3 px-4 text-xs ${
                 isActive
                   ? "text-blue-600 border-b-2 border-blue-600"
-                  : "text-gray-500 hover:text-gray-700"
+                  : "text-gray-700 hover:text-gray-900"
               }`}
             >
               <NavIcon name={item.icon} />

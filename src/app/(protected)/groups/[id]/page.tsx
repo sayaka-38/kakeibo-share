@@ -127,7 +127,7 @@ export default async function GroupDetailPage({ params }: Props) {
             <div>
               <h1 className="text-2xl font-bold text-gray-900">{group.name}</h1>
               {group.description && (
-                <p className="mt-1 text-gray-500">{group.description}</p>
+                <p className="mt-1 text-gray-700">{group.description}</p>
               )}
             </div>
             {isOwner && (
@@ -139,7 +139,7 @@ export default async function GroupDetailPage({ params }: Props) {
 
           <div className="mt-6 grid grid-cols-2 gap-4">
             <div className="bg-gray-50 rounded-lg p-4">
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-700">
                 {t("groups.detail.totalExpenses")}
               </p>
               <p className="text-2xl font-semibold text-gray-900">
@@ -147,7 +147,7 @@ export default async function GroupDetailPage({ params }: Props) {
               </p>
             </div>
             <div className="bg-gray-50 rounded-lg p-4">
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-700">
                 {t("groups.detail.members")}
               </p>
               <p className="text-2xl font-semibold text-gray-900">
@@ -192,7 +192,7 @@ export default async function GroupDetailPage({ params }: Props) {
                   <p className="font-medium text-gray-900">
                     {member.profiles?.display_name || member.profiles?.email}
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-700">
                     {t("groups.detail.joined")}{" "}
                     {new Date(member.joined_at).toLocaleDateString("ja-JP")}
                   </p>
@@ -234,7 +234,7 @@ export default async function GroupDetailPage({ params }: Props) {
                       <p className="font-medium text-gray-900">
                         {payment.description}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-700">
                         {payment.profiles?.display_name ||
                           payment.profiles?.email}{" "}
                         - {payment.payment_date}
@@ -248,7 +248,7 @@ export default async function GroupDetailPage({ params }: Props) {
               ))}
             </ul>
           ) : (
-            <p className="px-4 py-6 text-center text-gray-500">
+            <p className="px-4 py-6 text-center text-gray-700">
               {t("payments.noPayments")}
             </p>
           )}

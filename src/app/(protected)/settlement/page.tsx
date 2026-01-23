@@ -192,7 +192,7 @@ export default async function SettlementPage() {
 
       {groupSettlements.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-6 text-center">
-          <p className="text-gray-500">{t("settlement.noGroups")}</p>
+          <p className="text-gray-700">{t("settlement.noGroups")}</p>
         </div>
       ) : (
         <div className="space-y-8">
@@ -203,7 +203,7 @@ export default async function SettlementPage() {
                   <h2 className="text-lg font-medium text-gray-900">
                     {group.name}
                   </h2>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-700">
                     {t("settlement.totalExpenses")}: {t("common.currency")}{totalExpenses.toLocaleString()}
                   </p>
                 </div>
@@ -224,7 +224,7 @@ export default async function SettlementPage() {
                             {balance.displayName}
                           </span>
                           <div className="text-right">
-                            <span className="text-gray-500 mr-4">
+                            <span className="text-gray-700 mr-4">
                               {t("settlement.paid")}: {t("common.currency")}{balance.totalPaid.toLocaleString()}
                             </span>
                             <span
@@ -265,7 +265,7 @@ export default async function SettlementPage() {
                                 {settlement.fromName}
                               </span>
                               <svg
-                                className="w-4 h-4 text-gray-400"
+                                className="w-4 h-4 text-gray-600"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -288,7 +288,7 @@ export default async function SettlementPage() {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-gray-500 text-sm">
+                      <p className="text-gray-700 text-sm">
                         {t("settlement.allSettled")}
                       </p>
                     )}

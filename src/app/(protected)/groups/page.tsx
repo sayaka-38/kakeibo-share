@@ -80,7 +80,7 @@ export default async function GroupsPage() {
                 <div>
                   <h2 className="font-medium text-gray-900">{group.name}</h2>
                   {group.description && (
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-gray-700 mt-1">
                       {group.description}
                     </p>
                   )}
@@ -91,7 +91,7 @@ export default async function GroupsPage() {
                   </span>
                 )}
               </div>
-              <div className="mt-4 flex items-center text-sm text-gray-500">
+              <div className="mt-4 flex items-center text-sm text-gray-700">
                 <svg
                   className="w-4 h-4 mr-1"
                   fill="none"
@@ -112,7 +112,7 @@ export default async function GroupsPage() {
         </div>
       ) : (
         <div className="bg-white rounded-lg shadow p-6 text-center">
-          <p className="text-gray-500 mb-4">{t("groups.noGroups")}</p>
+          <p className="text-gray-700 mb-4">{t("groups.noGroups")}</p>
           <Link
             href="/groups/new"
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
