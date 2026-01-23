@@ -85,7 +85,7 @@ export default async function SettlementPage() {
     // Get all payments for this group
     type PaymentResult = {
       id: string;
-      paid_by: string;
+      payer_id: string;
       amount: number;
       payment_splits: { user_id: string; amount: number }[] | null;
     };
@@ -95,7 +95,7 @@ export default async function SettlementPage() {
       .select(
         `
         id,
-        paid_by,
+        payer_id,
         amount,
         payment_splits (
           user_id,
@@ -125,8 +125,8 @@ export default async function SettlementPage() {
       totalExpenses += amount;
 
       // Add to total paid
-      if (balanceMap[payment.paid_by]) {
-        balanceMap[payment.paid_by].totalPaid += amount;
+      if (balanceMap[payment.payer_id]) {
+        balanceMap[payment.payer_id].totalPaid += amount;
       }
 
       // Add to total owed from splits

@@ -114,7 +114,7 @@ export interface Database {
         Row: {
           id: string;
           group_id: string;
-          paid_by: string;
+          payer_id: string;
           amount: number;
           description: string;
           category_id: string | null;
@@ -125,7 +125,7 @@ export interface Database {
         Insert: {
           id?: string;
           group_id: string;
-          paid_by: string;
+          payer_id: string;
           amount: number;
           description: string;
           category_id?: string | null;
@@ -136,7 +136,7 @@ export interface Database {
         Update: {
           id?: string;
           group_id?: string;
-          paid_by?: string;
+          payer_id?: string;
           amount?: number;
           description?: string;
           category_id?: string | null;
