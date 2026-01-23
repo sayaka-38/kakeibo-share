@@ -37,7 +37,7 @@ export default function NewGroupPage() {
       .insert({
         name,
         description: description || null,
-        created_by: user.id,
+        owner_id: user.id,
       })
       .select()
       .single();
