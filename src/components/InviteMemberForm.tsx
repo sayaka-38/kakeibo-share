@@ -92,7 +92,7 @@ export default function InviteMemberForm({ groupId }: InviteMemberFormProps) {
           onChange={(e) => setEmail(e.target.value)}
           required
           placeholder={t("groups.invite.emailPlaceholder")}
-          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         />
         <button
           type="submit"

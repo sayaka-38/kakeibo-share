@@ -92,7 +92,7 @@ export function PaymentForm({ onSubmit }: PaymentFormProps) {
             value={amount}
             onChange={(e) => setAmount(e.target.value.replace(/[^0-9]/g, ""))}
             placeholder={t("payments.form.amountPlaceholder")}
-            className={`block w-full pl-8 pr-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+            className={`block w-full pl-8 pr-3 py-2 border rounded-lg shadow-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
               errors.amount ? "border-red-500" : "border-gray-300"
             }`}
             aria-invalid={!!errors.amount}
@@ -120,7 +120,7 @@ export function PaymentForm({ onSubmit }: PaymentFormProps) {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder={t("payments.form.descriptionPlaceholder")}
-          className={`mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+          className={`mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
             errors.description ? "border-red-500" : "border-gray-300"
           }`}
           aria-invalid={!!errors.description}
@@ -146,7 +146,7 @@ export function PaymentForm({ onSubmit }: PaymentFormProps) {
           type="date"
           value={paymentDate}
           onChange={(e) => setPaymentDate(e.target.value)}
-          className={`mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+          className={`mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
             errors.paymentDate ? "border-red-500" : "border-gray-300"
           }`}
           aria-invalid={!!errors.paymentDate}
@@ -303,7 +303,7 @@ export default function FullPaymentForm({
           value={groupId}
           onChange={(e) => setGroupId(e.target.value)}
           required
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         >
           {groups.map((group) => (
             <option key={group.id} value={group.id}>
@@ -329,7 +329,7 @@ export default function FullPaymentForm({
           required
           min="1"
           step="1"
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           placeholder={t("payments.form.amountPlaceholder")}
         />
       </div>
@@ -348,7 +348,7 @@ export default function FullPaymentForm({
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           required
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           placeholder={t("payments.form.descriptionPlaceholder")}
         />
       </div>
@@ -365,7 +365,7 @@ export default function FullPaymentForm({
           id="category"
           value={categoryId}
           onChange={(e) => setCategoryId(e.target.value)}
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         >
           <option value="">{t("payments.form.selectCategory")}</option>
           {categories.map((category) => (
@@ -390,7 +390,7 @@ export default function FullPaymentForm({
           value={paymentDate}
           onChange={(e) => setPaymentDate(e.target.value)}
           required
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         />
       </div>
 
@@ -451,7 +451,7 @@ export default function FullPaymentForm({
                 }
                 min="0"
                 step="1"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="0"
               />
             </div>
