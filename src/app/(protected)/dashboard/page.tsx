@@ -140,7 +140,7 @@ export default async function DashboardPage() {
                     >
                       <p className="font-medium text-gray-900">{group.name}</p>
                       {group.description && (
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-gray-700">
                           {group.description}
                         </p>
                       )}
@@ -173,7 +173,7 @@ export default async function DashboardPage() {
                         <p className="font-medium text-gray-900">
                           {payment.description}
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-gray-700">
                           {payment.profiles?.display_name ||
                             payment.profiles?.email}{" "}
                           - {payment.payment_date}
@@ -187,7 +187,7 @@ export default async function DashboardPage() {
                 ))}
               </ul>
             ) : (
-              <p className="px-4 py-6 text-center text-gray-500">
+              <p className="px-4 py-6 text-center text-gray-700">
                 {t("dashboard.noPayments")}
               </p>
             )}

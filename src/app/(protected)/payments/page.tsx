@@ -123,12 +123,12 @@ export default async function PaymentsPage() {
                               </span>
                             )}
                           </div>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-sm text-gray-700">
                             {payment.profiles?.display_name ||
                               payment.profiles?.email}{" "}
                             - {payment.payment_date}
                           </p>
-                          <p className="text-xs text-gray-400">
+                          <p className="text-xs text-gray-600">
                             {payment.groups?.name}
                           </p>
                         </div>
@@ -145,7 +145,7 @@ export default async function PaymentsPage() {
         </div>
       ) : (
         <div className="bg-white rounded-lg shadow p-6 text-center">
-          <p className="text-gray-500 mb-4">{t("payments.noPayments")}</p>
+          <p className="text-gray-700 mb-4">{t("payments.noPayments")}</p>
           <Link
             href="/payments/new"
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
