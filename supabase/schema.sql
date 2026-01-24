@@ -15,6 +15,7 @@ CREATE TABLE profiles (
   email TEXT NOT NULL,
   display_name TEXT,
   avatar_url TEXT,
+  is_demo BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
@@ -51,7 +52,8 @@ CREATE TABLE groups (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
   description TEXT,
-  created_by UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  owner_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  invite_code TEXT NOT NULL UNIQUE DEFAULT encode(gen_random_bytes(6), 'hex'),
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
@@ -82,7 +84,7 @@ CREATE POLICY "Users can view their groups" ON groups
   );
 
 CREATE POLICY "Users can create groups" ON groups
-  FOR INSERT WITH CHECK (auth.uid() = created_by);
+  FOR INSERT WITH CHECK (auth.uid() = owner_id);
 
 CREATE POLICY "Group owners can update their groups" ON groups
   FOR UPDATE USING (
@@ -158,7 +160,7 @@ INSERT INTO categories (name, icon, is_default) VALUES
 CREATE TABLE payments (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   group_id UUID REFERENCES groups(id) ON DELETE CASCADE NOT NULL,
-  paid_by UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  payer_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   amount DECIMAL(12, 2) NOT NULL CHECK (amount > 0),
   description TEXT NOT NULL,
   category_id UUID REFERENCES categories(id) ON DELETE SET NULL,
@@ -182,10 +184,10 @@ CREATE POLICY "Group members can create payments" ON payments
   );
 
 CREATE POLICY "Users can update their own payments" ON payments
-  FOR UPDATE USING (paid_by = auth.uid());
+  FOR UPDATE USING (payer_id = auth.uid());
 
 CREATE POLICY "Users can delete their own payments" ON payments
-  FOR DELETE USING (paid_by = auth.uid());
+  FOR DELETE USING (payer_id = auth.uid());
 
 -- =============================================
 -- PAYMENT SPLITS TABLE
@@ -214,7 +216,7 @@ CREATE POLICY "Users can view splits in their groups" ON payment_splits
 
 CREATE POLICY "Payment creators can manage splits" ON payment_splits
   FOR ALL USING (
-    payment_id IN (SELECT id FROM payments WHERE paid_by = auth.uid())
+    payment_id IN (SELECT id FROM payments WHERE payer_id = auth.uid())
   );
 
 -- =============================================
@@ -262,7 +264,7 @@ BEGIN
   -- Total amount paid by user
   SELECT COALESCE(SUM(amount), 0) INTO total_paid
   FROM payments
-  WHERE group_id = p_group_id AND paid_by = p_user_id;
+  WHERE group_id = p_group_id AND payer_id = p_user_id;
 
   -- Total amount user owes (from splits)
   SELECT COALESCE(SUM(ps.amount), 0) INTO total_owed

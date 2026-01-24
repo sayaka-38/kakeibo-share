@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
+import type { GroupMembershipFullResult } from "@/types/query-results";
 
 export default async function GroupsPage() {
   const supabase = await createClient();
@@ -10,17 +11,6 @@ export default async function GroupsPage() {
   } = await supabase.auth.getUser();
 
   // Get user's groups with member count
-  type GroupMembershipResult = {
-    group_id: string;
-    role: string;
-    groups: {
-      id: string;
-      name: string;
-      description: string | null;
-      created_at: string;
-    } | null;
-  };
-
   const { data: groupMemberships } = await supabase
     .from("group_members")
     .select(
@@ -37,7 +27,7 @@ export default async function GroupsPage() {
     )
     .eq("user_id", user?.id || "");
 
-  const typedMemberships = groupMemberships as GroupMembershipResult[] | null;
+  const typedMemberships = groupMemberships as GroupMembershipFullResult[] | null;
   const groups = typedMemberships?.filter((m) => m.groups !== null) || [];
 
   // Get member count for each group

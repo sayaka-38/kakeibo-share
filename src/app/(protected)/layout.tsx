@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
 import { DemoBanner } from "@/components/demo/DemoBanner";
+import type { Profile } from "@/types/database";
 
 export default async function ProtectedLayout({
   children,
@@ -19,23 +20,14 @@ export default async function ProtectedLayout({
     redirect("/login");
   }
 
-  type ProfileResult = {
-    id: string;
-    email: string;
-    display_name: string | null;
-    avatar_url: string | null;
-    created_at: string;
-    updated_at: string;
-  };
-
   const { data: profile } = (await supabase
     .from("profiles")
     .select("*")
     .eq("id", user.id)
-    .single()) as { data: ProfileResult | null };
+    .single()) as { data: Profile | null };
 
-  // デモユーザーかどうかを判定（メールアドレスのドメインで判定）
-  const isDemo = profile?.email?.endsWith("@demo.kakeibo.local") ?? false;
+  // デモユーザーかどうかを判定（is_demoフラグで判定）
+  const isDemo = profile?.is_demo ?? false;
 
   // デモセッションの有効期限を取得（将来的にdemo_sessionsテーブルから取得）
   // 現時点では24時間後を仮定

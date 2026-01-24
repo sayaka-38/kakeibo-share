@@ -5,6 +5,11 @@ import { t } from "@/lib/i18n";
 import InviteMemberForm from "@/components/InviteMemberForm";
 import { GroupPaymentForm } from "@/components/GroupPaymentForm";
 import { InviteLinkButton } from "@/components/InviteLinkButton";
+import type {
+  GroupResult,
+  GroupMemberDetailResult,
+  DashboardPaymentResult,
+} from "@/types/query-results";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -19,16 +24,6 @@ export default async function GroupDetailPage({ params }: Props) {
   } = await supabase.auth.getUser();
 
   // Get group details
-  type GroupResult = {
-    id: string;
-    name: string;
-    description: string | null;
-    owner_id: string;
-    invite_code: string;
-    created_at: string;
-    updated_at: string;
-  };
-
   const { data: group } = (await supabase
     .from("groups")
     .select("*")
@@ -55,12 +50,6 @@ export default async function GroupDetailPage({ params }: Props) {
   const isOwner = typedMembership.role === "owner";
 
   // Get group members
-  type MemberResult = {
-    role: string;
-    joined_at: string;
-    profiles: { id: string; display_name: string | null; email: string } | null;
-  };
-
   const { data: members } = (await supabase
     .from("group_members")
     .select(
@@ -74,17 +63,9 @@ export default async function GroupDetailPage({ params }: Props) {
       )
     `
     )
-    .eq("group_id", id)) as { data: MemberResult[] | null };
+    .eq("group_id", id)) as { data: GroupMemberDetailResult[] | null };
 
   // Get recent payments
-  type PaymentResult = {
-    id: string;
-    amount: number;
-    description: string;
-    payment_date: string;
-    profiles: { display_name: string | null; email: string } | null;
-  };
-
   const { data: recentPayments } = (await supabase
     .from("payments")
     .select(
@@ -101,7 +82,7 @@ export default async function GroupDetailPage({ params }: Props) {
     )
     .eq("group_id", id)
     .order("payment_date", { ascending: false })
-    .limit(5)) as { data: PaymentResult[] | null };
+    .limit(5)) as { data: DashboardPaymentResult[] | null };
 
   // Calculate group stats
   const { data: allPayments } = (await supabase
