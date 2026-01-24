@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
 import InviteMemberForm from "@/components/InviteMemberForm";
 import { GroupPaymentForm } from "@/components/GroupPaymentForm";
+import { InviteLinkButton } from "@/components/InviteLinkButton";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -22,7 +23,8 @@ export default async function GroupDetailPage({ params }: Props) {
     id: string;
     name: string;
     description: string | null;
-    owner_id: string;
+    created_by: string;
+    invite_code: string;
     created_at: string;
     updated_at: string;
   };
@@ -205,6 +207,12 @@ export default async function GroupDetailPage({ params }: Props) {
               </li>
             ))}
           </ul>
+          {/* 招待リンク（全メンバーが利用可能） */}
+          <div className="px-4 py-3 border-t border-gray-200">
+            <InviteLinkButton inviteCode={group.invite_code} />
+          </div>
+
+          {/* メールアドレスによる招待（オーナーのみ） */}
           {isOwner && (
             <div className="px-4 py-3 border-t border-gray-200">
               <InviteMemberForm groupId={id} />

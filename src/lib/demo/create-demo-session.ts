@@ -92,7 +92,7 @@ export async function createDemoSession(
       .insert({
         name: "デモ用シェアハウス",
         description: "デモ体験用のサンプルグループです",
-        owner_id: userId,
+        created_by: userId,
       })
       .select()
       .single();
