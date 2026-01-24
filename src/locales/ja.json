@@ -125,10 +125,28 @@
       "adding": "...",
       "add": "追加",
       "success": "メンバーを追加しました！",
+      "link": {
+        "title": "招待リンク",
+        "description": "このリンクを共有して、ルームメイトをグループに招待できます",
+        "copy": "リンクをコピー",
+        "copied": "コピーしました",
+        "share": "共有する"
+      },
+      "join": {
+        "title": "グループに参加",
+        "joining": "参加中...",
+        "success": "グループに参加しました",
+        "welcomeMessage": "「{groupName}」へようこそ！",
+        "goToGroup": "グループを見る"
+      },
       "errors": {
         "userNotFound": "ユーザーが見つかりません。先にサインアップが必要です。",
         "alreadyMember": "このユーザーは既にグループのメンバーです。",
-        "addFailed": "メンバーの追加に失敗しました: "
+        "addFailed": "メンバーの追加に失敗しました: ",
+        "notAuthenticated": "グループに参加するにはログインが必要です",
+        "invalidCode": "この招待リンクは無効です",
+        "groupFull": "このグループはメンバー数の上限に達しています",
+        "joinFailed": "参加に失敗しました。しばらく経ってからお試しください"
       }
     },
     "errors": {
