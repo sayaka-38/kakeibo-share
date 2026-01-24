@@ -66,10 +66,10 @@ export async function createDemoSession(
 
     const userId = authData.user.id;
 
-    // 2. プロフィール取得（トリガーで自動作成済み）& 表示名を更新
+    // 2. プロフィール取得（トリガーで自動作成済み）& 表示名とデモフラグを更新
     const { data: profileData, error: profileError } = await supabase
       .from("profiles")
-      .update({ display_name: "デモユーザー" })
+      .update({ display_name: "デモユーザー", is_demo: true })
       .eq("id", userId)
       .select()
       .single();

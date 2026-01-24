@@ -1,21 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
-
-type Balance = {
-  id: string;
-  displayName: string;
-  totalPaid: number;
-  totalOwed: number;
-  balance: number;
-};
-
-type Settlement = {
-  from: string;
-  fromName: string;
-  to: string;
-  toName: string;
-  amount: number;
-};
+import type {
+  GroupMembershipResult,
+  MemberResult,
+  PaymentForSettlementResult,
+  Balance,
+  SettlementSuggestion,
+} from "@/types/query-results";
 
 export default async function SettlementPage() {
   const supabase = await createClient();
@@ -38,11 +29,6 @@ export default async function SettlementPage() {
     )
     .eq("user_id", user?.id || "");
 
-  type GroupMembershipResult = {
-    group_id: string;
-    groups: { id: string; name: string } | null;
-  };
-
   const groups =
     (groupMemberships as GroupMembershipResult[] | null)
       ?.map((m) => m.groups)
@@ -52,7 +38,7 @@ export default async function SettlementPage() {
   const groupSettlements: {
     group: { id: string; name: string };
     balances: Balance[];
-    settlements: Settlement[];
+    settlements: SettlementSuggestion[];
     totalExpenses: number;
   }[] = [];
 
@@ -72,24 +58,12 @@ export default async function SettlementPage() {
       )
       .eq("group_id", group.id);
 
-    type MemberResult = {
-      user_id: string;
-      profiles: { id: string; display_name: string | null; email: string } | null;
-    };
-
     const memberProfiles =
       (members as MemberResult[] | null)
         ?.map((m) => m.profiles)
         .filter((p): p is NonNullable<typeof p> => p !== null) || [];
 
     // Get all payments for this group
-    type PaymentResult = {
-      id: string;
-      payer_id: string;
-      amount: number;
-      payment_splits: { user_id: string; amount: number }[] | null;
-    };
-
     const { data: payments } = await supabase
       .from("payments")
       .select(
@@ -103,7 +77,7 @@ export default async function SettlementPage() {
         )
       `
       )
-      .eq("group_id", group.id) as { data: PaymentResult[] | null };
+      .eq("group_id", group.id) as { data: PaymentForSettlementResult[] | null };
 
     // Calculate balances
     const balanceMap: { [userId: string]: Balance } = {};
@@ -143,7 +117,7 @@ export default async function SettlementPage() {
     });
 
     // Calculate settlements (who pays whom)
-    const settlements: Settlement[] = [];
+    const settlements: SettlementSuggestion[] = [];
     const debtors = Object.values(balanceMap)
       .filter((b) => b.balance < 0)
       .sort((a, b) => a.balance - b.balance);

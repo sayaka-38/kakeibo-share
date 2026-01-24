@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
+import type {
+  GroupMembershipWithDescriptionResult,
+  DashboardPaymentResult,
+} from "@/types/query-results";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -24,23 +28,10 @@ export default async function DashboardPage() {
     )
     .eq("user_id", user?.id || "");
 
-  type GroupMembershipResult = {
-    group_id: string;
-    groups: { id: string; name: string; description: string | null } | null;
-  };
-
-  const groups = (groupMemberships as GroupMembershipResult[] | null)?.map((m) => m.groups) || [];
+  const groups = (groupMemberships as GroupMembershipWithDescriptionResult[] | null)?.map((m) => m.groups) || [];
 
   // Get recent payments from all groups
   const groupIds = groups.map((g) => g?.id).filter(Boolean) as string[];
-
-  type PaymentResult = {
-    id: string;
-    amount: number;
-    description: string;
-    payment_date: string;
-    profiles: { display_name: string | null; email: string } | null;
-  };
 
   const { data: recentPayments } = groupIds.length
     ? (await supabase
@@ -59,8 +50,8 @@ export default async function DashboardPage() {
         )
         .in("group_id", groupIds)
         .order("payment_date", { ascending: false })
-        .limit(5)) as { data: PaymentResult[] | null }
-    : { data: [] as PaymentResult[] };
+        .limit(5)) as { data: DashboardPaymentResult[] | null }
+    : { data: [] as DashboardPaymentResult[] };
 
   return (
     <div className="max-w-4xl mx-auto">

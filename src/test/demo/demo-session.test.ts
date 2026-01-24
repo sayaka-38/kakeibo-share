@@ -325,6 +325,74 @@ describe("Demo Session Creation - デモセッション作成", () => {
       expect(result.data?.expiresAt).toBeDefined();
     });
 
+    it("プロフィールにis_demoフラグがtrueで設定される", async () => {
+      const mockUserId = "demo-user-123";
+
+      mockSupabase.auth.signInAnonymously.mockResolvedValue({
+        data: {
+          user: { id: mockUserId },
+          session: { access_token: "token" },
+        },
+        error: null,
+      });
+
+      let capturedProfileUpdate: { display_name?: string; is_demo?: boolean } = {};
+      mockSupabase.from.mockImplementation((table: string) => {
+        if (table === "profiles") {
+          return {
+            update: vi.fn().mockImplementation((data: { display_name?: string; is_demo?: boolean }) => {
+              capturedProfileUpdate = data;
+              return {
+                eq: vi.fn().mockReturnValue({
+                  select: vi.fn().mockReturnValue({
+                    single: vi.fn().mockResolvedValue({
+                      data: { id: mockUserId, ...data },
+                      error: null,
+                    }),
+                  }),
+                }),
+              };
+            }),
+          };
+        }
+        if (table === "groups") {
+          return {
+            insert: vi.fn().mockReturnValue({
+              select: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: { id: "group-123", name: "デモ用シェアハウス" },
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+        if (table === "group_members") {
+          return {
+            insert: vi.fn().mockResolvedValue({ data: {}, error: null }),
+          };
+        }
+        if (table === "demo_sessions") {
+          return {
+            insert: vi.fn().mockReturnValue({
+              select: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: { id: "session-123", expires_at: new Date().toISOString() },
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+        return { insert: vi.fn(), update: vi.fn() };
+      });
+
+      await createDemoSession(mockSupabase as never);
+
+      expect(capturedProfileUpdate.is_demo).toBe(true);
+      expect(capturedProfileUpdate.display_name).toBe("デモユーザー");
+    });
+
     it("作成されたデモグループに適切な名前が設定されている", async () => {
       const mockUserId = "demo-user-123";
 

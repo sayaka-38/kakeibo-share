@@ -2,6 +2,10 @@ import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
 import PaymentForm from "@/components/PaymentForm";
 import type { Profile, Group, Category } from "@/types/database";
+import type {
+  GroupMembershipWithGroupResult,
+  MemberWithProfileResult,
+} from "@/types/query-results";
 
 export default async function NewPaymentPage() {
   const supabase = await createClient();
@@ -11,11 +15,6 @@ export default async function NewPaymentPage() {
   } = await supabase.auth.getUser();
 
   // Get user's groups
-  type GroupMembershipResult = {
-    group_id: string;
-    groups: Group | null;
-  };
-
   const { data: groupMemberships } = (await supabase
     .from("group_members")
     .select(
@@ -24,7 +23,7 @@ export default async function NewPaymentPage() {
       groups (*)
     `
     )
-    .eq("user_id", user?.id || "")) as { data: GroupMembershipResult[] | null };
+    .eq("user_id", user?.id || "")) as { data: GroupMembershipWithGroupResult<Group>[] | null };
 
   const groups =
     groupMemberships
@@ -43,10 +42,6 @@ export default async function NewPaymentPage() {
     )) as { data: Category[] | null };
 
   // Get members for each group
-  type MemberResult = {
-    profiles: Profile | null;
-  };
-
   const members: { [groupId: string]: Profile[] } = {};
 
   for (const group of groups) {
@@ -57,7 +52,7 @@ export default async function NewPaymentPage() {
         profiles (*)
       `
       )
-      .eq("group_id", group.id)) as { data: MemberResult[] | null };
+      .eq("group_id", group.id)) as { data: MemberWithProfileResult<Profile>[] | null };
 
     members[group.id] =
       groupMembers
