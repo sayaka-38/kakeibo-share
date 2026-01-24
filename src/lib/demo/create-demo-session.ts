@@ -53,6 +53,7 @@ export async function createDemoSession(
       await supabase.auth.signInAnonymously();
 
     if (authError || !authData.user) {
+      console.error("Demo auth error:", authError);
       return {
         success: false,
         error: {
@@ -65,18 +66,16 @@ export async function createDemoSession(
 
     const userId = authData.user.id;
 
-    // 2. プロフィール作成
+    // 2. プロフィール取得（トリガーで自動作成済み）& 表示名を更新
     const { data: profileData, error: profileError } = await supabase
       .from("profiles")
-      .insert({
-        id: userId,
-        email: `${userId}@demo.kakeibo.local`,
-        display_name: "デモユーザー",
-      })
+      .update({ display_name: "デモユーザー" })
+      .eq("id", userId)
       .select()
       .single();
 
     if (profileError || !profileData) {
+      console.error("Demo profile error:", profileError);
       return {
         success: false,
         error: {
@@ -92,12 +91,13 @@ export async function createDemoSession(
       .insert({
         name: "デモ用シェアハウス",
         description: "デモ体験用のサンプルグループです",
-        created_by: userId,
+        owner_id: userId,
       })
       .select()
       .single();
 
     if (groupError || !groupData) {
+      console.error("Demo group error:", groupError);
       return {
         success: false,
         error: {
@@ -128,6 +128,7 @@ export async function createDemoSession(
       .single();
 
     if (sessionError || !sessionData) {
+      console.error("Demo session error:", sessionError);
       return {
         success: false,
         error: {

@@ -1,9 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import {
-  createDemoSession,
-  type CreateDemoSessionResult,
-  type DemoSessionError,
-} from "@/lib/demo/create-demo-session";
+import { createDemoSession } from "@/lib/demo/create-demo-session";
 
 // Supabase クライアントのモック型
 type MockSupabaseClient = {
@@ -20,6 +16,38 @@ function createMockSupabase(): MockSupabaseClient {
       signInAnonymously: vi.fn(),
     },
     from: vi.fn(),
+  };
+}
+
+// profiles の update モックを生成するヘルパー（成功）
+function createProfileUpdateMock(userId: string) {
+  return {
+    update: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: { id: userId, display_name: "デモユーザー" },
+            error: null,
+          }),
+        }),
+      }),
+    }),
+  };
+}
+
+// profiles の update モックを生成するヘルパー（失敗）
+function createProfileUpdateErrorMock() {
+  return {
+    update: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: null,
+            error: { message: "Update failed" },
+          }),
+        }),
+      }),
+    }),
   };
 }
 
@@ -64,10 +92,10 @@ describe("Demo Session Creation - デモセッション作成", () => {
   });
 
   // ============================================
-  // 異常系：プロフィール作成の失敗
+  // 異常系：プロフィール更新の失敗
   // ============================================
-  describe("プロフィール作成の失敗ハンドリング", () => {
-    it("プロフィール作成が失敗した場合エラーを返す", async () => {
+  describe("プロフィール更新の失敗ハンドリング", () => {
+    it("プロフィール更新が失敗した場合エラーを返す", async () => {
       mockSupabase.auth.signInAnonymously.mockResolvedValue({
         data: {
           user: { id: "demo-user-123" },
@@ -76,16 +104,7 @@ describe("Demo Session Creation - デモセッション作成", () => {
         error: null,
       });
 
-      // profiles テーブルへの insert が失敗
-      const mockInsert = vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: null,
-            error: { message: "Insert failed" },
-          }),
-        }),
-      });
-      mockSupabase.from.mockReturnValue({ insert: mockInsert });
+      mockSupabase.from.mockReturnValue(createProfileUpdateErrorMock());
 
       const result = await createDemoSession(mockSupabase as never);
 
@@ -110,20 +129,9 @@ describe("Demo Session Creation - デモセッション作成", () => {
         error: null,
       });
 
-      // profiles 作成成功、groups 作成失敗
-      let callCount = 0;
       mockSupabase.from.mockImplementation((table: string) => {
         if (table === "profiles") {
-          return {
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: { id: "demo-user-123", email: "demo@example.com" },
-                  error: null,
-                }),
-              }),
-            }),
-          };
+          return createProfileUpdateMock("demo-user-123");
         }
         if (table === "groups") {
           return {
@@ -137,7 +145,7 @@ describe("Demo Session Creation - デモセッション作成", () => {
             }),
           };
         }
-        return { insert: vi.fn() };
+        return { insert: vi.fn(), update: vi.fn() };
       });
 
       const result = await createDemoSession(mockSupabase as never);
@@ -165,16 +173,7 @@ describe("Demo Session Creation - デモセッション作成", () => {
 
       mockSupabase.from.mockImplementation((table: string) => {
         if (table === "profiles") {
-          return {
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: { id: "demo-user-123" },
-                  error: null,
-                }),
-              }),
-            }),
-          };
+          return createProfileUpdateMock("demo-user-123");
         }
         if (table === "groups") {
           return {
@@ -208,7 +207,7 @@ describe("Demo Session Creation - デモセッション作成", () => {
             }),
           };
         }
-        return { insert: vi.fn() };
+        return { insert: vi.fn(), update: vi.fn() };
       });
 
       const result = await createDemoSession(mockSupabase as never);
@@ -270,20 +269,7 @@ describe("Demo Session Creation - デモセッション作成", () => {
 
       mockSupabase.from.mockImplementation((table: string) => {
         if (table === "profiles") {
-          return {
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: {
-                    id: mockUserId,
-                    email: `${mockUserId}@demo.kakeibo.local`,
-                    display_name: "デモユーザー",
-                  },
-                  error: null,
-                }),
-              }),
-            }),
-          };
+          return createProfileUpdateMock(mockUserId);
         }
         if (table === "groups") {
           return {
@@ -327,7 +313,7 @@ describe("Demo Session Creation - デモセッション作成", () => {
             }),
           };
         }
-        return { insert: vi.fn() };
+        return { insert: vi.fn(), update: vi.fn() };
       });
 
       const result = await createDemoSession(mockSupabase as never);
@@ -353,16 +339,7 @@ describe("Demo Session Creation - デモセッション作成", () => {
       let capturedGroupName = "";
       mockSupabase.from.mockImplementation((table: string) => {
         if (table === "profiles") {
-          return {
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: { id: mockUserId },
-                  error: null,
-                }),
-              }),
-            }),
-          };
+          return createProfileUpdateMock(mockUserId);
         }
         if (table === "groups") {
           return {
@@ -389,14 +366,14 @@ describe("Demo Session Creation - デモセッション作成", () => {
             insert: vi.fn().mockReturnValue({
               select: vi.fn().mockReturnValue({
                 single: vi.fn().mockResolvedValue({
-                  data: { id: "session-123" },
+                  data: { id: "session-123", expires_at: new Date().toISOString() },
                   error: null,
                 }),
               }),
             }),
           };
         }
-        return { insert: vi.fn() };
+        return { insert: vi.fn(), update: vi.fn() };
       });
 
       await createDemoSession(mockSupabase as never);

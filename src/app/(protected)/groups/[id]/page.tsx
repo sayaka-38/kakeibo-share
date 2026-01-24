@@ -23,7 +23,7 @@ export default async function GroupDetailPage({ params }: Props) {
     id: string;
     name: string;
     description: string | null;
-    created_by: string;
+    owner_id: string;
     invite_code: string;
     created_at: string;
     updated_at: string;

@@ -24,6 +24,22 @@ function createMockSupabase(): MockSupabaseClient {
   };
 }
 
+// profiles の update モックを生成するヘルパー
+function createProfileUpdateMock(userId: string) {
+  return {
+    update: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: { id: userId, display_name: "デモユーザー" },
+            error: null,
+          }),
+        }),
+      }),
+    }),
+  };
+}
+
 describe("Demo Flow Integration - デモフロー統合テスト", () => {
   let mockSupabase: MockSupabaseClient;
 
@@ -33,7 +49,7 @@ describe("Demo Flow Integration - デモフロー統合テスト", () => {
   });
 
   describe("グループ作成時のカラム名検証", () => {
-    it("グループ作成時に created_by カラムが使用される", async () => {
+    it("グループ作成時に owner_id カラムが使用される", async () => {
       const userId = "demo-user-123";
       let capturedGroupInsertData: Record<string, unknown> = {};
 
@@ -47,16 +63,7 @@ describe("Demo Flow Integration - デモフロー統合テスト", () => {
 
       mockSupabase.from.mockImplementation((table: string) => {
         if (table === "profiles") {
-          return {
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: { id: userId },
-                  error: null,
-                }),
-              }),
-            }),
-          };
+          return createProfileUpdateMock(userId);
         }
         if (table === "groups") {
           return {
@@ -90,17 +97,17 @@ describe("Demo Flow Integration - デモフロー統合テスト", () => {
             }),
           };
         }
-        return { insert: vi.fn() };
+        return { insert: vi.fn(), update: vi.fn() };
       });
 
       await createDemoSession(mockSupabase as never);
 
-      // created_by カラムが使用されていることを確認
-      expect(capturedGroupInsertData).toHaveProperty("created_by");
-      expect(capturedGroupInsertData.created_by).toBe(userId);
+      // owner_id カラムが使用されていることを確認
+      expect(capturedGroupInsertData).toHaveProperty("owner_id");
+      expect(capturedGroupInsertData.owner_id).toBe(userId);
 
-      // owner_id が使用されていないことを確認
-      expect(capturedGroupInsertData).not.toHaveProperty("owner_id");
+      // created_by が使用されていないことを確認（DBは owner_id）
+      expect(capturedGroupInsertData).not.toHaveProperty("created_by");
     });
 
     it("invite_code は自動生成されるため明示的に指定しない", async () => {
@@ -117,16 +124,7 @@ describe("Demo Flow Integration - デモフロー統合テスト", () => {
 
       mockSupabase.from.mockImplementation((table: string) => {
         if (table === "profiles") {
-          return {
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: { id: userId },
-                  error: null,
-                }),
-              }),
-            }),
-          };
+          return createProfileUpdateMock(userId);
         }
         if (table === "groups") {
           return {
@@ -160,7 +158,7 @@ describe("Demo Flow Integration - デモフロー統合テスト", () => {
             }),
           };
         }
-        return { insert: vi.fn() };
+        return { insert: vi.fn(), update: vi.fn() };
       });
 
       await createDemoSession(mockSupabase as never);
@@ -187,16 +185,7 @@ describe("Demo Flow Integration - デモフロー統合テスト", () => {
 
       mockSupabase.from.mockImplementation((table: string) => {
         if (table === "profiles") {
-          return {
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: { id: userId, email: `${userId}@demo.kakeibo.local` },
-                  error: null,
-                }),
-              }),
-            }),
-          };
+          return createProfileUpdateMock(userId);
         }
         if (table === "groups") {
           return {
@@ -236,7 +225,7 @@ describe("Demo Flow Integration - デモフロー統合テスト", () => {
             }),
           };
         }
-        return { insert: vi.fn() };
+        return { insert: vi.fn(), update: vi.fn() };
       });
 
       const result = await createDemoSession(mockSupabase as never);

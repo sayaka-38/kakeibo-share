@@ -40,7 +40,7 @@ export interface Database {
           id: string;
           name: string;
           description: string | null;
-          created_by: string;
+          owner_id: string;
           invite_code: string;
           created_at: string;
           updated_at: string;
@@ -49,7 +49,7 @@ export interface Database {
           id?: string;
           name: string;
           description?: string | null;
-          created_by: string;
+          owner_id: string;
           invite_code?: string;
           created_at?: string;
           updated_at?: string;
@@ -58,7 +58,7 @@ export interface Database {
           id?: string;
           name?: string;
           description?: string | null;
-          created_by?: string;
+          owner_id?: string;
           invite_code?: string;
           created_at?: string;
           updated_at?: string;
