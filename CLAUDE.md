@@ -69,6 +69,48 @@ src/
 - **型による制約**: `string` より `"owner" | "member"` のようなリテラル型
 - **副作用の分離**: 純粋関数と副作用を持つ関数を明確に分ける
 
+### 4. 堅実な技術選択（Proven Patterns First）
+
+**Server Actions は使用禁止。API Routes を優先する。**
+
+Next.js の Server Actions は開発体験において不安定な挙動（"Invalid Server Actions request" エラー等）が確認されているため、本プロジェクトでは使用しない。
+
+| パターン | 採用可否 | 理由 |
+|---------|---------|------|
+| **API Routes** (`app/api/*/route.ts`) | ✅ 推奨 | 実績があり、デバッグしやすく、挙動が予測可能 |
+| **Server Actions** (`"use server"`) | ❌ 禁止 | 不安定な挙動が確認されており、トラブルシュートが困難 |
+| **Client-side fetch** | ✅ 推奨 | API Routes と組み合わせて使用 |
+
+**API Route の標準パターン:**
+```typescript
+// src/app/api/[resource]/[action]/route.ts
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+
+export async function POST(request: Request) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // ビジネスロジック実行
+  // ...
+
+  return NextResponse.json({ success: true });
+}
+```
+
+**Client Component からの呼び出し:**
+```typescript
+const response = await fetch("/api/resource/action", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(data),
+});
+```
+
 ---
 
 ## テスト駆動開発（TDD）
