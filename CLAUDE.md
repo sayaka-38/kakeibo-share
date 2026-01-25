@@ -224,10 +224,17 @@ npm run test:run -- --watch  # テストをウォッチモードで実行しな�
 | **ブランチ命名** | 新機能: `feature/xxx`、バグ修正: `fix/xxx` |
 | **main への直接プッシュ禁止** | 必ず feature/fix ブランチから PR を作成 |
 | **マージ前の確認** | テスト通過、レビュー承認を経てマージ |
+| **Step 開始時のブランチ作成** | 新しい Step や Phase を開始する際は、必ず専用のブランチを作成してから作業を開始する |
+
+**ブランチ作成タイミング:**
+```
+Phase/Step 開始時 → git checkout -b feature/phaseX-Y-description
+```
 
 **禁止事項:**
 - `main` ブランチへの直接コミット・プッシュ
 - レビューなしでのマージ
+- Step 開始時にブランチを切らずに作業を進めること
 
 ### 6. Demo Mode Policy（本番常設型デモ）
 
