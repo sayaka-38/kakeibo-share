@@ -6,13 +6,19 @@
 
 ## 最終更新日
 
-2026-01-25（Phase 2-2 Step 1-4 UIコンポーネント統合完了）
+2026-01-25（Phase 2-2 完了、PR #7 作成）
 
 ---
 
 ## 完了した機能
 
-### Phase 2-2 Step 2-4: UIコンポーネント統合（今セッション完了）
+### Phase 2-2 最終 Step: Suspense スケルトン表示（今セッション完了）
+
+- `RecentPaymentList`: 非同期サーバーコンポーネント
+- グループ詳細ページで `Suspense` + `PaymentListSkeleton` 適用
+- PR #7 作成: https://github.com/sayaka-38/kakeibo-share/pull/7
+
+### Phase 2-2 Step 2-4: UIコンポーネント統合
 
 **概要**: 作成したコンポーネントを実際のフォーム・一覧に統合。
 
@@ -96,8 +102,8 @@
 
 ## テスト状況
 
-- **286件のテストがパス** ✅
-- 全テスト合格（+19件追加）
+- **292件のテストがパス** ✅
+- 全テスト合格（Phase 2-2 で +25件追加）
 
 ---
 
@@ -112,12 +118,22 @@
 
 ## 次のタスク
 
-### Phase 2-2 継続作業
+### Phase 2-2 完了 ✅
 
-- [x] Step 2: スケルトンの実際の画面への適用（PaymentListSkeleton 作成）
-- [x] Step 3: NumericKeypad を AmountField に統合（AmountFieldWithKeypad）
-- [x] Step 4: Button コンポーネントの既存フォームへの適用（InlinePaymentForm）
-- [ ] Step 5: Suspense でのスケルトン表示（サーバーコンポーネント対応）
+- [x] Step 1: 基本コンポーネント作成（Skeleton, Button, NumericKeypad）
+- [x] Step 2-4: コンポーネント統合（PaymentListSkeleton, AmountFieldWithKeypad, Button適用）
+- [x] Step 5: Suspense スケルトン表示（RecentPaymentList）
+- [x] PR #7 作成
+
+### Phase 2-3: 清算ロジック改善（次フェーズ候補）
+
+現状: `/settlement` ページに基本実装済み
+
+改善候補:
+- [ ] 清算ロジックをビジネスロジック層に分離
+- [ ] 清算計算のユニットテスト追加
+- [ ] グループ詳細ページに清算サマリー表示
+- [ ] 清算完了マーク機能
 
 ### 将来の機能要件
 
@@ -134,37 +150,27 @@
 
 *次回セッション開始時に参照すべき事項*
 
-- 現在のブランチ: `feature/phase2-2-ui`
-- コミット済み、未プッシュの変更あり
+- 現在のブランチ: `feature/phase2-2-ui`（PR #7 作成済み）
+- 次は PR マージ後、`main` から新ブランチを作成
 
 ### 今セッションの作業内容
 
-1. **Phase 2-2 Step 1: 基本コンポーネント作成**
-   - Skeleton, Button, NumericKeypad を TDD で作成
+1. **Phase 2-2 完了**
+   - Step 1: 基本コンポーネント作成（Skeleton, Button, NumericKeypad）
+   - Step 2-4: コンポーネント統合
+   - Step 5: Suspense スケルトン表示
+   - PR #7 作成
 
-2. **Phase 2-2 Step 2-4: コンポーネント統合**
-   - PaymentListSkeleton 作成
-   - InlinePaymentForm に Button 統合
-   - AmountFieldWithKeypad 作成（NumericKeypad 統合）
+### Phase 2-2 で追加したファイル
 
-### 技術的ノート
-
-| 項目 | 詳細 |
-|------|------|
-| **44px タッチターゲット** | Tailwind の `min-h-11` クラスで実現 |
-| **スケルトン設計** | Composition パターンで柔軟に組み合わせ可能 |
-| **NumericKeypad** | 先頭ゼロ防止、maxLength制限実装済み |
-| **AmountFieldWithKeypad** | フォーカスでキーパッド表示、確定で閉じる |
-
-### 変更ファイル一覧（Step 1-4 合計）
-
-| ファイル | 変更内容 |
+| カテゴリ | ファイル |
 |---------|---------|
-| `CLAUDE.md` | Step開始時ブランチ作成ルール追加 |
-| `src/components/ui/Skeleton.tsx` | 新規作成 |
-| `src/components/ui/Button.tsx` | 新規作成 |
-| `src/components/ui/NumericKeypad.tsx` | 新規作成 |
-| `src/components/payment-list/PaymentListSkeleton.tsx` | 新規作成 |
-| `src/components/payment-form/fields/AmountFieldWithKeypad.tsx` | 新規作成 |
-| `src/components/payment-form/InlinePaymentForm.tsx` | Button 統合 |
-| `src/test/components/*.test.tsx` | 各コンポーネントのテスト追加 |
+| **UIコンポーネント** | `Skeleton.tsx`, `Button.tsx`, `NumericKeypad.tsx` |
+| **支払い一覧** | `PaymentListSkeleton.tsx`, `RecentPaymentList.tsx` |
+| **フォーム** | `AmountFieldWithKeypad.tsx` |
+| **テスト** | 各コンポーネントのテスト（+25件） |
+
+### 次のアクション
+
+1. PR #7 のレビュー・マージ
+2. Phase 2-3 着手（清算ロジック改善）または他の優先タスク
