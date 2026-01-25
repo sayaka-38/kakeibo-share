@@ -275,6 +275,72 @@ describe("calculateBalances - 残高計算（エクセル方式）", () => {
     });
   });
 
+  describe("極端なケース - 1円を分ける", () => {
+    it("1円を2人で割る → 各0円（全額が端数持ち越し）", () => {
+      const members: Member[] = [
+        { id: "user-a", displayName: "A" },
+        { id: "user-b", displayName: "B" },
+      ];
+      const payments: Payment[] = [
+        { id: "pay-1", payerId: "user-a", amount: 1 },
+      ];
+
+      const result = calculateBalances(members, payments);
+
+      // 1 ÷ 2 = 0.5 → Math.floor(0.5) = 0
+      // 各自の負担額は0円（整数）
+      expect(result.find((b) => b.memberId === "user-a")!.totalOwed).toBe(0);
+      expect(result.find((b) => b.memberId === "user-b")!.totalOwed).toBe(0);
+
+      // A: paid=1, owed=0 → balance=1
+      // B: paid=0, owed=0 → balance=0
+      expect(result.find((b) => b.memberId === "user-a")!.balance).toBe(1);
+      expect(result.find((b) => b.memberId === "user-b")!.balance).toBe(0);
+    });
+
+    it("1円を3人で割る → 各0円（全額が端数持ち越し）", () => {
+      const members: Member[] = [
+        { id: "user-a", displayName: "A" },
+        { id: "user-b", displayName: "B" },
+        { id: "user-c", displayName: "C" },
+      ];
+      const payments: Payment[] = [
+        { id: "pay-1", payerId: "user-a", amount: 1 },
+      ];
+
+      const result = calculateBalances(members, payments);
+
+      // 1 ÷ 3 = 0.33... → Math.floor = 0
+      for (const balance of result) {
+        expect(balance.totalOwed).toBe(0);
+      }
+
+      // 全額が端数持ち越し
+      expect(result.find((b) => b.memberId === "user-a")!.balance).toBe(1);
+    });
+
+    it("3円を2人で割る → 各1円（1円が端数持ち越し）", () => {
+      const members: Member[] = [
+        { id: "user-a", displayName: "A" },
+        { id: "user-b", displayName: "B" },
+      ];
+      const payments: Payment[] = [
+        { id: "pay-1", payerId: "user-a", amount: 3 },
+      ];
+
+      const result = calculateBalances(members, payments);
+
+      // 3 ÷ 2 = 1.5 → Math.floor = 1
+      expect(result.find((b) => b.memberId === "user-a")!.totalOwed).toBe(1);
+      expect(result.find((b) => b.memberId === "user-b")!.totalOwed).toBe(1);
+
+      // A: paid=3, owed=1 → balance=2
+      // B: paid=0, owed=1 → balance=-1
+      expect(result.find((b) => b.memberId === "user-a")!.balance).toBe(2);
+      expect(result.find((b) => b.memberId === "user-b")!.balance).toBe(-1);
+    });
+  });
+
   describe("残高合計の検証", () => {
     it("全メンバーの残高合計は端数分だけずれる（切り捨てによる）", () => {
       const members: Member[] = [
