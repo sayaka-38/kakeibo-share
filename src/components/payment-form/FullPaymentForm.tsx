@@ -54,8 +54,7 @@ export default function FullPaymentForm({
     const formData = form.getFormData();
 
     // Create payment
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: payment, error: paymentError } = await (supabase as any)
+    const { data: payment, error: paymentError } = await supabase
       .from("payments")
       .insert({
         group_id: groupId,
@@ -91,8 +90,7 @@ export default function FullPaymentForm({
             }));
 
     if (splits.length > 0) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase as any).from("payment_splits").insert(splits);
+      await supabase.from("payment_splits").insert(splits);
       // 端数は仕様なので、分割情報の保存結果は無視して成功扱い
     }
 
