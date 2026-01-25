@@ -6,13 +6,40 @@
 
 ## 最終更新日
 
-2026-01-25（Phase 2-3 Step 1-3 完了）
+2026-01-25（Phase 2-3 Step 1-5 完了）
 
 ---
 
 ## 完了した機能
 
-### Phase 2-3 Step 1-3: 清算ロジック分離（今セッション完了）
+### Phase 2-3 Step 4-5: 清算ページリファクタリング（今セッション完了）
+
+**概要**: 新ロジックを清算ページに適用し、「エクセル運用の明細の透明性」を再現。
+
+#### 修正内容
+
+| ファイル | 変更内容 |
+|---------|---------|
+| `FullPaymentForm.tsx` | `splitEqually` を使用して端数切り捨て |
+| `GroupPaymentForm.tsx` | `splitEqually` を使用して端数切り捨て |
+| `settlement/page.tsx` | 新ロジック適用 + UI拡張 |
+
+#### 解決した問題
+
+- **`invalid input syntax for type integer`**: 支払い登録時の小数を `floorToYen` / `splitEqually` で整数化
+
+#### 新機能（清算ページ）
+
+1. **計算プロセス表示**: 総額 ÷ 人数 ＝ 負担額を明示
+2. **端数持ち越し表示**: `unsettledRemainder` を「次回清算時に調整」として表示
+3. **支払い履歴（時系列リスト）**: 日付・品目・支払者・金額のテーブル表示
+
+#### i18n 追加キー
+
+- `settlement.paymentHistory`, `settlement.calculationBreakdown`, `settlement.perPerson`
+- `settlement.memberCount`, `settlement.unsettledRemainder`, `settlement.owed`
+
+### Phase 2-3 Step 1-3: 清算ロジック分離
 
 **概要**: 清算ロジックを `src/lib/settlement/` に分離し、TDD で実装。
 
@@ -127,8 +154,8 @@
 
 ## テスト状況
 
-- **292件のテストがパス** ✅
-- 全テスト合格（Phase 2-2 で +25件追加）
+- **330件のテストがパス** ✅
+- 全テスト合格
 
 ---
 
@@ -138,6 +165,7 @@
 
 - ~~Server Actions の不安定な挙動~~ → API Routes に移行で解決
 - ~~schema-consistency.test.ts の失敗~~ → 解決済み
+- ~~`invalid input syntax for type integer`~~ → `floorToYen` / `splitEqually` で解決
 
 ---
 
@@ -148,8 +176,8 @@
 - [x] Step 1: 端数処理 (`rounding.ts`)
 - [x] Step 2: 残高計算 (`calculate-balances.ts`)
 - [x] Step 3: 清算提案 (`suggest-settlements.ts`)
-- [ ] Step 4: 既存ページのリファクタリング（`settlement/page.tsx` を新ロジックに置き換え）
-- [ ] Step 5: グループ詳細ページに清算サマリー表示
+- [x] Step 4: 登録処理の端数修正 + 清算ページリファクタリング
+- [x] Step 5: 時系列リスト・計算プロセス・端数持ち越し表示
 - [ ] Step 6: PR 作成
 
 ### 将来の機能要件
@@ -168,22 +196,27 @@
 *次回セッション開始時に参照すべき事項*
 
 - 現在のブランチ: `feature/phase2-3-settlement`
-- Phase 2-3 Step 1-3 完了、Step 4-6 残り
+- Phase 2-3 Step 1-5 完了、Step 6（PR作成）残り
 
 ### 今セッションの作業内容
 
-1. **Phase 2-3 Step 1-3 完了**
-   - Step 1: 端数処理 (`rounding.ts`) - 21テスト
-   - Step 2: 残高計算 (`calculate-balances.ts`) - 8テスト
-   - Step 3: 清算提案 (`suggest-settlements.ts`) - 9テスト
+1. **Step 4: 登録処理の端数修正**
+   - `FullPaymentForm.tsx`: `splitEqually` で均等分割を整数化
+   - `GroupPaymentForm.tsx`: 同様に修正
+   - `invalid input syntax for type integer` エラー解消
+
+2. **Step 5: 清算ページリファクタリング**
+   - 新ロジック (`calculateBalances`, `suggestSettlements`) を適用
+   - 計算プロセス表示（総額÷人数＝負担額）
+   - 端数持ち越し表示 (`unsettledRemainder`)
+   - 支払い履歴（時系列リスト）
 
 ### 仕様決定事項
 
 - **端数処理**: 切り捨て（floor）
 - **未清算残高**: 余りは `unsettledRemainder` として返却、次回に持ち越し
+- **赤字表示回避**: マイナス残高は `text-amber-600`（非攻撃的な色）
 
 ### 次のアクション
 
-1. Step 4: `settlement/page.tsx` を新ロジックでリファクタリング
-2. Step 5: グループ詳細ページに清算サマリー表示
-3. Step 6: PR 作成
+1. Step 6: PR 作成

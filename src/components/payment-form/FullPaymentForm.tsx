@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { t } from "@/lib/i18n";
 import { usePaymentForm } from "./hooks/usePaymentForm";
 import { AmountField, DescriptionField, DateField } from "./fields";
+import { splitEqually, floorToYen } from "@/lib/settlement";
 import type { Category, Group, Profile } from "@/types/database";
 
 type FullPaymentFormProps = {
@@ -76,17 +77,20 @@ export default function FullPaymentForm({
     // Create payment splits
     const splits =
       splitType === "equal"
-        ? currentMembers.map((member) => ({
-            payment_id: payment.id,
-            user_id: member.id,
-            amount: formData.amount / currentMembers.length,
-          }))
+        ? (() => {
+            const { amountPerPerson } = splitEqually(formData.amount, currentMembers.length);
+            return currentMembers.map((member) => ({
+              payment_id: payment.id,
+              user_id: member.id,
+              amount: amountPerPerson,
+            }));
+          })()
         : currentMembers
             .filter((member) => customSplits[member.id])
             .map((member) => ({
               payment_id: payment.id,
               user_id: member.id,
-              amount: parseFloat(customSplits[member.id]) || 0,
+              amount: floorToYen(parseFloat(customSplits[member.id]) || 0),
             }));
 
     if (splits.length > 0) {
