@@ -6,35 +6,26 @@ import { AmountField, DescriptionField, DateField } from "@/components/payment-f
 import { t } from "@/lib/i18n";
 
 // ============================================
-// React.memo によるメモ化テスト
+// フィールドコンポーネントの再レンダリング耐性テスト
 // ============================================
-describe("フィールドコンポーネントのメモ化", () => {
-  it("AmountField は同一propsで再レンダリングしない", () => {
+describe("フィールドコンポーネントの再レンダリング耐性", () => {
+  it("AmountField は再レンダリング後も値が維持される", () => {
     const onChange = vi.fn();
-    const renderCount = { current: 0 };
-
-    // レンダリング回数を追跡するためのラッパー
-    const TrackedAmountField = (props: React.ComponentProps<typeof AmountField>) => {
-      renderCount.current++;
-      return <AmountField {...props} />;
-    };
-
     const { rerender } = render(
-      <TrackedAmountField value="100" onChange={onChange} />
+      <AmountField value="100" onChange={onChange} />
     );
 
-    expect(renderCount.current).toBe(1);
+    // input[type=number] でも value は文字列として取得される
+    expect(screen.getByLabelText(t("payments.form.amount"))).toHaveValue("100");
 
     // 同じpropsで再レンダリング
-    rerender(<TrackedAmountField value="100" onChange={onChange} />);
+    rerender(<AmountField value="100" onChange={onChange} />);
 
-    // memo化されていれば、再レンダリングは発生しない
-    // ただし、TrackedAmountFieldは memo化されていないので常に再レンダリングされる
-    // 実際のテストはAmountField自体のmemo化を確認する別の方法が必要
-    expect(renderCount.current).toBe(2); // 現状は再レンダリングされる
+    // 再レンダリング後も値が維持される
+    expect(screen.getByLabelText(t("payments.form.amount"))).toHaveValue("100");
   });
 
-  it("DescriptionField は同一propsで再レンダリングしない", () => {
+  it("DescriptionField は再レンダリング後も値が維持される", () => {
     const onChange = vi.fn();
     const { rerender } = render(
       <DescriptionField value="test" onChange={onChange} />
@@ -46,7 +37,7 @@ describe("フィールドコンポーネントのメモ化", () => {
     expect(screen.getByLabelText(t("payments.form.description"))).toHaveValue("test");
   });
 
-  it("DateField は同一propsで再レンダリングしない", () => {
+  it("DateField は再レンダリング後も値が維持される", () => {
     const onChange = vi.fn();
     const { rerender } = render(
       <DateField value="2024-01-15" onChange={onChange} />

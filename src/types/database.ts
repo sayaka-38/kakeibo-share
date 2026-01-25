@@ -297,6 +297,45 @@ export interface Database {
           }
         ];
       };
+      demo_sessions: {
+        Row: {
+          id: string;
+          user_id: string;
+          group_id: string;
+          expires_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          group_id: string;
+          expires_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          group_id?: string;
+          expires_at?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "demo_sessions_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "demo_sessions_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "groups";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -321,6 +360,7 @@ export type Category = Database["public"]["Tables"]["categories"]["Row"];
 export type Payment = Database["public"]["Tables"]["payments"]["Row"];
 export type PaymentSplit = Database["public"]["Tables"]["payment_splits"]["Row"];
 export type Settlement = Database["public"]["Tables"]["settlements"]["Row"];
+export type DemoSession = Database["public"]["Tables"]["demo_sessions"]["Row"];
 
 // Insert types
 export type ProfileInsert = Database["public"]["Tables"]["profiles"]["Insert"];
@@ -330,6 +370,7 @@ export type CategoryInsert = Database["public"]["Tables"]["categories"]["Insert"
 export type PaymentInsert = Database["public"]["Tables"]["payments"]["Insert"];
 export type PaymentSplitInsert = Database["public"]["Tables"]["payment_splits"]["Insert"];
 export type SettlementInsert = Database["public"]["Tables"]["settlements"]["Insert"];
+export type DemoSessionInsert = Database["public"]["Tables"]["demo_sessions"]["Insert"];
 
 // Extended types with relations
 export type PaymentWithDetails = Payment & {

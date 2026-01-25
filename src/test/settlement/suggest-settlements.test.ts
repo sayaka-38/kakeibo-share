@@ -1,9 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  suggestSettlements,
-  type SettlementSuggestion,
-  type SettlementResult,
-} from "@/lib/settlement/suggest-settlements";
+import { suggestSettlements } from "@/lib/settlement/suggest-settlements";
 import type { Balance } from "@/lib/settlement/calculate-balances";
 
 describe("suggestSettlements - 清算提案", () => {

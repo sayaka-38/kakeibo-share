@@ -72,7 +72,7 @@ export function SkeletonText({
   );
 }
 
-interface SkeletonCardProps extends HTMLAttributes<HTMLDivElement> {}
+type SkeletonCardProps = HTMLAttributes<HTMLDivElement>;
 
 export function SkeletonCard({ className = "", ...props }: SkeletonCardProps) {
   return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import { usePaymentForm, type PaymentFormData } from "./hooks/usePaymentForm";
 import { AmountFieldWithKeypad } from "./fields";
 import { Button } from "@/components/ui/Button";
@@ -43,17 +43,6 @@ export function InlinePaymentForm({ onSubmit }: InlinePaymentFormProps) {
     }
   }, [showSuccess]);
 
-  // エラー時に最初のエラーフィールドにフォーカス
-  const focusFirstError = useCallback((errors: typeof form.errors) => {
-    if (errors.amount) {
-      // AmountFieldWithKeypad は id="payment-amount" を使用
-      document.getElementById("payment-amount")?.focus();
-    } else if (errors.description) {
-      descriptionRef.current?.focus();
-    } else if (errors.paymentDate) {
-      dateRef.current?.focus();
-    }
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,7 +52,13 @@ export function InlinePaymentForm({ onSubmit }: InlinePaymentFormProps) {
 
     if (!isValid) {
       // エラー時に最初のエラーフィールドにフォーカス
-      focusFirstError(form.errors);
+      if (form.errors.amount) {
+        document.getElementById("payment-amount")?.focus();
+      } else if (form.errors.description) {
+        descriptionRef.current?.focus();
+      } else if (form.errors.paymentDate) {
+        dateRef.current?.focus();
+      }
       return;
     }
 
@@ -79,9 +74,15 @@ export function InlinePaymentForm({ onSubmit }: InlinePaymentFormProps) {
   // バリデーション後にエラーがあればフォーカス
   useEffect(() => {
     if (Object.keys(form.errors).length > 0) {
-      focusFirstError(form.errors);
+      if (form.errors.amount) {
+        document.getElementById("payment-amount")?.focus();
+      } else if (form.errors.description) {
+        descriptionRef.current?.focus();
+      } else if (form.errors.paymentDate) {
+        dateRef.current?.focus();
+      }
     }
-  }, [form.errors, focusFirstError]);
+  }, [form.errors]);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">

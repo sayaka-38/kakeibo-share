@@ -29,9 +29,19 @@ export default async function ProtectedLayout({
   // デモユーザーかどうかを判定（is_demoフラグで判定）
   const isDemo = profile?.is_demo ?? false;
 
-  // デモセッションの有効期限を取得（将来的にdemo_sessionsテーブルから取得）
-  // 現時点では24時間後を仮定
-  const demoExpiresAt = isDemo ? new Date(Date.now() + 24 * 60 * 60 * 1000) : undefined;
+  // デモセッションの有効期限を demo_sessions テーブルから取得
+  let demoExpiresAt: Date | undefined;
+  if (isDemo) {
+    const { data: demoSession } = await supabase
+      .from("demo_sessions")
+      .select("expires_at")
+      .eq("user_id", user.id)
+      .single();
+
+    if (demoSession?.expires_at) {
+      demoExpiresAt = new Date(demoSession.expires_at);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
