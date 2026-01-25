@@ -16,7 +16,6 @@ type PaymentWithDetails = {
   description: string;
   payment_date: string;
   payer: { display_name: string | null; email: string } | null;
-  payment_splits: { user_id: string; amount: number }[] | null;
 };
 
 export default async function SettlementPage() {
@@ -85,6 +84,7 @@ export default async function SettlementPage() {
     }));
 
     // Get all payments for this group with payer info
+    // エクセル方式: payment_splits は使わず、総額のみで計算
     const { data: rawPayments } = (await supabase
       .from("payments")
       .select(
@@ -97,10 +97,6 @@ export default async function SettlementPage() {
         payer:profiles!payments_payer_id_fkey (
           display_name,
           email
-        ),
-        payment_splits (
-          user_id,
-          amount
         )
       `
       )
@@ -111,16 +107,11 @@ export default async function SettlementPage() {
 
     const payments = rawPayments || [];
 
-    // 支払いを新ロジックの型に変換
+    // 支払いを新ロジックの型に変換（エクセル方式: splitsは使わない）
     const paymentList: Payment[] = payments.map((p) => ({
       id: p.id,
       payerId: p.payer_id,
       amount: Number(p.amount),
-      splits:
-        p.payment_splits?.map((s) => ({
-          userId: s.user_id,
-          amount: Number(s.amount),
-        })) || [],
     }));
 
     // 新ロジックで残高計算

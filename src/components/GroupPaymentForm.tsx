@@ -5,7 +5,6 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { PaymentForm, type PaymentFormData } from "@/components/PaymentForm";
 import { t } from "@/lib/i18n";
-import { splitEqually } from "@/lib/settlement";
 
 type GroupPaymentFormProps = {
   groupId: string;
@@ -47,12 +46,14 @@ export function GroupPaymentForm({
       throw new Error(paymentError?.message);
     }
 
-    // 均等割り勘で分割データを登録（切り捨てで整数化）
-    const { amountPerPerson } = splitEqually(data.amount, memberIds.length);
+    // 均等割り勘で分割データを登録
+    // エクセル方式: 端数処理は清算時に行うため、ここでは切り捨てない
+    // DECIMAL(12,2) なので小数保存可能
+    const splitAmount = data.amount / memberIds.length;
     const splits = memberIds.map((userId) => ({
       payment_id: payment.id,
       user_id: userId,
-      amount: amountPerPerson,
+      amount: splitAmount,
     }));
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

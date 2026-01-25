@@ -13,12 +13,11 @@
 // 端数処理
 export { floorToYen, splitEqually, type SplitResult } from "./rounding";
 
-// 残高計算
+// 残高計算（エクセル方式: 全支払い合計後に1回だけ切り捨て）
 export {
   calculateBalances,
   type Member,
   type Payment,
-  type PaymentSplit,
   type Balance,
 } from "./calculate-balances";
 
