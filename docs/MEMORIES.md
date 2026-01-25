@@ -6,13 +6,38 @@
 
 ## 最終更新日
 
-2026-01-25（Phase 2-2 完了、PR #7 作成）
+2026-01-25（Phase 2-3 Step 1-3 完了）
 
 ---
 
 ## 完了した機能
 
-### Phase 2-2 最終 Step: Suspense スケルトン表示（今セッション完了）
+### Phase 2-3 Step 1-3: 清算ロジック分離（今セッション完了）
+
+**概要**: 清算ロジックを `src/lib/settlement/` に分離し、TDD で実装。
+
+#### 新規ファイル
+
+| ファイル | 説明 |
+|---------|------|
+| `rounding.ts` | 端数処理（切り捨て + 未清算残高） |
+| `calculate-balances.ts` | 残高計算 |
+| `suggest-settlements.ts` | 清算提案（最小回数アルゴリズム） |
+| `index.ts` | エクスポート |
+
+#### 仕様変更
+
+- **端数処理方針**: 特定個人に加算せず「切り捨て」
+- **未清算残高**: 余りは次回清算に持ち越し
+
+#### テスト追加
+
+- `rounding.test.ts`: 21件
+- `calculate-balances.test.ts`: 8件
+- `suggest-settlements.test.ts`: 9件
+- **合計**: 38件追加（プロジェクト合計 330件）
+
+### Phase 2-2 最終 Step: Suspense スケルトン表示
 
 - `RecentPaymentList`: 非同期サーバーコンポーネント
 - グループ詳細ページで `Suspense` + `PaymentListSkeleton` 適用
@@ -118,22 +143,14 @@
 
 ## 次のタスク
 
-### Phase 2-2 完了 ✅
+### Phase 2-3 進行中 🚧
 
-- [x] Step 1: 基本コンポーネント作成（Skeleton, Button, NumericKeypad）
-- [x] Step 2-4: コンポーネント統合（PaymentListSkeleton, AmountFieldWithKeypad, Button適用）
-- [x] Step 5: Suspense スケルトン表示（RecentPaymentList）
-- [x] PR #7 作成
-
-### Phase 2-3: 清算ロジック改善（次フェーズ候補）
-
-現状: `/settlement` ページに基本実装済み
-
-改善候補:
-- [ ] 清算ロジックをビジネスロジック層に分離
-- [ ] 清算計算のユニットテスト追加
-- [ ] グループ詳細ページに清算サマリー表示
-- [ ] 清算完了マーク機能
+- [x] Step 1: 端数処理 (`rounding.ts`)
+- [x] Step 2: 残高計算 (`calculate-balances.ts`)
+- [x] Step 3: 清算提案 (`suggest-settlements.ts`)
+- [ ] Step 4: 既存ページのリファクタリング（`settlement/page.tsx` を新ロジックに置き換え）
+- [ ] Step 5: グループ詳細ページに清算サマリー表示
+- [ ] Step 6: PR 作成
 
 ### 将来の機能要件
 
@@ -150,27 +167,23 @@
 
 *次回セッション開始時に参照すべき事項*
 
-- 現在のブランチ: `feature/phase2-2-ui`（PR #7 作成済み）
-- 次は PR マージ後、`main` から新ブランチを作成
+- 現在のブランチ: `feature/phase2-3-settlement`
+- Phase 2-3 Step 1-3 完了、Step 4-6 残り
 
 ### 今セッションの作業内容
 
-1. **Phase 2-2 完了**
-   - Step 1: 基本コンポーネント作成（Skeleton, Button, NumericKeypad）
-   - Step 2-4: コンポーネント統合
-   - Step 5: Suspense スケルトン表示
-   - PR #7 作成
+1. **Phase 2-3 Step 1-3 完了**
+   - Step 1: 端数処理 (`rounding.ts`) - 21テスト
+   - Step 2: 残高計算 (`calculate-balances.ts`) - 8テスト
+   - Step 3: 清算提案 (`suggest-settlements.ts`) - 9テスト
 
-### Phase 2-2 で追加したファイル
+### 仕様決定事項
 
-| カテゴリ | ファイル |
-|---------|---------|
-| **UIコンポーネント** | `Skeleton.tsx`, `Button.tsx`, `NumericKeypad.tsx` |
-| **支払い一覧** | `PaymentListSkeleton.tsx`, `RecentPaymentList.tsx` |
-| **フォーム** | `AmountFieldWithKeypad.tsx` |
-| **テスト** | 各コンポーネントのテスト（+25件） |
+- **端数処理**: 切り捨て（floor）
+- **未清算残高**: 余りは `unsettledRemainder` として返却、次回に持ち越し
 
 ### 次のアクション
 
-1. PR #7 のレビュー・マージ
-2. Phase 2-3 着手（清算ロジック改善）または他の優先タスク
+1. Step 4: `settlement/page.tsx` を新ロジックでリファクタリング
+2. Step 5: グループ詳細ページに清算サマリー表示
+3. Step 6: PR 作成
