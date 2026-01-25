@@ -66,20 +66,6 @@ export type MemberResult = {
 };
 
 /**
- * グループメンバー詳細のクエリ結果（role付き）
- * group_members.select("user_id, role, profiles(...)") の戻り値
- */
-export type MemberWithRoleResult = {
-  user_id: string;
-  role: "owner" | "member";
-  profiles: {
-    id: string;
-    display_name: string | null;
-    email: string;
-  } | null;
-};
-
-/**
  * グループメンバー詳細のクエリ結果（role + joined_at付き）
  * group_members.select("role, joined_at, profiles(...)") の戻り値
  */
@@ -90,39 +76,6 @@ export type GroupMemberDetailResult = {
     id: string;
     display_name: string | null;
     email: string;
-  } | null;
-};
-
-/**
- * 支払いのクエリ結果（清算計算用）
- * payments.select("id, payer_id, amount, payment_splits(user_id, amount)") の戻り値
- */
-export type PaymentForSettlementResult = {
-  id: string;
-  payer_id: string;
-  amount: number;
-  payment_splits: { user_id: string; amount: number }[] | null;
-};
-
-/**
- * 支払いのクエリ結果（履歴表示用）
- * payments.select("id, description, amount, payment_date, payer_id, profiles(...)") の戻り値
- */
-export type PaymentHistoryResult = {
-  id: string;
-  description: string;
-  amount: number;
-  payment_date: string;
-  payer_id: string;
-  profiles: {
-    id: string;
-    display_name: string | null;
-    email: string;
-  } | null;
-  categories: {
-    id: string;
-    name: string;
-    icon: string | null;
   } | null;
 };
 
