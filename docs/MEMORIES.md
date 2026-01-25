@@ -6,13 +6,30 @@
 
 ## 最終更新日
 
-2026-01-25（Phase 2-2 Step 1 UIコンポーネント実装完了）
+2026-01-25（Phase 2-2 Step 1-4 UIコンポーネント統合完了）
 
 ---
 
 ## 完了した機能
 
-### Phase 2-2 Step 1: UIコンポーネント追加（今セッション完了）
+### Phase 2-2 Step 2-4: UIコンポーネント統合（今セッション完了）
+
+**概要**: 作成したコンポーネントを実際のフォーム・一覧に統合。
+
+| 統合内容 | 詳細 |
+|---------|------|
+| **PaymentListSkeleton** | 支払い一覧のスケルトンローディング |
+| **Button → InlinePaymentForm** | 送信ボタンを 44px Button に置き換え |
+| **AmountFieldWithKeypad** | NumericKeypad 統合の金額入力フィールド |
+
+#### AmountFieldWithKeypad 機能
+
+- フォーカス時に NumericKeypad 表示
+- 確定キーでキーパッド閉じる
+- 直接入力も可能（後方互換性）
+- エラー表示対応
+
+### Phase 2-2 Step 1: UIコンポーネント追加
 
 **概要**: TDD で3つのUIコンポーネントを実装し、CLAUDE.md のワークフロールールを更新。
 
@@ -79,8 +96,8 @@
 
 ## テスト状況
 
-- **267件のテストがパス** ✅
-- 全テスト合格
+- **286件のテストがパス** ✅
+- 全テスト合格（+19件追加）
 
 ---
 
@@ -97,9 +114,10 @@
 
 ### Phase 2-2 継続作業
 
-- [ ] Step 2: スケルトンの実際の画面への適用
-- [ ] Step 3: NumericKeypad を AmountField に統合
-- [ ] Step 4: Button コンポーネントの既存フォームへの適用
+- [x] Step 2: スケルトンの実際の画面への適用（PaymentListSkeleton 作成）
+- [x] Step 3: NumericKeypad を AmountField に統合（AmountFieldWithKeypad）
+- [x] Step 4: Button コンポーネントの既存フォームへの適用（InlinePaymentForm）
+- [ ] Step 5: Suspense でのスケルトン表示（サーバーコンポーネント対応）
 
 ### 将来の機能要件
 
@@ -121,19 +139,13 @@
 
 ### 今セッションの作業内容
 
-1. **ブランチ `feature/phase2-2-ui` への移行**
-   - 既に作成済みのブランチに移動
+1. **Phase 2-2 Step 1: 基本コンポーネント作成**
+   - Skeleton, Button, NumericKeypad を TDD で作成
 
-2. **CLAUDE.md のワークフロー更新**
-   - Step 開始時のブランチ作成ルールを追加
-
-3. **TDD による UIコンポーネント実装**
-   - Skeleton (Red → Green: 20テスト)
-   - Button (Red → Green: 24テスト)
-   - NumericKeypad (Red → Green: 19テスト)
-
-4. **i18n 辞書更新**
-   - `common.confirm` キー追加
+2. **Phase 2-2 Step 2-4: コンポーネント統合**
+   - PaymentListSkeleton 作成
+   - InlinePaymentForm に Button 統合
+   - AmountFieldWithKeypad 作成（NumericKeypad 統合）
 
 ### 技術的ノート
 
@@ -142,8 +154,9 @@
 | **44px タッチターゲット** | Tailwind の `min-h-11` クラスで実現 |
 | **スケルトン設計** | Composition パターンで柔軟に組み合わせ可能 |
 | **NumericKeypad** | 先頭ゼロ防止、maxLength制限実装済み |
+| **AmountFieldWithKeypad** | フォーカスでキーパッド表示、確定で閉じる |
 
-### 変更ファイル一覧
+### 変更ファイル一覧（Step 1-4 合計）
 
 | ファイル | 変更内容 |
 |---------|---------|
@@ -151,8 +164,7 @@
 | `src/components/ui/Skeleton.tsx` | 新規作成 |
 | `src/components/ui/Button.tsx` | 新規作成 |
 | `src/components/ui/NumericKeypad.tsx` | 新規作成 |
-| `src/test/components/Skeleton.test.tsx` | 新規作成（20テスト） |
-| `src/test/components/Button.test.tsx` | 新規作成（24テスト） |
-| `src/test/components/NumericKeypad.test.tsx` | 新規作成（19テスト） |
-| `src/locales/ja.json` | common.confirm 追加 |
-| `src/locales/en.json` | common.confirm 追加 |
+| `src/components/payment-list/PaymentListSkeleton.tsx` | 新規作成 |
+| `src/components/payment-form/fields/AmountFieldWithKeypad.tsx` | 新規作成 |
+| `src/components/payment-form/InlinePaymentForm.tsx` | Button 統合 |
+| `src/test/components/*.test.tsx` | 各コンポーネントのテスト追加 |
