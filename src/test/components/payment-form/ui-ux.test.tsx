@@ -113,14 +113,16 @@ describe("エラー時フォーカス管理", () => {
     const user = userEvent.setup();
     const mockOnSubmit = vi.fn();
 
-    render(<InlinePaymentForm onSubmit={mockOnSubmit} />);
+    const { container } = render(<InlinePaymentForm onSubmit={mockOnSubmit} />);
 
     // 何も入力せずに送信
     await user.click(screen.getByRole("button", { name: t("payments.form.submit") }));
 
     // 最初のエラーフィールド（金額）にフォーカスが移動していることを確認
+    // AmountFieldWithKeypad は id="payment-amount" を使用
     await waitFor(() => {
-      expect(screen.getByLabelText(t("payments.form.amount"))).toHaveFocus();
+      const amountInput = container.querySelector("#payment-amount");
+      expect(amountInput).toHaveFocus();
     });
   });
 
@@ -128,10 +130,11 @@ describe("エラー時フォーカス管理", () => {
     const user = userEvent.setup();
     const mockOnSubmit = vi.fn();
 
-    render(<InlinePaymentForm onSubmit={mockOnSubmit} />);
+    const { container } = render(<InlinePaymentForm onSubmit={mockOnSubmit} />);
 
-    // 金額のみ入力
-    await user.type(screen.getByLabelText(t("payments.form.amount")), "1000");
+    // 金額のみ入力（id で直接取得）
+    const amountInput = container.querySelector("#payment-amount") as HTMLInputElement;
+    await user.type(amountInput, "1000");
 
     // 送信
     await user.click(screen.getByRole("button", { name: t("payments.form.submit") }));
@@ -196,12 +199,12 @@ describe("送信成功フィードバック", () => {
 // 送信ボタンのUXテスト
 // ============================================
 describe("送信ボタンのUX", () => {
-  it("送信ボタンは十分な高さを持つ", () => {
+  it("送信ボタンは十分な高さを持つ（44px タッチターゲット）", () => {
     render(<InlinePaymentForm onSubmit={vi.fn()} />);
 
     const button = screen.getByRole("button", { name: t("payments.form.submit") });
-    // py-3 クラスが適用されていることを確認
-    expect(button.className).toMatch(/py-3/);
+    // min-h-11 クラス（44px）が適用されていることを確認
+    expect(button.className).toMatch(/min-h-11/);
   });
 
   it("送信中のテキストがi18nで定義されている", () => {
