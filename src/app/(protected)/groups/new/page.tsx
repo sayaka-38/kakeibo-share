@@ -31,8 +31,7 @@ export default function NewGroupPage() {
     }
 
     // Create group
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: group, error: groupError } = await (supabase as any)
+    const { data: group, error: groupError } = await supabase
       .from("groups")
       .insert({
         name,
@@ -49,8 +48,7 @@ export default function NewGroupPage() {
     }
 
     // Add creator as owner
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: memberError } = await (supabase as any).from("group_members").insert({
+    const { error: memberError } = await supabase.from("group_members").insert({
       group_id: group.id,
       user_id: user.id,
       role: "owner",

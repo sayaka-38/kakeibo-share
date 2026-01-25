@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { t } from "@/lib/i18n";
 import { usePaymentForm } from "./hooks/usePaymentForm";
 import { AmountField, DescriptionField, DateField } from "./fields";
+import { calculateEqualSplit, calculateCustomSplits } from "@/lib/calculation/split";
 import type { Category, Group, Profile } from "@/types/database";
 
 type FullPaymentFormProps = {
@@ -54,8 +55,7 @@ export default function FullPaymentForm({
     const formData = form.getFormData();
 
     // Create payment
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: payment, error: paymentError } = await (supabase as any)
+    const { data: payment, error: paymentError } = await supabase
       .from("payments")
       .insert({
         group_id: groupId,
@@ -74,26 +74,20 @@ export default function FullPaymentForm({
     }
 
     // Create payment splits
-    // DBには整数を保存（端数は清算時に計算するため問題なし）
     const splits =
       splitType === "equal"
-        ? currentMembers.map((member) => ({
-            payment_id: payment.id,
-            user_id: member.id,
-            amount: Math.floor(formData.amount / currentMembers.length),
-          }))
-        : currentMembers
-            .filter((member) => customSplits[member.id])
-            .map((member) => ({
-              payment_id: payment.id,
-              user_id: member.id,
-              amount: Math.floor(parseFloat(customSplits[member.id]) || 0),
-            }));
+        ? calculateEqualSplit({
+            paymentId: payment.id,
+            totalAmount: formData.amount,
+            memberIds: currentMembers.map((m) => m.id),
+          })
+        : calculateCustomSplits({
+            paymentId: payment.id,
+            customAmounts: customSplits,
+          });
 
     if (splits.length > 0) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase as any).from("payment_splits").insert(splits);
-      // 端数は仕様なので、分割情報の保存結果は無視して成功扱い
+      await supabase.from("payment_splits").insert(splits);
     }
 
     router.push("/payments");

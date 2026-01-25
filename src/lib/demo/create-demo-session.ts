@@ -147,7 +147,7 @@ export async function createDemoSession(
         expiresAt: new Date(sessionData.expires_at),
       },
     };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       error: {

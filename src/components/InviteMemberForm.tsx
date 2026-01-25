@@ -25,11 +25,11 @@ export default function InviteMemberForm({ groupId }: InviteMemberFormProps) {
     const supabase = createClient();
 
     // Find user by email
-    const { data: profile } = (await supabase
+    const { data: profile } = await supabase
       .from("profiles")
       .select("id")
       .eq("email", email)
-      .single()) as { data: { id: string } | null };
+      .single();
 
     if (!profile) {
       setError(t("groups.invite.errors.userNotFound"));
@@ -38,12 +38,12 @@ export default function InviteMemberForm({ groupId }: InviteMemberFormProps) {
     }
 
     // Check if already a member
-    const { data: existingMember } = (await supabase
+    const { data: existingMember } = await supabase
       .from("group_members")
       .select("id")
       .eq("group_id", groupId)
       .eq("user_id", profile.id)
-      .single()) as { data: { id: string } | null };
+      .single();
 
     if (existingMember) {
       setError(t("groups.invite.errors.alreadyMember"));
@@ -52,8 +52,7 @@ export default function InviteMemberForm({ groupId }: InviteMemberFormProps) {
     }
 
     // Add member
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: addError } = await (supabase as any).from("group_members").insert({
+    const { error: addError } = await supabase.from("group_members").insert({
       group_id: groupId,
       user_id: profile.id,
       role: "member",

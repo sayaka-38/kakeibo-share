@@ -20,7 +20,7 @@ export function InviteLinkButton({ inviteCode }: Props) {
       await navigator.clipboard.writeText(inviteUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
+    } catch {
       // フォールバック: execCommand を使用
       const textarea = document.createElement("textarea");
       textarea.value = inviteUrl;
@@ -43,7 +43,7 @@ export function InviteLinkButton({ inviteCode }: Props) {
           text: t("groups.invite.link.description"),
           url: inviteUrl,
         });
-      } catch (err) {
+      } catch {
         // ユーザーがキャンセルした場合など
       }
     } else {

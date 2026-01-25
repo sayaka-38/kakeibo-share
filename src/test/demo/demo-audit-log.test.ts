@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   createDemoAuditLog,
-  type DemoAuditLogEntry,
   type DemoAuditAction,
 } from "@/lib/demo/audit-log";
 

@@ -141,7 +141,7 @@ export async function joinGroupByInviteCode(
         groupName: group.name,
       },
     };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       error: {

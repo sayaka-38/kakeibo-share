@@ -1,0 +1,103 @@
+/**
+ * 割り勘計算ロジック
+ *
+ * 支払いを複数メンバーに分割する計算を行う
+ * - 均等割り: 全員同じ金額（端数は切り捨て）
+ * - カスタム割り: 各メンバーに個別の金額を指定
+ */
+
+/**
+ * 分割結果の型（DB保存用）
+ */
+export type SplitResult = {
+  payment_id: string;
+  user_id: string;
+  amount: number;
+};
+
+/**
+ * 均等割り計算の入力
+ */
+export type SplitInput = {
+  paymentId: string;
+  totalAmount: number;
+  memberIds: string[];
+};
+
+/**
+ * カスタム割り計算の入力
+ */
+export type CustomSplitInput = {
+  paymentId: string;
+  customAmounts: { [userId: string]: string };
+};
+
+/**
+ * 均等割り計算
+ *
+ * 金額をメンバー数で割り、各自の負担額を計算する
+ * 端数は切り捨て（清算時に調整される）
+ *
+ * @param input - 支払いID、総額、メンバーIDリスト
+ * @returns 各メンバーの分割結果
+ */
+export function calculateEqualSplit(input: SplitInput): SplitResult[] {
+  const { paymentId, totalAmount, memberIds } = input;
+
+  // メンバーがいない場合は空配列
+  if (memberIds.length === 0) {
+    return [];
+  }
+
+  // 負の金額または0の場合は全員0円
+  if (totalAmount <= 0) {
+    return memberIds.map((userId) => ({
+      payment_id: paymentId,
+      user_id: userId,
+      amount: 0,
+    }));
+  }
+
+  // 均等割り（端数切り捨て）
+  const splitAmount = Math.floor(totalAmount / memberIds.length);
+
+  return memberIds.map((userId) => ({
+    payment_id: paymentId,
+    user_id: userId,
+    amount: splitAmount,
+  }));
+}
+
+/**
+ * カスタム割り計算
+ *
+ * 各メンバーに指定された金額を設定する
+ * 空文字列のメンバーはスキップ、不正な値は0として扱う
+ *
+ * @param input - 支払いID、カスタム金額マップ
+ * @returns 各メンバーの分割結果
+ */
+export function calculateCustomSplits(input: CustomSplitInput): SplitResult[] {
+  const { paymentId, customAmounts } = input;
+
+  const results: SplitResult[] = [];
+
+  for (const [userId, amountStr] of Object.entries(customAmounts)) {
+    // 空文字列はスキップ
+    if (amountStr === "") {
+      continue;
+    }
+
+    // 文字列をパースして整数に変換
+    const parsed = parseFloat(amountStr);
+    const amount = isNaN(parsed) || parsed < 0 ? 0 : Math.floor(parsed);
+
+    results.push({
+      payment_id: paymentId,
+      user_id: userId,
+      amount,
+    });
+  }
+
+  return results;
+}

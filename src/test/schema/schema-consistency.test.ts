@@ -27,38 +27,10 @@ function extractColumnNamesFromType(typeContent: string, tableName: string): str
   return properties;
 }
 
-// SQLスキーマからカラム名を抽出するヘルパー
-function extractColumnNamesFromSQL(sqlContent: string, tableName: string): string[] {
-  // CREATE TABLE文を探す
-  const tablePattern = new RegExp(
-    `CREATE TABLE(?:\\s+IF NOT EXISTS)?\\s+${tableName}\\s*\\(([^;]+)\\)`,
-    "is"
-  );
-  const match = sqlContent.match(tablePattern);
-  if (!match) return [];
-
-  const tableContent = match[1];
-  // カラム定義を抽出（最初の識別子がカラム名）
-  const lines = tableContent.split(",").map((line) => line.trim());
-  const columns: string[] = [];
-  for (const line of lines) {
-    // PRIMARY KEY, UNIQUE, CHECK, REFERENCES などの制約行をスキップ
-    if (/^(PRIMARY|UNIQUE|CHECK|CONSTRAINT|FOREIGN)/i.test(line)) continue;
-
-    // カラム名を抽出（最初の単語）
-    const columnMatch = line.match(/^(\w+)/);
-    if (columnMatch) {
-      columns.push(columnMatch[1]);
-    }
-  }
-  return columns;
-}
-
 describe("Schema Consistency - スキーマ整合性", () => {
   // process.cwd() を使用してプロジェクトルートを取得
   const projectRoot = process.cwd();
   const typesPath = join(projectRoot, "src/types/database.ts");
-  const schemaPath = join(projectRoot, "supabase/migrations/001_initial_schema.sql");
   const inviteCodeMigrationPath = join(
     projectRoot,
     "supabase/migrations/002_add_invite_code.sql"
@@ -69,19 +41,16 @@ describe("Schema Consistency - スキーマ整合性", () => {
   );
 
   let typeContent: string;
-  let schemaContent: string;
   let inviteCodeMigration: string;
   let columnRenameMigration: string;
 
   // ファイルを読み込む
   try {
     typeContent = readFileSync(typesPath, "utf-8");
-    schemaContent = readFileSync(schemaPath, "utf-8");
     inviteCodeMigration = readFileSync(inviteCodeMigrationPath, "utf-8");
   } catch (e) {
     console.error("Failed to read files:", e);
     typeContent = "";
-    schemaContent = "";
     inviteCodeMigration = "";
   }
 
