@@ -168,8 +168,8 @@
 
 ## テスト状況
 
-- **334件のテストがパス** ✅
-- 全テスト合格（エクセル方式テスト追加）
+- **337件のテストがパス** ✅
+- 全テスト合格（エクセル方式 + 1円を分けるテスト追加）
 
 ---
 
@@ -186,14 +186,14 @@
 
 ## 次のタスク
 
-### Phase 2-3 進行中 🚧
+### Phase 2-3 完了 ✅
 
 - [x] Step 1: 端数処理 (`rounding.ts`)
 - [x] Step 2: 残高計算 (`calculate-balances.ts`)
 - [x] Step 3: 清算提案 (`suggest-settlements.ts`)
 - [x] Step 4: 登録処理の端数修正 + 清算ページリファクタリング
 - [x] Step 5: 時系列リスト・計算プロセス・端数持ち越し表示
-- [ ] Step 6: PR 作成
+- [x] Step 6: PR 作成 → https://github.com/sayaka-38/kakeibo-share/pull/8
 
 ### 将来の機能要件
 
