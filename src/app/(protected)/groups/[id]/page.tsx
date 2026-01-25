@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
@@ -5,10 +6,11 @@ import { t } from "@/lib/i18n";
 import InviteMemberForm from "@/components/InviteMemberForm";
 import { GroupPaymentForm } from "@/components/GroupPaymentForm";
 import { InviteLinkButton } from "@/components/InviteLinkButton";
+import { RecentPaymentList } from "@/components/payment-list/RecentPaymentList";
+import { PaymentListSkeleton } from "@/components/payment-list/PaymentListSkeleton";
 import type {
   GroupResult,
   GroupMemberDetailResult,
-  DashboardPaymentResult,
 } from "@/types/query-results";
 
 type Props = {
@@ -64,25 +66,6 @@ export default async function GroupDetailPage({ params }: Props) {
     `
     )
     .eq("group_id", id)) as { data: GroupMemberDetailResult[] | null };
-
-  // Get recent payments
-  const { data: recentPayments } = (await supabase
-    .from("payments")
-    .select(
-      `
-      id,
-      amount,
-      description,
-      payment_date,
-      profiles (
-        display_name,
-        email
-      )
-    `
-    )
-    .eq("group_id", id)
-    .order("payment_date", { ascending: false })
-    .limit(5)) as { data: DashboardPaymentResult[] | null };
 
   // Calculate group stats
   const { data: allPayments } = (await supabase
@@ -214,33 +197,9 @@ export default async function GroupDetailPage({ params }: Props) {
               {t("common.viewAll")}
             </Link>
           </div>
-          {recentPayments && recentPayments.length > 0 ? (
-            <ul className="divide-y divide-gray-200">
-              {recentPayments.map((payment) => (
-                <li key={payment.id} className="px-4 py-3">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-medium text-gray-900">
-                        {payment.description}
-                      </p>
-                      <p className="text-sm text-gray-700">
-                        {payment.profiles?.display_name ||
-                          payment.profiles?.email}{" "}
-                        - {payment.payment_date}
-                      </p>
-                    </div>
-                    <span className="font-medium text-gray-900">
-                      ¥{Number(payment.amount).toLocaleString()}
-                    </span>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="px-4 py-6 text-center text-gray-700">
-              {t("payments.noPayments")}
-            </p>
-          )}
+          <Suspense fallback={<PaymentListSkeleton count={3} />}>
+            <RecentPaymentList groupId={id} limit={5} />
+          </Suspense>
         </div>
       </div>
     </div>
