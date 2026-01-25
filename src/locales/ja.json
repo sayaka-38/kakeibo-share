@@ -203,7 +203,17 @@
     "balanceSummary": "収支サマリー",
     "paid": "支払済",
     "requiredSettlements": "必要な清算",
-    "allSettled": "すべて清算済みです！支払いは不要です。"
+    "allSettled": "すべて清算済みです！支払いは不要です。",
+    "paymentHistory": "支払い履歴",
+    "calculationBreakdown": "計算プロセス",
+    "perPerson": "1人あたり負担額",
+    "memberCount": "{count}人で分割",
+    "unsettledRemainder": "端数持越し（次回清算時に調整）",
+    "date": "日付",
+    "description": "品目",
+    "paidBy": "支払者",
+    "amount": "金額",
+    "owed": "負担額"
   },
   "navigation": {
     "dashboard": "ダッシュボード",

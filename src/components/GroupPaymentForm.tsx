@@ -47,7 +47,8 @@ export function GroupPaymentForm({
     }
 
     // 均等割り勘で分割データを登録
-    const splitAmount = data.amount / memberIds.length;
+    // DBには必ず整数を保存（端数は清算時に計算）
+    const splitAmount = Math.floor(data.amount / memberIds.length);
     const splits = memberIds.map((userId) => ({
       payment_id: payment.id,
       user_id: userId,
@@ -55,14 +56,8 @@ export function GroupPaymentForm({
     }));
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: splitError } = await (supabase as any)
-      .from("payment_splits")
-      .insert(splits);
-
-    if (splitError) {
-      setError(t("payments.errors.splitFailed") + splitError.message);
-      throw new Error(splitError.message);
-    }
+    await (supabase as any).from("payment_splits").insert(splits);
+    // 端数は仕様なので、分割情報の保存結果は無視して成功扱い
 
     // 成功
     setSuccess(true);

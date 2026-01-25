@@ -185,7 +185,17 @@
     "balanceSummary": "Balance Summary",
     "paid": "Paid",
     "requiredSettlements": "Required Settlements",
-    "allSettled": "All settled! No payments needed."
+    "allSettled": "All settled! No payments needed.",
+    "paymentHistory": "Payment History",
+    "calculationBreakdown": "Calculation Breakdown",
+    "perPerson": "Amount per person",
+    "memberCount": "Split among {count} people",
+    "unsettledRemainder": "Carried over (adjusted in next settlement)",
+    "date": "Date",
+    "description": "Description",
+    "paidBy": "Paid by",
+    "amount": "Amount",
+    "owed": "Owed"
   },
   "navigation": {
     "dashboard": "Dashboard",
