@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { PaymentForm, type PaymentFormData } from "@/components/PaymentForm";
+import { calculateEqualSplit } from "@/lib/calculation/split";
 import { t } from "@/lib/i18n";
 
 type GroupPaymentFormProps = {
@@ -46,15 +47,15 @@ export function GroupPaymentForm({
     }
 
     // 均等割り勘で分割データを登録
-    // DBには必ず整数を保存（端数は清算時に計算）
-    const splitAmount = Math.floor(data.amount / memberIds.length);
-    const splits = memberIds.map((userId) => ({
-      payment_id: payment.id,
-      user_id: userId,
-      amount: splitAmount,
-    }));
+    const splits = calculateEqualSplit({
+      paymentId: payment.id,
+      totalAmount: data.amount,
+      memberIds,
+    });
 
-    await supabase.from("payment_splits").insert(splits);
+    if (splits.length > 0) {
+      await supabase.from("payment_splits").insert(splits);
+    }
     // 端数は仕様なので、分割情報の保存結果は無視して成功扱い
 
     // 成功
