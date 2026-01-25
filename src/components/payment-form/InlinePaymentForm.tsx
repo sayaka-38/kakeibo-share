@@ -2,7 +2,8 @@
 
 import { useRef, useState, useCallback, useEffect } from "react";
 import { usePaymentForm, type PaymentFormData } from "./hooks/usePaymentForm";
-import { AmountField, DescriptionField, DateField } from "./fields";
+import { AmountFieldWithKeypad } from "./fields";
+import { Button } from "@/components/ui/Button";
 import { t } from "@/lib/i18n";
 
 export type { PaymentFormData };
@@ -26,7 +27,6 @@ export function InlinePaymentForm({ onSubmit }: InlinePaymentFormProps) {
   const form = usePaymentForm();
 
   // フィールドへのref（エラー時フォーカス用）
-  const amountRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLInputElement>(null);
   const dateRef = useRef<HTMLInputElement>(null);
 
@@ -46,7 +46,8 @@ export function InlinePaymentForm({ onSubmit }: InlinePaymentFormProps) {
   // エラー時に最初のエラーフィールドにフォーカス
   const focusFirstError = useCallback((errors: typeof form.errors) => {
     if (errors.amount) {
-      amountRef.current?.focus();
+      // AmountFieldWithKeypad は id="payment-amount" を使用
+      document.getElementById("payment-amount")?.focus();
     } else if (errors.description) {
       descriptionRef.current?.focus();
     } else if (errors.paymentDate) {
@@ -95,8 +96,7 @@ export function InlinePaymentForm({ onSubmit }: InlinePaymentFormProps) {
         </div>
       )}
 
-      <AmountFieldWithRef
-        ref={amountRef}
+      <AmountFieldWithKeypad
         value={form.amount}
         onChange={form.setAmount}
         error={form.errors.amount}
@@ -116,15 +116,17 @@ export function InlinePaymentForm({ onSubmit }: InlinePaymentFormProps) {
         error={form.errors.paymentDate}
       />
 
-      <button
+      <Button
         type="submit"
-        disabled={form.isSubmitting}
-        className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        variant="primary"
+        size="md"
+        fullWidth
+        loading={form.isSubmitting}
       >
         {form.isSubmitting
           ? t("payments.form.submitting")
           : t("payments.form.submit")}
-      </button>
+      </Button>
     </form>
   );
 }
@@ -134,56 +136,6 @@ export function InlinePaymentForm({ onSubmit }: InlinePaymentFormProps) {
 // ============================================
 
 import { forwardRef, memo } from "react";
-
-type AmountFieldWithRefProps = {
-  value: string;
-  onChange: (value: string) => void;
-  error?: string;
-};
-
-const AmountFieldWithRef = memo(
-  forwardRef<HTMLInputElement, AmountFieldWithRefProps>(
-    function AmountFieldWithRef({ value, onChange, error }, ref) {
-      const errorId = "payment-amount-error";
-
-      return (
-        <div>
-          <label
-            htmlFor="payment-amount"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            {t("payments.form.amount")}
-          </label>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-700 pointer-events-none">
-              {t("common.currency")}
-            </span>
-            <input
-              ref={ref}
-              id="payment-amount"
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              value={value}
-              onChange={(e) => onChange(e.target.value)}
-              placeholder={t("payments.form.amountPlaceholder")}
-              className={`block w-full pl-8 pr-3 py-3 border rounded-lg shadow-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                error ? "border-red-500" : "border-gray-300"
-              }`}
-              aria-invalid={!!error}
-              aria-describedby={error ? errorId : undefined}
-            />
-          </div>
-          {error && (
-            <p id={errorId} className="mt-1 text-sm text-red-600" role="alert">
-              {error}
-            </p>
-          )}
-        </div>
-      );
-    }
-  )
-);
 
 type DescriptionFieldWithRefProps = {
   value: string;

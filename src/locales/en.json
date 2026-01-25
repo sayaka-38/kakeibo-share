@@ -15,7 +15,8 @@
     "owner": "Owner",
     "member": "Member",
     "total": "Total",
-    "currency": "¥"
+    "currency": "¥",
+    "confirm": "OK"
   },
   "landing": {
     "tagline": "Share expenses easily with your housemates or partner. Track who paid what and settle up at the end of each month.",
