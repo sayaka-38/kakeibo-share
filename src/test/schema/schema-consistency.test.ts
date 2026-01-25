@@ -142,33 +142,24 @@ describe("Schema Consistency - スキーマ整合性", () => {
 
 describe("RLS Policy Consistency - RLSポリシー整合性", () => {
   const projectRoot = process.cwd();
-  const schemaPath = join(projectRoot, "supabase/migrations/001_initial_schema.sql");
-  const columnRenameMigrationPath = join(
+  const initialSchemaPath = join(
     projectRoot,
-    "supabase/migrations/003_rename_columns_for_consistency.sql"
+    "supabase/migrations/001_initial_schema.sql"
   );
 
-  let schemaContent: string;
-  let columnRenameMigration: string;
+  let initialSchemaContent: string;
 
   try {
-    schemaContent = readFileSync(schemaPath, "utf-8");
+    initialSchemaContent = readFileSync(initialSchemaPath, "utf-8");
   } catch {
-    schemaContent = "";
-  }
-
-  try {
-    columnRenameMigration = readFileSync(columnRenameMigrationPath, "utf-8");
-  } catch {
-    columnRenameMigration = "";
+    initialSchemaContent = "";
   }
 
   describe("payments RLSポリシー", () => {
-    it("RLSポリシーで payer_id を使用するように更新されている", () => {
-      // 元のスキーマでは paid_by を使用
-      // マイグレーションでポリシーが更新されていることを確認
-      expect(columnRenameMigration).toContain("payments_update_payer");
-      expect(columnRenameMigration).toContain("payments_delete_payer");
+    it("RLSポリシーで payer_id を使用するように定義されている", () => {
+      // 初期スキーマでRLSポリシーが payer_id を使用していることを確認
+      expect(initialSchemaContent).toContain("payments_update_payer");
+      expect(initialSchemaContent).toContain("payments_delete_payer");
     });
   });
 });

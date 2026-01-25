@@ -6,6 +6,7 @@
     "save": "保存",
     "cancel": "キャンセル",
     "delete": "削除",
+    "deleting": "削除中...",
     "edit": "編集",
     "add": "追加",
     "back": "戻る",
@@ -159,6 +160,8 @@
     "addPayment": "支払いを追加",
     "addFirstPayment": "最初の支払いを追加",
     "noPayments": "支払いがありません",
+    "delete": "削除",
+    "deleteConfirm": "この支払いを削除しますか？",
     "form": {
       "group": "グループ",
       "amount": "金額",
@@ -173,7 +176,8 @@
       "customSplit": "カスタム",
       "splitAmounts": "負担額",
       "submit": "登録する",
-      "submitting": "登録中..."
+      "submitting": "登録中...",
+      "submitSuccess": "登録しました"
     },
     "validation": {
       "amountMin": "金額は1円以上で入力してください",

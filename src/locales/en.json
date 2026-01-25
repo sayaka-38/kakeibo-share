@@ -6,6 +6,7 @@
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
+    "deleting": "Deleting...",
     "edit": "Edit",
     "add": "Add",
     "back": "Back",
@@ -141,6 +142,8 @@
     "addPayment": "Add Payment",
     "addFirstPayment": "Add your first payment",
     "noPayments": "No payments yet",
+    "delete": "Delete",
+    "deleteConfirm": "Are you sure you want to delete this payment?",
     "form": {
       "group": "Group",
       "amount": "Amount",
@@ -155,7 +158,8 @@
       "customSplit": "Custom split",
       "splitAmounts": "Split amounts",
       "submit": "Add Payment",
-      "submitting": "Adding..."
+      "submitting": "Adding...",
+      "submitSuccess": "Added successfully"
     },
     "validation": {
       "amountMin": "Amount must be at least ¥1",
