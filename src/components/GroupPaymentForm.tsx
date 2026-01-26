@@ -6,25 +6,26 @@ import { createClient } from "@/lib/supabase/client";
 import { PaymentForm, type PaymentFormData } from "@/components/PaymentForm";
 import { calculateEqualSplit } from "@/lib/calculation/split";
 import { t } from "@/lib/i18n";
+import type { Category } from "@/types/database";
 
 type GroupPaymentFormProps = {
   groupId: string;
   currentUserId: string;
   memberIds: string[];
+  categories?: Category[];
 };
 
 export function GroupPaymentForm({
   groupId,
   currentUserId,
   memberIds,
+  categories = [],
 }: GroupPaymentFormProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (data: PaymentFormData) => {
     setError(null);
-    setSuccess(false);
 
     const supabase = createClient();
 
@@ -37,6 +38,7 @@ export function GroupPaymentForm({
         amount: data.amount,
         description: data.description,
         payment_date: data.paymentDate.toISOString().split("T")[0],
+        category_id: data.categoryId,
       })
       .select()
       .single();
@@ -58,12 +60,8 @@ export function GroupPaymentForm({
     }
     // 端数は仕様なので、分割情報の保存結果は無視して成功扱い
 
-    // 成功
-    setSuccess(true);
+    // 成功時はページをリフレッシュ
     router.refresh();
-
-    // 成功メッセージを3秒後に消す
-    setTimeout(() => setSuccess(false), 3000);
   };
 
   return (
@@ -73,12 +71,7 @@ export function GroupPaymentForm({
           {error}
         </div>
       )}
-      {success && (
-        <div className="mb-4 bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-lg text-sm">
-          {t("payments.addPayment")}が完了しました
-        </div>
-      )}
-      <PaymentForm onSubmit={handleSubmit} />
+      <PaymentForm onSubmit={handleSubmit} categories={categories} />
     </div>
   );
 }

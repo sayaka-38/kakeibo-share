@@ -5,11 +5,13 @@ import { usePaymentForm, type PaymentFormData } from "./hooks/usePaymentForm";
 import { AmountFieldWithKeypad } from "./fields";
 import { Button } from "@/components/ui/Button";
 import { t } from "@/lib/i18n";
+import type { Category } from "@/types/database";
 
 export type { PaymentFormData };
 
 type InlinePaymentFormProps = {
   onSubmit: (data: PaymentFormData) => Promise<void>;
+  categories?: Category[];
 };
 
 /**
@@ -23,7 +25,7 @@ type InlinePaymentFormProps = {
  * - 送信成功時に柔らかいフィードバック表示
  * - モバイル最適化されたタップ領域
  */
-export function InlinePaymentForm({ onSubmit }: InlinePaymentFormProps) {
+export function InlinePaymentForm({ onSubmit, categories = [] }: InlinePaymentFormProps) {
   const form = usePaymentForm();
 
   // フィールドへのref（エラー時フォーカス用）
@@ -116,6 +118,31 @@ export function InlinePaymentForm({ onSubmit }: InlinePaymentFormProps) {
         onChange={form.setPaymentDate}
         error={form.errors.paymentDate}
       />
+
+      {/* カテゴリ選択 */}
+      {categories.length > 0 && (
+        <div>
+          <label
+            htmlFor="payment-category"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            {t("payments.form.category")}
+          </label>
+          <select
+            id="payment-category"
+            value={form.categoryId}
+            onChange={(e) => form.setCategoryId(e.target.value)}
+            className="block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+          >
+            <option value="">{t("payments.form.selectCategory")}</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.icon} {category.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <Button
         type="submit"

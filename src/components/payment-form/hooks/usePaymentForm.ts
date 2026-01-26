@@ -10,6 +10,7 @@ export type PaymentFormData = {
   amount: number;
   description: string;
   paymentDate: Date;
+  categoryId: string | null;
 };
 
 /**
@@ -20,6 +21,7 @@ export type UsePaymentFormReturn = {
   amount: string;
   description: string;
   paymentDate: string;
+  categoryId: string;
   errors: ValidationErrors;
   isSubmitting: boolean;
 
@@ -27,6 +29,7 @@ export type UsePaymentFormReturn = {
   setAmount: (value: string) => void;
   setDescription: (value: string) => void;
   setPaymentDate: (value: string) => void;
+  setCategoryId: (value: string) => void;
 
   // アクション
   validate: () => boolean;
@@ -64,6 +67,7 @@ export function usePaymentForm(): UsePaymentFormReturn {
   const [amount, setAmountRaw] = useState("");
   const [description, setDescription] = useState("");
   const [paymentDate, setPaymentDate] = useState(getTodayString);
+  const [categoryId, setCategoryId] = useState("");
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -96,6 +100,7 @@ export function usePaymentForm(): UsePaymentFormReturn {
     setAmountRaw("");
     setDescription("");
     setPaymentDate(getTodayString());
+    setCategoryId("");
     setErrors({});
   }, []);
 
@@ -105,8 +110,9 @@ export function usePaymentForm(): UsePaymentFormReturn {
       amount: parseFloat(amount) || 0,
       description: description.trim(),
       paymentDate: new Date(paymentDate),
+      categoryId: categoryId || null,
     };
-  }, [amount, description, paymentDate]);
+  }, [amount, description, paymentDate, categoryId]);
 
   // 送信ハンドラ
   const handleSubmit = useCallback(
@@ -137,6 +143,7 @@ export function usePaymentForm(): UsePaymentFormReturn {
     amount,
     description,
     paymentDate,
+    categoryId,
     errors,
     isSubmitting,
 
@@ -144,6 +151,7 @@ export function usePaymentForm(): UsePaymentFormReturn {
     setAmount,
     setDescription,
     setPaymentDate,
+    setCategoryId,
 
     // アクション
     validate,
