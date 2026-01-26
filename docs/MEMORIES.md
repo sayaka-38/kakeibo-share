@@ -6,99 +6,60 @@
 
 ## 最終更新日
 
-2026-01-26（Phase 4 CI/CD 構築完了、PR #11 作成）
+2026-01-26（Phase 5-1 RLS + カテゴリ機能完了、PR #12 作成）
 
 ---
 
 ## 完了した機能
 
-### Phase 4: CI/CD 構築（今セッション完了）
+### Phase 5-1: categories RLS + カテゴリ選択機能（今セッション完了）
 
-**概要**: GitHub Actions による CI/CD パイプライン構築。
+**概要**: categories テーブルの RLS 設定とカテゴリ選択 UI の実装。
 
-#### 変更内容
+#### DB 変更（Supabase で実行済み）
+
+```sql
+-- カラム追加
+ALTER TABLE categories ADD COLUMN is_default BOOLEAN DEFAULT false;
+ALTER TABLE categories ADD COLUMN group_id UUID REFERENCES groups(id);
+UPDATE categories SET is_default = true;
+
+-- RLS 有効化 + ポリシー
+ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "categories_select_policy" ON categories
+FOR SELECT USING (
+  is_default = true
+  OR group_id IN (SELECT group_id FROM group_members WHERE user_id = auth.uid())
+);
+```
+
+#### コード変更
 
 | ファイル | 変更 |
 |---------|------|
-| `.github/workflows/ci.yml` | CI ワークフロー新規作成 |
-| `package.json` | `typecheck`, `test:coverage` スクリプト追加 |
-| `vitest.config.ts` | カバレッジ設定（v8, lcov, html） |
-| テストファイル 2 件 | TypeScript 型エラー修正 |
+| `src/types/database.ts` | categories に `is_default`, `group_id` 追加 |
+| `src/components/payment-form/hooks/usePaymentForm.ts` | `categoryId` を PaymentFormData に追加 |
+| `src/components/payment-form/InlinePaymentForm.tsx` | カテゴリ選択セレクトボックス追加 |
+| `src/components/GroupPaymentForm.tsx` | カテゴリ受け取り・保存、二重メッセージ修正 |
+| `src/app/(protected)/groups/[id]/page.tsx` | カテゴリ取得・渡し処理追加 |
 
-#### CI ジョブ構成
+**結果**: PR #12 作成。
 
-```
-lint (ESLint)       ─┬─→ build (Next.js)
-typecheck (tsc)     ─┤
-test (Vitest + cov) ─┘
-```
+### Phase 4: CI/CD 構築
 
-**結果**: PR #11 作成、CI が PR で自動実行される状態に。
+- GitHub Actions による CI パイプライン（lint, typecheck, test, build）
+- PR #11 マージ済み
 
 ### Phase 3-1: 型安全性強化とコードクリーンアップ
 
-**概要**: `as any` の全排除、Lint エラー解消、ロジック抽出、未使用コード削除。
+- `as any` 全排除、Relationships 型追加
+- Lint エラー修正、未使用コード削除
+- PR #9, #10 マージ済み
 
-#### Step 1: Database型にRelationships追加
+### Phase 2: UI コンポーネント統合 + エクセル方式
 
-| ファイル | 変更内容 |
-|---------|---------|
-| `src/types/database.ts` | `Relationships` 型を追加、Join クエリの型推論を有効化 |
-| 全ページコンポーネント | `as any` を排除、型安全なクエリに変更 |
-
-#### Step 2: Lint エラー修正
-
-- エラー3件、警告12件を修正
-- `@typescript-eslint/no-unused-vars` 対応
-- 未使用 import の削除
-
-#### Step 3: 割り勘計算ロジック集約
-
-| ファイル | 説明 |
-|---------|------|
-| `src/lib/calculation/split.ts` | `calculateEqualSplit()` 関数を新規作成 |
-| `FullPaymentForm.tsx` | ロジックを `split.ts` に委譲 |
-| `GroupPaymentForm.tsx` | 同上 |
-
-#### Step 4: 未使用コード削除
-
-削除した型定義：
-- `MemberWithRoleResult` (GroupMemberDetailResult と重複)
-- `PaymentForSettlementResult` (未使用)
-- `PaymentHistoryResult` (DashboardPaymentResult と重複)
-
-**結果**: 47行削除、コードベースがクリーンに。
-
-### Phase 2-3 Step 1-5: 清算ページリファクタリング + エクセル方式
-
-**概要**: 計算ロジックを「エクセル方式」に変更し、端数誤差累積を解消。
-
-#### エクセル方式の変更点
-
-**問題**: 各支払いごとに端数切り捨て → 誤差が累積
-```
-従来: 1000円÷3人=333円×3=999円（1円ロス）× N回 = N円の誤差
-```
-
-**修正後**: 全支払い合計後に1回だけ切り捨て
-```
-エクセル方式: 全支払い合計 5166円 ÷ 2人 = 2583円（1回だけ切り捨て）
-```
-
-#### 修正内容
-
-| ファイル | 変更内容 |
-|---------|---------|
-| `calculate-balances.ts` | `splits` を使わず全支払い合計から計算、最後に1回切り捨て |
-| `FullPaymentForm.tsx` | `splitEqually` を削除、小数のまま保存（DECIMAL(12,2)対応） |
-| `GroupPaymentForm.tsx` | 同上 |
-| `settlement/page.tsx` | `payment_splits` クエリを削除、新ロジック適用 |
-
-### Phase 2-2: UIコンポーネント統合
-
-- Skeleton, Button, NumericKeypad コンポーネント実装
-- AmountFieldWithKeypad 統合
-- PaymentListSkeleton 適用
+- Skeleton, Button, NumericKeypad 実装
+- 清算計算をエクセル方式に変更（端数誤差解消）
 
 ### Phase 1: 基盤構築
 
@@ -124,23 +85,27 @@ test (Vitest + cov) ─┘
 - ~~`as any` の多用~~ → Database型にRelationships追加で解決
 - ~~Lintエラー・警告~~ → 全件修正完了
 - ~~端数誤差の累積~~ → エクセル方式で解決
+- ~~カテゴリ選択がない~~ → InlinePaymentForm に追加
+- ~~二重成功メッセージ~~ → GroupPaymentForm から削除
 
 ---
 
 ## 次のタスク
 
-### Phase 4 完了 ✅
+### Phase 5: RLS 設定（継続）
 
-- [x] Step 4-1: `.github/workflows/ci.yml` 作成
-- [x] Step 4-2: `typecheck` / `test:coverage` スクリプト追加
-- [x] Step 4-3: Vitest カバレッジ設定
-- [x] PR #11 作成（レビュー待ち）
+- [x] Step 5-1: categories テーブル RLS + カテゴリ選択 UI（PR #12）
+- [ ] Step 5-2: profiles テーブル RLS
+- [ ] Step 5-3: demo_sessions テーブル RLS
+- [ ] Step 5-4: groups + group_members テーブル RLS
+- [ ] Step 5-5: payments + payment_splits テーブル RLS
 
 ### 将来の機能要件
 
 - [ ] 清算機能の実装検討
 - [ ] デモデータ自動削除機能（24時間後）
 - [ ] 通常ユーザーの支払い削除機能
+- [ ] グループ別カテゴリの追加・編集 UI
 
 ---
 
@@ -150,27 +115,40 @@ test (Vitest + cov) ─┘
 
 ### 現在のブランチ状態
 
-- ブランチ: `feature/phase4-ci-setup`
-- PR: #11（レビュー待ち）
+- ブランチ: `feature/phase5-rls-setup`
+- PR: #12（レビュー待ち）
 - 作業ディレクトリ: クリーン
 
-### CI/CD 構成（実装済み）
+### Step 5-2: profiles RLS（次に実行する SQL）
 
-```yaml
-# .github/workflows/ci.yml
-jobs:
-  lint:      # ESLint
-  typecheck: # tsc --noEmit
-  test:      # Vitest + coverage（Codecov連携）
-  build:     # Next.js build（上記3つ完了後）
+```sql
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "profiles_select_policy" ON profiles
+FOR SELECT USING (
+  id = auth.uid()
+  OR id IN (
+    SELECT gm2.user_id
+    FROM group_members gm1
+    JOIN group_members gm2 ON gm1.group_id = gm2.group_id
+    WHERE gm1.user_id = auth.uid()
+  )
+);
+
+CREATE POLICY "profiles_update_policy" ON profiles
+FOR UPDATE USING (
+  id = auth.uid()
+);
+
+CREATE POLICY "profiles_insert_policy" ON profiles
+FOR INSERT WITH CHECK (
+  id = auth.uid()
+);
 ```
-
-**GitHub Secrets 登録済み:**
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
 ### 仕様決定事項（継続）
 
 - **エクセル方式**: 全支払い合計後に1回だけ切り捨て
 - **Server Actions 禁止**: API Routes を使用
 - **型安全性**: `as any` 禁止、Relationships 型で Join クエリ対応
+- **RLS 段階的適用**: categories → profiles → demo_sessions → groups/group_members → payments/payment_splits
