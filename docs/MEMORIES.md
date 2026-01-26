@@ -6,13 +6,36 @@
 
 ## 最終更新日
 
-2026-01-25（Phase 3-1 完了、Phase 4 プラン提示）
+2026-01-26（Phase 4 CI/CD 構築完了、PR #11 作成）
 
 ---
 
 ## 完了した機能
 
-### Phase 3-1: 型安全性強化とコードクリーンアップ（今セッション完了）
+### Phase 4: CI/CD 構築（今セッション完了）
+
+**概要**: GitHub Actions による CI/CD パイプライン構築。
+
+#### 変更内容
+
+| ファイル | 変更 |
+|---------|------|
+| `.github/workflows/ci.yml` | CI ワークフロー新規作成 |
+| `package.json` | `typecheck`, `test:coverage` スクリプト追加 |
+| `vitest.config.ts` | カバレッジ設定（v8, lcov, html） |
+| テストファイル 2 件 | TypeScript 型エラー修正 |
+
+#### CI ジョブ構成
+
+```
+lint (ESLint)       ─┬─→ build (Next.js)
+typecheck (tsc)     ─┤
+test (Vitest + cov) ─┘
+```
+
+**結果**: PR #11 作成、CI が PR で自動実行される状態に。
+
+### Phase 3-1: 型安全性強化とコードクリーンアップ
 
 **概要**: `as any` の全排除、Lint エラー解消、ロジック抽出、未使用コード削除。
 
@@ -106,19 +129,12 @@
 
 ## 次のタスク
 
-### Phase 3-1 完了 ✅
+### Phase 4 完了 ✅
 
-- [x] Step 1: Database型にRelationships追加、as any 全排除
-- [x] Step 2: Lint エラー修正
-- [x] Step 3: 割り勘計算ロジック集約
-- [x] Step 4: 未使用コード削除
-- [x] Step 5: PR #9 作成・マージ完了
-
-### Phase 4: 自動テストの強化と CI/CD 構築（プラン承認待ち）
-
-- [ ] Step 4-1: `.github/workflows/ci.yml` 作成
-- [ ] Step 4-2: `typecheck` / `test:coverage` スクリプト追加
-- [ ] Step 4-3: Vitest カバレッジ設定
+- [x] Step 4-1: `.github/workflows/ci.yml` 作成
+- [x] Step 4-2: `typecheck` / `test:coverage` スクリプト追加
+- [x] Step 4-3: Vitest カバレッジ設定
+- [x] PR #11 作成（レビュー待ち）
 
 ### 将来の機能要件
 
@@ -134,22 +150,22 @@
 
 ### 現在のブランチ状態
 
-- ブランチ: `main`（PR #9 マージ済み）
-- 未push コミット: なし
+- ブランチ: `feature/phase4-ci-setup`
+- PR: #11（レビュー待ち）
 - 作業ディレクトリ: クリーン
 
-### Phase 4 CI/CD プラン（提示済み・承認待ち）
+### CI/CD 構成（実装済み）
 
 ```yaml
-# .github/workflows/ci.yml の構成
+# .github/workflows/ci.yml
 jobs:
   lint:      # ESLint
   typecheck: # tsc --noEmit
-  test:      # Vitest + coverage
-  build:     # Next.js build (depends on above)
+  test:      # Vitest + coverage（Codecov連携）
+  build:     # Next.js build（上記3つ完了後）
 ```
 
-**必要な GitHub Secrets:**
+**GitHub Secrets 登録済み:**
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
