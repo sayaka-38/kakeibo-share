@@ -6,44 +6,58 @@
 
 ## 最終更新日
 
-2026-01-26（Phase 5-1 RLS + カテゴリ機能完了、PR #12 作成）
+2026-01-26（Phase 5-2 完了、PR #13, #14 マージ済み）
 
 ---
 
 ## 完了した機能
 
-### Phase 5-1: categories RLS + カテゴリ選択機能（今セッション完了）
+### Phase 5-2: profiles RLS + バグ修正（今セッション完了）
 
-**概要**: categories テーブルの RLS 設定とカテゴリ選択 UI の実装。
+**概要**: profiles テーブルの RLS 設定とHydrationエラー・カラム名不整合の修正。
 
 #### DB 変更（Supabase で実行済み）
 
 ```sql
--- カラム追加
-ALTER TABLE categories ADD COLUMN is_default BOOLEAN DEFAULT false;
-ALTER TABLE categories ADD COLUMN group_id UUID REFERENCES groups(id);
-UPDATE categories SET is_default = true;
+-- 既存ポリシー削除
+DROP POLICY IF EXISTS "profiles_select_all" ON profiles;
+DROP POLICY IF EXISTS "profiles_update_own" ON profiles;
+DROP POLICY IF EXISTS "profiles_insert_own" ON profiles;
 
--- RLS 有効化 + ポリシー
-ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "categories_select_policy" ON categories
+-- SELECT: 認証済み + (自分自身 OR 同一グループメンバー)
+CREATE POLICY "profiles_select_policy" ON profiles
 FOR SELECT USING (
-  is_default = true
-  OR group_id IN (SELECT group_id FROM group_members WHERE user_id = auth.uid())
+  auth.uid() IS NOT NULL
+  AND (
+    id = auth.uid()
+    OR id IN (
+      SELECT gm2.user_id
+      FROM group_members gm1
+      JOIN group_members gm2 ON gm1.group_id = gm2.group_id
+      WHERE gm1.user_id = auth.uid()
+    )
+  )
 );
+
+-- UPDATE/INSERT/DELETE ポリシーも設定済み
 ```
 
-#### コード変更
+#### コード変更（PR #14）
 
 | ファイル | 変更 |
 |---------|------|
-| `src/types/database.ts` | categories に `is_default`, `group_id` 追加 |
-| `src/components/payment-form/hooks/usePaymentForm.ts` | `categoryId` を PaymentFormData に追加 |
-| `src/components/payment-form/InlinePaymentForm.tsx` | カテゴリ選択セレクトボックス追加 |
-| `src/components/GroupPaymentForm.tsx` | カテゴリ受け取り・保存、二重メッセージ修正 |
-| `src/app/(protected)/groups/[id]/page.tsx` | カテゴリ取得・渡し処理追加 |
+| `src/app/(protected)/groups/[id]/page.tsx` | `joined_at` → `created_at`、`toLocaleString("ja-JP")` |
+| `src/components/InviteLinkButton.tsx` | `useSyncExternalStore` で Hydration 修正 |
+| `src/components/payment-list/RecentPaymentList.tsx` | `toLocaleString("ja-JP")` |
+| `src/types/query-results.ts` | `joined_at` → `created_at` |
 
-**結果**: PR #12 作成。
+**結果**: PR #13（RLS設定）、PR #14（バグ修正）マージ済み。
+
+### Phase 5-1: categories RLS + カテゴリ選択機能
+
+- categories テーブルの RLS 設定
+- カテゴリ選択 UI の実装
+- PR #12 マージ済み
 
 ### Phase 4: CI/CD 構築
 
@@ -53,13 +67,12 @@ FOR SELECT USING (
 ### Phase 3-1: 型安全性強化とコードクリーンアップ
 
 - `as any` 全排除、Relationships 型追加
-- Lint エラー修正、未使用コード削除
 - PR #9, #10 マージ済み
 
 ### Phase 2: UI コンポーネント統合 + エクセル方式
 
 - Skeleton, Button, NumericKeypad 実装
-- 清算計算をエクセル方式に変更（端数誤差解消）
+- 清算計算をエクセル方式に変更
 
 ### Phase 1: 基盤構築
 
@@ -86,7 +99,8 @@ FOR SELECT USING (
 - ~~Lintエラー・警告~~ → 全件修正完了
 - ~~端数誤差の累積~~ → エクセル方式で解決
 - ~~カテゴリ選択がない~~ → InlinePaymentForm に追加
-- ~~二重成功メッセージ~~ → GroupPaymentForm から削除
+- ~~Hydrationエラー~~ → `useSyncExternalStore` で解決
+- ~~DBカラム名不整合~~ → 実際のDBスキーマに合わせて修正
 
 ---
 
@@ -95,8 +109,8 @@ FOR SELECT USING (
 ### Phase 5: RLS 設定（継続）
 
 - [x] Step 5-1: categories テーブル RLS + カテゴリ選択 UI（PR #12）
-- [x] Step 5-2: profiles テーブル RLS（SQL実行済み、バグ修正完了）
-- [ ] Step 5-3: demo_sessions テーブル RLS
+- [x] Step 5-2: profiles テーブル RLS（PR #13, #14）
+- [ ] **Step 5-3: demo_sessions テーブル RLS** ← 次はここ
 - [ ] Step 5-4: groups + group_members テーブル RLS
 - [ ] Step 5-5: payments + payment_splits テーブル RLS
 
@@ -133,51 +147,62 @@ FOR SELECT USING (
 
 ### 現在のブランチ状態
 
-- ブランチ: `feature/phase5-rls-setup`
-- PR: #12（レビュー待ち）
-- 作業ディレクトリ: 変更あり（Hydration修正、カラム名修正）
+- ブランチ: `main`（最新）
+- 作業ディレクトリ: クリーン
+- 次の作業: `feature/phase5-3-demo-sessions-rls` ブランチを作成
 
-### Step 5-2: profiles RLS（実行済み）
+### Step 5-3: demo_sessions RLS（次に実行）
 
-```sql
--- 既存ポリシー削除
-DROP POLICY IF EXISTS "profiles_select_all" ON profiles;
-DROP POLICY IF EXISTS "profiles_update_own" ON profiles;
-DROP POLICY IF EXISTS "profiles_insert_own" ON profiles;
+#### テーブル構造
 
--- SELECT: 認証済み + (自分自身 OR 同一グループメンバー)
-CREATE POLICY "profiles_select_policy" ON profiles
-FOR SELECT USING (
-  auth.uid() IS NOT NULL
-  AND (
-    id = auth.uid()
-    OR id IN (
-      SELECT gm2.user_id
-      FROM group_members gm1
-      JOIN group_members gm2 ON gm1.group_id = gm2.group_id
-      WHERE gm1.user_id = auth.uid()
-    )
-  )
-);
-
--- UPDATE: 自分自身のみ
-CREATE POLICY "profiles_update_policy" ON profiles
-FOR UPDATE USING (id = auth.uid());
-
--- INSERT: 自分自身のみ
-CREATE POLICY "profiles_insert_policy" ON profiles
-FOR INSERT WITH CHECK (id = auth.uid());
-
--- DELETE: 誰も削除不可
-CREATE POLICY "profiles_delete_policy" ON profiles
-FOR DELETE USING (false);
+```
+demo_sessions
+├── id: UUID (PK)
+├── user_id: UUID → profiles(id)
+├── group_id: UUID → groups(id)
+├── expires_at: TIMESTAMPTZ
+└── created_at: TIMESTAMPTZ
 ```
 
-### 今セッションで修正したバグ
+#### RLS 要件
 
-1. **group_members.joined_at → created_at**: DBに存在しないカラム参照を修正
-2. **Hydrationエラー**: `InviteLinkButton` の `navigator.share` 判定をクライアントサイドのみに変更
-3. **toLocaleString**: ロケール指定 `"ja-JP"` を追加
+| 操作 | ポリシー |
+|------|---------|
+| SELECT | 自分のセッションのみ (`user_id = auth.uid()`) |
+| INSERT | 自分のセッションのみ (`user_id = auth.uid()`) |
+| DELETE | 自分のセッションのみ (`user_id = auth.uid()`) |
+| UPDATE | 不要（デモセッションは更新しない） |
+
+#### 注意点
+
+1. **既存ポリシー確認**: 001_initial_schema.sql に既存ポリシーあり → DROP してから CREATE
+2. **カラム名**: 上記DBスキーマのみ使用（推測禁止）
+3. **マイグレーションファイル**: `supabase/migrations/005_demo_sessions_rls.sql` として作成
+
+#### 提案SQL
+
+```sql
+-- ============================================
+-- Phase 5-3: demo_sessions テーブル RLS 設定
+-- ============================================
+
+-- 既存ポリシー削除
+DROP POLICY IF EXISTS "demo_sessions_select_own" ON demo_sessions;
+DROP POLICY IF EXISTS "demo_sessions_insert_own" ON demo_sessions;
+DROP POLICY IF EXISTS "demo_sessions_delete_own" ON demo_sessions;
+
+-- SELECT: 自分のセッションのみ
+CREATE POLICY "demo_sessions_select_policy" ON demo_sessions
+FOR SELECT USING (user_id = auth.uid());
+
+-- INSERT: 自分のセッションのみ
+CREATE POLICY "demo_sessions_insert_policy" ON demo_sessions
+FOR INSERT WITH CHECK (user_id = auth.uid());
+
+-- DELETE: 自分のセッションのみ
+CREATE POLICY "demo_sessions_delete_policy" ON demo_sessions
+FOR DELETE USING (user_id = auth.uid());
+```
 
 ### 仕様決定事項（継続）
 
