@@ -15,7 +15,7 @@ describe("Demo Audit Log - 削除操作の監査ログ", () => {
 
   afterEach(() => {
     consoleSpy.mockRestore();
-    process.env.NODE_ENV = originalEnv;
+    (process.env as { NODE_ENV?: string }).NODE_ENV = originalEnv;
   });
 
   // ============================================
