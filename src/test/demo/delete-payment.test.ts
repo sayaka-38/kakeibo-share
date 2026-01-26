@@ -167,7 +167,7 @@ describe("deletePayment - 個別支払い削除", () => {
 
       // 監査ログが出力されたことを確認
       expect(consoleSpy).toHaveBeenCalled();
-      const logCalls = consoleSpy.mock.calls.map((call) => call[0]);
+      const logCalls = consoleSpy.mock.calls.map((call: unknown[]) => call[0]);
       expect(logCalls.some((log: string) => log.includes("[DEMO_AUDIT]"))).toBe(true);
       expect(logCalls.some((log: string) => log.includes("PAYMENT_DELETE"))).toBe(true);
     });
