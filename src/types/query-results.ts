@@ -66,12 +66,12 @@ export type MemberResult = {
 };
 
 /**
- * グループメンバー詳細のクエリ結果（role + joined_at付き）
- * group_members.select("role, joined_at, profiles(...)") の戻り値
+ * グループメンバー詳細のクエリ結果（role + created_at付き）
+ * group_members.select("role, created_at, profiles(...)") の戻り値
  */
 export type GroupMemberDetailResult = {
   role: string;
-  joined_at: string;
+  created_at: string;
   profiles: {
     id: string;
     display_name: string | null;

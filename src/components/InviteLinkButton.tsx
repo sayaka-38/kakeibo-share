@@ -1,7 +1,16 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useSyncExternalStore } from "react";
 import { t } from "@/lib/i18n";
+
+// navigator.share の有無をクライアント/サーバーで安全に判定
+function useCanShare() {
+  return useSyncExternalStore(
+    () => () => {}, // subscribe: 静的な値なので何もしない
+    () => typeof navigator !== "undefined" && "share" in navigator, // クライアント
+    () => false // サーバー
+  );
+}
 
 type Props = {
   inviteCode: string;
@@ -9,6 +18,7 @@ type Props = {
 
 export function InviteLinkButton({ inviteCode }: Props) {
   const [copied, setCopied] = useState(false);
+  const canShare = useCanShare();
 
   const inviteUrl =
     typeof window !== "undefined"
@@ -109,7 +119,7 @@ export function InviteLinkButton({ inviteCode }: Props) {
         </button>
 
         {/* 共有ボタン（モバイル向け） */}
-        {"share" in navigator && (
+        {canShare && (
           <button
             onClick={handleShare}
             className="inline-flex items-center justify-center px-4 py-2.5 bg-white border border-blue-200 text-blue-700 rounded-lg font-medium text-sm hover:bg-blue-50 active:scale-95 transition-all"

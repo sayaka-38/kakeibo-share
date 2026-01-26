@@ -95,7 +95,7 @@ FOR SELECT USING (
 ### Phase 5: RLS 設定（継続）
 
 - [x] Step 5-1: categories テーブル RLS + カテゴリ選択 UI（PR #12）
-- [ ] Step 5-2: profiles テーブル RLS
+- [x] Step 5-2: profiles テーブル RLS（SQL実行済み、バグ修正完了）
 - [ ] Step 5-3: demo_sessions テーブル RLS
 - [ ] Step 5-4: groups + group_members テーブル RLS
 - [ ] Step 5-5: payments + payment_splits テーブル RLS
@@ -109,6 +109,24 @@ FOR SELECT USING (
 
 ---
 
+## DBスキーマ（唯一の正解）
+
+**2026-01-26 時点の本番DB構造。推測禁止、以下のみ使用可。**
+
+| テーブル | カラム |
+|---------|--------|
+| `profiles` | id, display_name, email, avatar_url, is_demo, created_at, updated_at |
+| `groups` | id, name, description, owner_id, invite_code, created_at, updated_at |
+| `group_members` | id, group_id, user_id, role, created_at |
+| `payments` | id, group_id, payer_id, category_id, amount, description, payment_date, created_at, updated_at |
+| `payment_splits` | id, payment_id, user_id, amount, is_paid, created_at |
+| `categories` | id, name, icon, color, is_default, group_id, created_at |
+| `demo_sessions` | id, user_id, group_id, expires_at, created_at |
+
+**注意**: マイグレーションファイル (001_initial_schema.sql) と実際のDBに差異あり。コードでは上記を正とする。
+
+---
+
 ## セッション引き継ぎメモ
 
 *次回セッション開始時に参照すべき事項*
@@ -117,34 +135,49 @@ FOR SELECT USING (
 
 - ブランチ: `feature/phase5-rls-setup`
 - PR: #12（レビュー待ち）
-- 作業ディレクトリ: クリーン
+- 作業ディレクトリ: 変更あり（Hydration修正、カラム名修正）
 
-### Step 5-2: profiles RLS（次に実行する SQL）
+### Step 5-2: profiles RLS（実行済み）
 
 ```sql
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+-- 既存ポリシー削除
+DROP POLICY IF EXISTS "profiles_select_all" ON profiles;
+DROP POLICY IF EXISTS "profiles_update_own" ON profiles;
+DROP POLICY IF EXISTS "profiles_insert_own" ON profiles;
 
+-- SELECT: 認証済み + (自分自身 OR 同一グループメンバー)
 CREATE POLICY "profiles_select_policy" ON profiles
 FOR SELECT USING (
-  id = auth.uid()
-  OR id IN (
-    SELECT gm2.user_id
-    FROM group_members gm1
-    JOIN group_members gm2 ON gm1.group_id = gm2.group_id
-    WHERE gm1.user_id = auth.uid()
+  auth.uid() IS NOT NULL
+  AND (
+    id = auth.uid()
+    OR id IN (
+      SELECT gm2.user_id
+      FROM group_members gm1
+      JOIN group_members gm2 ON gm1.group_id = gm2.group_id
+      WHERE gm1.user_id = auth.uid()
+    )
   )
 );
 
+-- UPDATE: 自分自身のみ
 CREATE POLICY "profiles_update_policy" ON profiles
-FOR UPDATE USING (
-  id = auth.uid()
-);
+FOR UPDATE USING (id = auth.uid());
 
+-- INSERT: 自分自身のみ
 CREATE POLICY "profiles_insert_policy" ON profiles
-FOR INSERT WITH CHECK (
-  id = auth.uid()
-);
+FOR INSERT WITH CHECK (id = auth.uid());
+
+-- DELETE: 誰も削除不可
+CREATE POLICY "profiles_delete_policy" ON profiles
+FOR DELETE USING (false);
 ```
+
+### 今セッションで修正したバグ
+
+1. **group_members.joined_at → created_at**: DBに存在しないカラム参照を修正
+2. **Hydrationエラー**: `InviteLinkButton` の `navigator.share` 判定をクライアントサイドのみに変更
+3. **toLocaleString**: ロケール指定 `"ja-JP"` を追加
 
 ### 仕様決定事項（継続）
 
@@ -152,3 +185,4 @@ FOR INSERT WITH CHECK (
 - **Server Actions 禁止**: API Routes を使用
 - **型安全性**: `as any` 禁止、Relationships 型で Join クエリ対応
 - **RLS 段階的適用**: categories → profiles → demo_sessions → groups/group_members → payments/payment_splits
+- **DBスキーマ**: 上記テーブル定義が唯一の正解、推測禁止

@@ -52,13 +52,13 @@ export default async function GroupDetailPage({ params }: Props) {
   const typedMembership = membership as { role: string };
   const isOwner = typedMembership.role === "owner";
 
-  // Get group members
+  // Get group members (created_at はDBのカラム名)
   const { data: members } = (await supabase
     .from("group_members")
     .select(
       `
       role,
-      joined_at,
+      created_at,
       profiles (
         id,
         display_name,
@@ -116,7 +116,7 @@ export default async function GroupDetailPage({ params }: Props) {
                 {t("groups.detail.totalExpenses")}
               </p>
               <p className="text-2xl font-semibold text-gray-900">
-                ¥{totalExpenses.toLocaleString()}
+                ¥{totalExpenses.toLocaleString("ja-JP")}
               </p>
             </div>
             <div className="bg-gray-50 rounded-lg p-4">
@@ -168,7 +168,7 @@ export default async function GroupDetailPage({ params }: Props) {
                   </p>
                   <p className="text-sm text-gray-700">
                     {t("groups.detail.joined")}{" "}
-                    {new Date(member.joined_at).toLocaleDateString("ja-JP")}
+                    {member.created_at.split("T")[0].replace(/-/g, "/")}
                   </p>
                 </div>
                 {member.role === "owner" && (
