@@ -60,7 +60,7 @@ export async function RecentPaymentList({
               </p>
             </div>
             <span className="font-medium text-gray-900">
-              ¥{Number(payment.amount).toLocaleString()}
+              ¥{Number(payment.amount).toLocaleString("ja-JP")}
             </span>
           </div>
         </li>

@@ -4,10 +4,12 @@
 -- 目的: API経由の不正アクセス（なりすまし・名簿抜き取り）をDB層で封鎖
 -- ============================================
 
--- 1. RLS 有効化
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+-- 1. 既存のポリシーを削除（001_initial_schema.sql で作成されたもの）
+DROP POLICY IF EXISTS "profiles_select_all" ON profiles;
+DROP POLICY IF EXISTS "profiles_update_own" ON profiles;
+DROP POLICY IF EXISTS "profiles_insert_own" ON profiles;
 
--- 2. SELECT ポリシー: 認証済み + (自分自身 OR 同一グループメンバー)
+-- 2. 新しい SELECT ポリシー: 認証済み + (自分自身 OR 同一グループメンバー)
 CREATE POLICY "profiles_select_policy" ON profiles
 FOR SELECT USING (
   auth.uid() IS NOT NULL
