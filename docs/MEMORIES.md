@@ -6,13 +6,31 @@
 
 ## 最終更新日
 
-2026-01-26（Phase 5-2 完了、PR #13, #14 マージ済み）
+2026-01-26（Phase 5-3 PR #15 作成、CI パス、レビュー待ち）
 
 ---
 
 ## 完了した機能
 
-### Phase 5-2: profiles RLS + バグ修正（今セッション完了）
+### Phase 5-3: demo_sessions RLS 強化（PR #15 レビュー待ち）
+
+**概要**: demo_sessions テーブルの RLS を `expires_at` を活用して強化。
+
+#### RLS ポリシー
+
+| 操作 | ポリシー | 効果 |
+|------|---------|------|
+| SELECT | `user_id = auth.uid() AND expires_at > now()` | 期限切れデータの自動隔離 |
+| INSERT | `user_id = auth.uid()` | 自分のセッションのみ作成可 |
+| DELETE | `user_id = auth.uid()` | クリーンアップ処理を許可 |
+
+#### マイグレーションファイル
+
+`supabase/migrations/005_demo_sessions_rls.sql`
+
+**結果**: PR #15 CI パス、レビュー待ち。
+
+### Phase 5-2: profiles RLS + バグ修正
 
 **概要**: profiles テーブルの RLS 設定とHydrationエラー・カラム名不整合の修正。
 
@@ -110,7 +128,8 @@ FOR SELECT USING (
 
 - [x] Step 5-1: categories テーブル RLS + カテゴリ選択 UI（PR #12）
 - [x] Step 5-2: profiles テーブル RLS（PR #13, #14）
-- [ ] **Step 5-3: demo_sessions テーブル RLS** ← 次はここ
+- [x] Step 5-3: demo_sessions テーブル RLS（PR #15 レビュー待ち）
+- [ ] **Step 5-4: groups + group_members テーブル RLS** ← 次はここ
 - [ ] Step 5-4: groups + group_members テーブル RLS
 - [ ] Step 5-5: payments + payment_splits テーブル RLS
 
@@ -147,62 +166,31 @@ FOR SELECT USING (
 
 ### 現在のブランチ状態
 
-- ブランチ: `main`（最新）
-- 作業ディレクトリ: クリーン
-- 次の作業: `feature/phase5-3-demo-sessions-rls` ブランチを作成
+- ブランチ: `feature/phase5-3-demo-sessions-rls`
+- PR: #15（レビュー待ち）
+- 次の作業: PR マージ後、Step 5-4 へ進む
 
-### Step 5-3: demo_sessions RLS（次に実行）
+### Step 5-4: groups + group_members RLS（次に実行）
 
-#### テーブル構造
+#### 対象テーブル
 
 ```
-demo_sessions
-├── id: UUID (PK)
-├── user_id: UUID → profiles(id)
-├── group_id: UUID → groups(id)
-├── expires_at: TIMESTAMPTZ
-└── created_at: TIMESTAMPTZ
+groups: id, name, description, owner_id, invite_code, created_at, updated_at
+group_members: id, group_id, user_id, role, created_at
 ```
 
-#### RLS 要件
+#### RLS 要件（設計書より）
 
-| 操作 | ポリシー |
-|------|---------|
-| SELECT | 自分のセッションのみ (`user_id = auth.uid()`) |
-| INSERT | 自分のセッションのみ (`user_id = auth.uid()`) |
-| DELETE | 自分のセッションのみ (`user_id = auth.uid()`) |
-| UPDATE | 不要（デモセッションは更新しない） |
+| テーブル | SELECT | INSERT | UPDATE | DELETE |
+|---------|--------|--------|--------|--------|
+| groups | メンバーのみ | 認証済み | ownerのみ | ownerのみ |
+| group_members | メンバーのみ | ownerのみ | - | owner/本人 |
 
 #### 注意点
 
-1. **既存ポリシー確認**: 001_initial_schema.sql に既存ポリシーあり → DROP してから CREATE
-2. **カラム名**: 上記DBスキーマのみ使用（推測禁止）
-3. **マイグレーションファイル**: `supabase/migrations/005_demo_sessions_rls.sql` として作成
-
-#### 提案SQL
-
-```sql
--- ============================================
--- Phase 5-3: demo_sessions テーブル RLS 設定
--- ============================================
-
--- 既存ポリシー削除
-DROP POLICY IF EXISTS "demo_sessions_select_own" ON demo_sessions;
-DROP POLICY IF EXISTS "demo_sessions_insert_own" ON demo_sessions;
-DROP POLICY IF EXISTS "demo_sessions_delete_own" ON demo_sessions;
-
--- SELECT: 自分のセッションのみ
-CREATE POLICY "demo_sessions_select_policy" ON demo_sessions
-FOR SELECT USING (user_id = auth.uid());
-
--- INSERT: 自分のセッションのみ
-CREATE POLICY "demo_sessions_insert_policy" ON demo_sessions
-FOR INSERT WITH CHECK (user_id = auth.uid());
-
--- DELETE: 自分のセッションのみ
-CREATE POLICY "demo_sessions_delete_policy" ON demo_sessions
-FOR DELETE USING (user_id = auth.uid());
-```
+1. **既存ポリシー確認**: 001_initial_schema.sql に既存ポリシーあり
+2. **招待コードでの参加**: グループ非メンバーが invite_code で SELECT する必要あり
+3. **カスケード考慮**: groups 削除時に group_members も自動削除
 
 ### 仕様決定事項（継続）
 
