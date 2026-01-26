@@ -316,6 +316,7 @@ describe("usePaymentForm", () => {
         amount: 1500,
         description: "スーパーで買い物", // トリム済み
         paymentDate: new Date("2024-01-15"),
+        categoryId: null,
       });
     });
   });
@@ -353,6 +354,7 @@ describe("usePaymentForm", () => {
         amount: 1500,
         description: "テスト",
         paymentDate: expect.any(Date),
+        categoryId: null,
       });
     });
 

@@ -122,24 +122,27 @@ export interface Database {
           name: string;
           icon: string | null;
           color: string | null;
-          group_id: string | null;
           is_default: boolean;
+          group_id: string | null;
+          created_at: string;
         };
         Insert: {
           id?: string;
           name: string;
           icon?: string | null;
           color?: string | null;
-          group_id?: string | null;
           is_default?: boolean;
+          group_id?: string | null;
+          created_at?: string;
         };
         Update: {
           id?: string;
           name?: string;
           icon?: string | null;
           color?: string | null;
-          group_id?: string | null;
           is_default?: boolean;
+          group_id?: string | null;
+          created_at?: string;
         };
         Relationships: [
           {

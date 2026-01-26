@@ -238,6 +238,7 @@ describe("PaymentForm", () => {
           amount: 1500,
           description: "スーパーで買い物",
           paymentDate: expect.any(Date),
+          categoryId: null,
         });
       });
     });

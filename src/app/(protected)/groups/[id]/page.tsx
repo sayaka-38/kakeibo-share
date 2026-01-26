@@ -12,6 +12,7 @@ import type {
   GroupResult,
   GroupMemberDetailResult,
 } from "@/types/query-results";
+import type { Category } from "@/types/database";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -76,6 +77,12 @@ export default async function GroupDetailPage({ params }: Props) {
   const totalExpenses =
     allPayments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
 
+  // Get categories (default + group-specific)
+  const { data: categories } = (await supabase
+    .from("categories")
+    .select("*")
+    .or(`is_default.eq.true,group_id.eq.${id}`)) as { data: Category[] | null };
+
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-6">
@@ -136,6 +143,7 @@ export default async function GroupDetailPage({ params }: Props) {
             groupId={id}
             currentUserId={user?.id || ""}
             memberIds={members?.map((m) => m.profiles?.id).filter((id): id is string => !!id) || []}
+            categories={categories || []}
           />
         </div>
       </div>
