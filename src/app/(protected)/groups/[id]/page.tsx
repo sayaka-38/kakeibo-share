@@ -8,6 +8,7 @@ import { GroupPaymentForm } from "@/components/GroupPaymentForm";
 import { InviteLinkButton } from "@/components/InviteLinkButton";
 import { RecentPaymentList } from "@/components/payment-list/RecentPaymentList";
 import { PaymentListSkeleton } from "@/components/payment-list/PaymentListSkeleton";
+import { DeleteGroupButton } from "@/components/DeleteGroupButton";
 import type {
   GroupResult,
   GroupMemberDetailResult,
@@ -104,9 +105,12 @@ export default async function GroupDetailPage({ params }: Props) {
               )}
             </div>
             {isOwner && (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                {t("common.owner")}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  {t("common.owner")}
+                </span>
+                <DeleteGroupButton groupId={id} groupName={group.name} />
+              </div>
             )}
           </div>
 

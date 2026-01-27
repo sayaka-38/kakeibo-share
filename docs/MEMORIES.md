@@ -6,13 +6,33 @@
 
 ## 最終更新日
 
-2026-01-27（Phase 5-4 完了、PR #17 作成）
+2026-01-27（Phase 5-4 + 5-4b 完了）
 
 ---
 
 ## 完了した機能
 
-### Phase 5-4: groups + group_members RLS 強化（PR #17 レビュー待ち）
+### Step 5-4b: グループ削除機能（PR #18 レビュー待ち）
+
+**概要**: オーナー限定のグループ削除機能を追加。
+
+#### 新規ファイル
+
+| ファイル | 説明 |
+|---------|------|
+| `src/app/api/groups/delete/route.ts` | グループ削除 API |
+| `src/components/DeleteGroupButton.tsx` | 削除ボタン + 確認ダイアログ |
+
+#### 機能詳細
+
+- オーナーのみ削除可能（RLS + API 両方でチェック）
+- 確認ダイアログで「他メンバーへの影響」を明示
+- CASCADE で関連データ自動削除
+- 削除成功後はグループ一覧へリダイレクト
+
+**結果**: PR #18 作成、CI パス。
+
+### Phase 5-4: groups + group_members RLS 強化（PR #17 マージ済み）
 
 **概要**: groups/group_members テーブルの RLS を強化し、招待参加フローを API Route 経由に移行。
 
@@ -38,7 +58,7 @@
 - 柔らかいエラーメッセージ表示
 - 成功後の自動リダイレクト
 
-**結果**: PR #17 作成、CI 待ち。
+**結果**: PR #17 マージ済み。
 
 ### Phase 5-3: demo_sessions RLS 強化（PR #15 マージ済み）
 
@@ -130,7 +150,7 @@ FOR SELECT USING (
 
 ## テスト状況
 
-- **400件のテストがパス** ✅
+- **414件のテストがパス** ✅
 - ビルド正常 ✅
 - Lint エラーなし ✅
 
@@ -157,7 +177,8 @@ FOR SELECT USING (
 - [x] Step 5-1: categories テーブル RLS + カテゴリ選択 UI（PR #12）
 - [x] Step 5-2: profiles テーブル RLS（PR #13, #14）
 - [x] Step 5-3: demo_sessions テーブル RLS（PR #15 マージ済み）
-- [x] Step 5-4: groups + group_members テーブル RLS（PR #17 レビュー待ち）
+- [x] Step 5-4: groups + group_members テーブル RLS（PR #17 マージ済み）
+- [x] Step 5-4b: グループ削除機能（PR #18 レビュー待ち）
 - [ ] **Step 5-5: payments + payment_splits テーブル RLS** ← 次はここ
 
 ### 将来の機能要件
@@ -193,8 +214,8 @@ FOR SELECT USING (
 
 ### 現在のブランチ状態
 
-- ブランチ: `feature/phase5-4-groups-rls`
-- PR: #17（レビュー待ち）
+- ブランチ: `feature/groups-delete`
+- PR: #18（レビュー待ち）
 - 次の作業: PR マージ後、Step 5-5 へ進む
 
 ### Step 5-5: payments + payment_splits RLS（次に実行）
