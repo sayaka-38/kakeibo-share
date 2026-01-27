@@ -6,13 +6,13 @@
 
 ## 最終更新日
 
-2026-01-26（Phase 5-3 PR #15 作成、CI パス、レビュー待ち）
+2026-01-27（Phase 5-3 完了、Step 5-4 着手準備）
 
 ---
 
 ## 完了した機能
 
-### Phase 5-3: demo_sessions RLS 強化（PR #15 レビュー待ち）
+### Phase 5-3: demo_sessions RLS 強化（PR #15 マージ済み）
 
 **概要**: demo_sessions テーブルの RLS を `expires_at` を活用して強化。
 
@@ -28,7 +28,7 @@
 
 `supabase/migrations/005_demo_sessions_rls.sql`
 
-**結果**: PR #15 CI パス、レビュー待ち。
+**結果**: PR #15 マージ完了。
 
 ### Phase 5-2: profiles RLS + バグ修正
 
@@ -128,9 +128,8 @@ FOR SELECT USING (
 
 - [x] Step 5-1: categories テーブル RLS + カテゴリ選択 UI（PR #12）
 - [x] Step 5-2: profiles テーブル RLS（PR #13, #14）
-- [x] Step 5-3: demo_sessions テーブル RLS（PR #15 レビュー待ち）
+- [x] Step 5-3: demo_sessions テーブル RLS（PR #15 マージ済み）
 - [ ] **Step 5-4: groups + group_members テーブル RLS** ← 次はここ
-- [ ] Step 5-4: groups + group_members テーブル RLS
 - [ ] Step 5-5: payments + payment_splits テーブル RLS
 
 ### 将来の機能要件
@@ -166,9 +165,9 @@ FOR SELECT USING (
 
 ### 現在のブランチ状態
 
-- ブランチ: `feature/phase5-3-demo-sessions-rls`
-- PR: #15（レビュー待ち）
-- 次の作業: PR マージ後、Step 5-4 へ進む
+- ブランチ: `main`（クリーンな状態）
+- マージ済みブランチ: すべて削除完了
+- 次の作業: Step 5-4 ブランチを作成して着手
 
 ### Step 5-4: groups + group_members RLS（次に実行）
 
