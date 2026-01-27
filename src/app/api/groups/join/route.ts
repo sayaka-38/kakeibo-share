@@ -16,6 +16,15 @@ const MIN_INVITE_CODE_LENGTH = 6;
  */
 export async function POST(request: Request) {
   try {
+    // 0. 環境変数チェック（早期に失敗を検出）
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.error("[API /groups/join] SUPABASE_SERVICE_ROLE_KEY is not set");
+      return NextResponse.json(
+        { error: "サーバー設定エラーが発生しました" },
+        { status: 500 }
+      );
+    }
+
     // 1. リクエストボディをパース
     const body = await request.json();
     const { inviteCode } = body;
@@ -44,6 +53,7 @@ export async function POST(request: Request) {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
+      console.log("[API /groups/join] Auth failed:", authError?.message);
       return NextResponse.json(
         { error: "ログインが必要です" },
         { status: 401 }
@@ -51,7 +61,16 @@ export async function POST(request: Request) {
     }
 
     // 4. 招待コードでグループを検索（admin クライアント = RLS バイパス）
-    const adminClient = createAdminClient();
+    let adminClient;
+    try {
+      adminClient = createAdminClient();
+    } catch (adminError) {
+      console.error("[API /groups/join] Failed to create admin client:", adminError);
+      return NextResponse.json(
+        { error: "サーバー設定エラーが発生しました" },
+        { status: 500 }
+      );
+    }
     const { data: group, error: groupError } = await adminClient
       .from("groups")
       .select("id, name")
@@ -59,6 +78,7 @@ export async function POST(request: Request) {
       .single();
 
     if (groupError || !group) {
+      console.log("[API /groups/join] Group not found:", groupError?.message);
       return NextResponse.json(
         { error: "この招待リンクは無効です" },
         { status: 404 }
@@ -93,16 +113,16 @@ export async function POST(request: Request) {
       );
     }
 
-    // 7. グループに参加（通常クライアント = RLS 適用）
-    // RLS は「自分自身の追加」を許可する設定
-    const { error: insertError } = await supabase.from("group_members").insert({
+    // 7. グループに参加（admin クライアント = RLS バイパス）
+    // 注意: RLS ポリシーが厳格なため、admin クライアントを使用
+    const { error: insertError } = await adminClient.from("group_members").insert({
       group_id: group.id,
       user_id: user.id,
       role: "member",
     });
 
     if (insertError) {
-      console.error("Failed to join group:", insertError);
+      console.error("[API /groups/join] Failed to join group:", insertError);
       return NextResponse.json(
         { error: "グループへの参加に失敗しました" },
         { status: 500 }
