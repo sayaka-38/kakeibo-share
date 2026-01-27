@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
-import { joinGroupByInviteCode } from "@/lib/invite/join-group";
+import { useRouter } from "next/navigation";
 import { t } from "@/lib/i18n";
 
 type Props = {
@@ -15,50 +14,106 @@ type JoinState =
   | { status: "success"; groupId: string; groupName: string }
   | { status: "error"; message: string; needsLogin?: boolean };
 
-// エラーコードをメッセージに変換
-function getErrorMessage(code: string): string {
-  switch (code) {
-    case "NOT_AUTHENTICATED":
-      return t("groups.invite.errors.notAuthenticated");
-    case "INVALID_INVITE_CODE":
-      return t("groups.invite.errors.invalidCode");
-    case "ALREADY_MEMBER":
-      return t("groups.invite.errors.alreadyMember");
-    case "GROUP_FULL":
-      return t("groups.invite.errors.groupFull");
+/**
+ * API レスポンスのステータスコードに応じたメッセージを返す
+ * ルームメイトに配慮した柔らかい表現を使用
+ */
+function getErrorMessageByStatus(status: number, apiError?: string): { message: string; needsLogin: boolean } {
+  switch (status) {
+    case 400:
+      // 招待コードの形式が不正
+      return {
+        message: t("groups.invite.errors.invalidCode"),
+        needsLogin: false,
+      };
+    case 401:
+      // 未認証
+      return {
+        message: t("groups.invite.errors.notAuthenticated"),
+        needsLogin: true,
+      };
+    case 403:
+      // グループが満員
+      return {
+        message: "このグループは現在メンバーがいっぱいです。オーナーにお問い合わせください。",
+        needsLogin: false,
+      };
+    case 404:
+      // 招待コードが無効
+      return {
+        message: "この招待リンクは無効か、既に使用できなくなっています。新しいリンクをリクエストしてください。",
+        needsLogin: false,
+      };
+    case 409:
+      // 既にメンバー
+      return {
+        message: "すでにこのグループのメンバーです。グループ一覧からアクセスできます。",
+        needsLogin: false,
+      };
     default:
-      return t("groups.invite.errors.joinFailed");
+      // その他のエラー
+      return {
+        message: apiError || "予期せぬエラーが発生しました。しばらく経ってからお試しください。",
+        needsLogin: false,
+      };
   }
 }
 
 export default function JoinGroupPage({ params }: Props) {
   const [state, setState] = useState<JoinState>({ status: "loading" });
+  const router = useRouter();
 
   useEffect(() => {
     const handleJoin = async () => {
       const { inviteCode } = await params;
-      const supabase = createClient();
 
-      const result = await joinGroupByInviteCode(supabase, inviteCode);
-
-      if (result.success) {
-        setState({
-          status: "success",
-          groupId: result.data.groupId,
-          groupName: result.data.groupName,
+      try {
+        // API Route 経由でグループに参加
+        // RLS をバイパスするため、サーバーサイドで service role を使用
+        const response = await fetch("/api/groups/join", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ inviteCode }),
         });
-      } else {
-        const needsLogin = result.error.code === "NOT_AUTHENTICATED";
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          setState({
+            status: "success",
+            groupId: data.groupId,
+            groupName: data.groupName,
+          });
+
+          // 3秒後に自動でグループダッシュボードへリダイレクト
+          setTimeout(() => {
+            router.push(`/groups/${data.groupId}`);
+          }, 3000);
+        } else {
+          const { message, needsLogin } = getErrorMessageByStatus(
+            response.status,
+            data.error
+          );
+          setState({
+            status: "error",
+            message,
+            needsLogin,
+          });
+        }
+      } catch {
+        // ネットワークエラーなど
         setState({
           status: "error",
-          message: getErrorMessage(result.error.code),
-          needsLogin,
+          message: "ネットワークエラーが発生しました。接続を確認してください。",
+          needsLogin: false,
         });
       }
     };
 
     handleJoin();
-  }, [params]);
+  }, [params, router]);
 
   // ローディング中
   if (state.status === "loading") {
@@ -96,10 +151,13 @@ export default function JoinGroupPage({ params }: Props) {
             <h1 className="text-xl font-bold text-gray-900 mb-2">
               {t("groups.invite.join.success")}
             </h1>
-            <p className="text-gray-700 mb-6">
+            <p className="text-gray-700 mb-2">
               {t("groups.invite.join.welcomeMessage", {
                 groupName: state.groupName,
               })}
+            </p>
+            <p className="text-sm text-gray-500 mb-6">
+              まもなくグループページへ移動します...
             </p>
             <Link
               href={`/groups/${state.groupId}`}

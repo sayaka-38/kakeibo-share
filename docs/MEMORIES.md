@@ -6,13 +6,41 @@
 
 ## 最終更新日
 
-2026-01-26（Phase 5-3 PR #15 作成、CI パス、レビュー待ち）
+2026-01-27（Phase 5-4 完了、PR #17 作成）
 
 ---
 
 ## 完了した機能
 
-### Phase 5-3: demo_sessions RLS 強化（PR #15 レビュー待ち）
+### Phase 5-4: groups + group_members RLS 強化（PR #17 レビュー待ち）
+
+**概要**: groups/group_members テーブルの RLS を強化し、招待参加フローを API Route 経由に移行。
+
+#### RLS ポリシー
+
+| テーブル | SELECT | INSERT | UPDATE | DELETE |
+|---------|--------|--------|--------|--------|
+| groups | メンバーのみ | owner_id = 自分 | owner のみ | owner のみ |
+| group_members | メンバーのみ | owner または自分自身 | - | owner または本人 |
+
+#### 新規ファイル
+
+| ファイル | 説明 |
+|---------|------|
+| `src/app/api/groups/join/route.ts` | 招待参加 API (service role 使用) |
+| `src/lib/supabase/admin.ts` | Admin クライアント (service role) |
+| `supabase/migrations/006_groups_rls.sql` | RLS ポリシー定義 |
+
+#### 招待参加フロー改善
+
+- クライアント直接アクセス → API Route 経由に変更
+- 招待コード露出を防止（RLS で厳格に制限）
+- 柔らかいエラーメッセージ表示
+- 成功後の自動リダイレクト
+
+**結果**: PR #17 作成、CI 待ち。
+
+### Phase 5-3: demo_sessions RLS 強化（PR #15 マージ済み）
 
 **概要**: demo_sessions テーブルの RLS を `expires_at` を活用して強化。
 
@@ -28,7 +56,7 @@
 
 `supabase/migrations/005_demo_sessions_rls.sql`
 
-**結果**: PR #15 CI パス、レビュー待ち。
+**結果**: PR #15 マージ完了。
 
 ### Phase 5-2: profiles RLS + バグ修正
 
@@ -102,7 +130,7 @@ FOR SELECT USING (
 
 ## テスト状況
 
-- **350件のテストがパス** ✅
+- **400件のテストがパス** ✅
 - ビルド正常 ✅
 - Lint エラーなし ✅
 
@@ -128,10 +156,9 @@ FOR SELECT USING (
 
 - [x] Step 5-1: categories テーブル RLS + カテゴリ選択 UI（PR #12）
 - [x] Step 5-2: profiles テーブル RLS（PR #13, #14）
-- [x] Step 5-3: demo_sessions テーブル RLS（PR #15 レビュー待ち）
-- [ ] **Step 5-4: groups + group_members テーブル RLS** ← 次はここ
-- [ ] Step 5-4: groups + group_members テーブル RLS
-- [ ] Step 5-5: payments + payment_splits テーブル RLS
+- [x] Step 5-3: demo_sessions テーブル RLS（PR #15 マージ済み）
+- [x] Step 5-4: groups + group_members テーブル RLS（PR #17 レビュー待ち）
+- [ ] **Step 5-5: payments + payment_splits テーブル RLS** ← 次はここ
 
 ### 将来の機能要件
 
@@ -166,31 +193,31 @@ FOR SELECT USING (
 
 ### 現在のブランチ状態
 
-- ブランチ: `feature/phase5-3-demo-sessions-rls`
-- PR: #15（レビュー待ち）
-- 次の作業: PR マージ後、Step 5-4 へ進む
+- ブランチ: `feature/phase5-4-groups-rls`
+- PR: #17（レビュー待ち）
+- 次の作業: PR マージ後、Step 5-5 へ進む
 
-### Step 5-4: groups + group_members RLS（次に実行）
+### Step 5-5: payments + payment_splits RLS（次に実行）
 
 #### 対象テーブル
 
 ```
-groups: id, name, description, owner_id, invite_code, created_at, updated_at
-group_members: id, group_id, user_id, role, created_at
+payments: id, group_id, payer_id, category_id, amount, description, payment_date, created_at, updated_at
+payment_splits: id, payment_id, user_id, amount, is_paid, created_at
 ```
 
 #### RLS 要件（設計書より）
 
 | テーブル | SELECT | INSERT | UPDATE | DELETE |
 |---------|--------|--------|--------|--------|
-| groups | メンバーのみ | 認証済み | ownerのみ | ownerのみ |
-| group_members | メンバーのみ | ownerのみ | - | owner/本人 |
+| payments | メンバーのみ | メンバーのみ | payer のみ | payer のみ |
+| payment_splits | メンバーのみ | メンバーのみ | - | - |
 
 #### 注意点
 
-1. **既存ポリシー確認**: 001_initial_schema.sql に既存ポリシーあり
-2. **招待コードでの参加**: グループ非メンバーが invite_code で SELECT する必要あり
-3. **カスケード考慮**: groups 削除時に group_members も自動削除
+1. **グループメンバーシップ確認**: payments の group_id から group_members を JOIN
+2. **payer 権限**: 支払いの編集・削除は支払者本人のみ
+3. **デモデータ考慮**: is_demo フラグとの整合性
 
 ### 仕様決定事項（継続）
 
