@@ -194,6 +194,9 @@ FOR SELECT USING (
 - ~~カテゴリ選択がない~~ → InlinePaymentForm に追加
 - ~~Hydrationエラー~~ → `useSyncExternalStore` で解決
 - ~~DBカラム名不整合~~ → 実際のDBスキーマに合わせて修正
+- ~~RLS 無限再帰~~ → SECURITY DEFINER ヘルパー関数で解消 (Migration 007)
+- ~~認証フロー不安定~~ → profiles SELECT を自己参照なしの独立ポリシーに分離
+- ~~demo_sessions 期限切れで参照不可~~ → expires_at 制約をアプリ層に移行
 
 ---
 
