@@ -6,13 +6,40 @@
 
 ## 最終更新日
 
-2026-01-27（Phase 5-4 + 5-4b 完了）
+2026-01-30（Phase 5-5 完了）
 
 ---
 
 ## 完了した機能
 
-### Step 5-4b: グループ削除機能（PR #18 レビュー待ち）
+### Step 5-5: payments + payment_splits RLS 強化（PR #21 レビュー待ち）
+
+**概要**: payments / payment_splits テーブルの RLS を強化。グループ非メンバーによるアクセスを DB 層で完全遮断。
+
+#### RLS ポリシー
+
+| テーブル | SELECT | INSERT | UPDATE | DELETE |
+|---------|--------|--------|--------|--------|
+| payments | メンバーのみ | payer=自分 & メンバー | 支払者のみ | 支払者のみ |
+| payment_splits | メンバーのみ | メンバーのみ | 全拒否 | 全拒否(CASCADE) |
+
+#### 新規ファイル
+
+| ファイル | 説明 |
+|---------|------|
+| `src/test/rls/payments-rls.test.ts` | RLS ポリシー仕様テスト（60テスト） |
+| `supabase/migrations/008_payments_rls.sql` | ヘルパー関数 + RLS ポリシー定義 |
+
+#### 設計ポイント
+
+- `get_payment_group_id()` SECURITY DEFINER で cross-table RLS 依存チェーン解消
+- `payer_id = auth.uid()` で INSERT 時のなりすまし防止
+- payment_splits DELETE は `USING(false)` + FK CASCADE で安全に動作
+- パフォーマンスインデックス追加（payments.group_id, payments.payer_id, payment_splits.payment_id）
+
+**結果**: PR #21 作成、CI パス。
+
+### Step 5-4b: グループ削除機能（PR #18 マージ済み）
 
 **概要**: オーナー限定のグループ削除機能を追加。
 
@@ -30,7 +57,7 @@
 - CASCADE で関連データ自動削除
 - 削除成功後はグループ一覧へリダイレクト
 
-**結果**: PR #18 作成、CI パス。
+**結果**: PR #18 マージ済み。
 
 ### Phase 5-4: groups + group_members RLS 強化（PR #17 マージ済み）
 
@@ -150,7 +177,7 @@ FOR SELECT USING (
 
 ## テスト状況
 
-- **414件のテストがパス** ✅
+- **548件のテストがパス** ✅
 - ビルド正常 ✅
 - Lint エラーなし ✅
 
@@ -178,8 +205,8 @@ FOR SELECT USING (
 - [x] Step 5-2: profiles テーブル RLS（PR #13, #14）
 - [x] Step 5-3: demo_sessions テーブル RLS（PR #15 マージ済み）
 - [x] Step 5-4: groups + group_members テーブル RLS（PR #17 マージ済み）
-- [x] Step 5-4b: グループ削除機能（PR #18 レビュー待ち）
-- [ ] **Step 5-5: payments + payment_splits テーブル RLS** ← 次はここ
+- [x] Step 5-4b: グループ削除機能（PR #18 マージ済み）
+- [x] Step 5-5: payments + payment_splits テーブル RLS（PR #21 レビュー待ち）
 
 ### 将来の機能要件
 
@@ -214,31 +241,23 @@ FOR SELECT USING (
 
 ### 現在のブランチ状態
 
-- ブランチ: `feature/groups-delete`
-- PR: #18（レビュー待ち）
-- 次の作業: PR マージ後、Step 5-5 へ進む
+- ブランチ: `feature/phase5-5-payments-rls`
+- PR: #21（レビュー待ち）
+- Phase 5 RLS 設定は全テーブル完了
 
-### Step 5-5: payments + payment_splits RLS（次に実行）
+### Phase 5 RLS 設定完了状況
 
-#### 対象テーブル
+全テーブルの RLS が完了。Supabase ダッシュボードで Migration 008 を適用すれば本番反映可能。
 
-```
-payments: id, group_id, payer_id, category_id, amount, description, payment_date, created_at, updated_at
-payment_splits: id, payment_id, user_id, amount, is_paid, created_at
-```
-
-#### RLS 要件（設計書より）
-
-| テーブル | SELECT | INSERT | UPDATE | DELETE |
-|---------|--------|--------|--------|--------|
-| payments | メンバーのみ | メンバーのみ | payer のみ | payer のみ |
-| payment_splits | メンバーのみ | メンバーのみ | - | - |
-
-#### 注意点
-
-1. **グループメンバーシップ確認**: payments の group_id から group_members を JOIN
-2. **payer 権限**: 支払いの編集・削除は支払者本人のみ
-3. **デモデータ考慮**: is_demo フラグとの整合性
+| テーブル | Migration | PR | 状態 |
+|---------|-----------|-----|------|
+| categories | - | #12 | マージ済み |
+| profiles | 004 + 007 | #13, #14 | マージ済み |
+| demo_sessions | 005 + 007 | #15 | マージ済み |
+| groups | 006 + 007 | #17 | マージ済み |
+| group_members | 006 + 007 | #17 | マージ済み |
+| payments | 008 | #21 | レビュー待ち |
+| payment_splits | 008 | #21 | レビュー待ち |
 
 ### 仕様決定事項（継続）
 
