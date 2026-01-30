@@ -294,8 +294,8 @@ describe("anon ロール RESTRICTIVE 拒否ポリシー (Migration 009)", () => 
   it("authenticated ロールは RESTRICTIVE ポリシーの影響を受けない", () => {
     // deny_anon ポリシーは TO anon で限定されているため
     // authenticated ロールには評価されない
-    const policyTarget = "anon";
-    const currentRole = "authenticated";
+    const policyTarget: string = "anon";
+    const currentRole: string = "authenticated";
 
     const policyApplies = policyTarget === currentRole;
     expect(policyApplies).toBe(false);
