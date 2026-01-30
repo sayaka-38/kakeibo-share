@@ -6,13 +6,33 @@
 
 ## 最終更新日
 
-2026-01-27（Phase 5-4 + 5-4b 完了）
+2026-01-30（Migration 007 完了、Step 5-5 着手準備）
 
 ---
 
 ## 完了した機能
 
-### Step 5-4b: グループ削除機能（PR #18 レビュー待ち）
+### Migration 007: RLS 無限再帰解消 + 認証フロー修正（PR #19）
+
+**概要**: group_members SELECT ポリシーの自己参照による無限再帰を SECURITY DEFINER ヘルパー関数で解消。
+
+#### 新規ファイル
+
+| ファイル | 説明 |
+|---------|------|
+| `supabase/migrations/007_fix_rls_auth_flow.sql` | RLS ポリシー再構築 + ヘルパー関数 |
+| `src/test/rls/profiles-demo-rls.test.ts` | 全テーブル RLS ポリシー仕様テスト (74テスト) |
+
+#### 修正内容
+
+- **SECURITY DEFINER 関数**: `is_group_member()`, `is_group_owner()` を導入し、RLS 再帰チェーンを断ち切り
+- **profiles SELECT 分離**: `profiles_select_own` (自分自身) + `profiles_select_group_members` (同グループ) に分離
+- **demo_sessions**: `expires_at > now()` 制約を削除、期限管理をアプリ層に移行
+- **handle_new_user トリガー**: 冪等に再作成
+
+**結果**: PR #19 作成、488テスト全パス。
+
+### Step 5-4b: グループ削除機能（PR #18 マージ済み）
 
 **概要**: オーナー限定のグループ削除機能を追加。
 
@@ -30,7 +50,7 @@
 - CASCADE で関連データ自動削除
 - 削除成功後はグループ一覧へリダイレクト
 
-**結果**: PR #18 作成、CI パス。
+**結果**: PR #18 マージ済み。
 
 ### Phase 5-4: groups + group_members RLS 強化（PR #17 マージ済み）
 
@@ -150,7 +170,7 @@ FOR SELECT USING (
 
 ## テスト状況
 
-- **414件のテストがパス** ✅
+- **488件のテストがパス** ✅
 - ビルド正常 ✅
 - Lint エラーなし ✅
 
@@ -167,6 +187,9 @@ FOR SELECT USING (
 - ~~カテゴリ選択がない~~ → InlinePaymentForm に追加
 - ~~Hydrationエラー~~ → `useSyncExternalStore` で解決
 - ~~DBカラム名不整合~~ → 実際のDBスキーマに合わせて修正
+- ~~RLS 無限再帰~~ → SECURITY DEFINER ヘルパー関数で解消 (Migration 007)
+- ~~認証フロー不安定~~ → profiles SELECT を自己参照なしの独立ポリシーに分離
+- ~~demo_sessions 期限切れで参照不可~~ → expires_at 制約をアプリ層に移行
 
 ---
 
@@ -178,7 +201,8 @@ FOR SELECT USING (
 - [x] Step 5-2: profiles テーブル RLS（PR #13, #14）
 - [x] Step 5-3: demo_sessions テーブル RLS（PR #15 マージ済み）
 - [x] Step 5-4: groups + group_members テーブル RLS（PR #17 マージ済み）
-- [x] Step 5-4b: グループ削除機能（PR #18 レビュー待ち）
+- [x] Step 5-4b: グループ削除機能（PR #18 マージ済み）
+- [x] Migration 007: RLS 無限再帰解消（PR #19）
 - [ ] **Step 5-5: payments + payment_splits テーブル RLS** ← 次はここ
 
 ### 将来の機能要件
@@ -214,9 +238,16 @@ FOR SELECT USING (
 
 ### 現在のブランチ状態
 
-- ブランチ: `feature/groups-delete`
-- PR: #18（レビュー待ち）
-- 次の作業: PR マージ後、Step 5-5 へ進む
+- ブランチ: `fix/rls-auth-flow` → PR #19（レビュー待ち）
+- 次の作業: `feature/phase5-5-payments-rls` ブランチを作成し、Step 5-5 に着手
+
+### SECURITY DEFINER ヘルパー関数（Migration 007 で導入）
+
+Step 5-5 でも再利用する関数:
+- `is_group_member(_group_id, _user_id)`: グループメンバーシップ確認（RLS バイパス）
+- `is_group_owner(_group_id, _user_id)`: グループオーナー確認（RLS バイパス）
+
+これらは payments/payment_splits の RLS ポリシーでも使用する。
 
 ### Step 5-5: payments + payment_splits RLS（次に実行）
 
