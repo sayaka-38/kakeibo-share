@@ -6,31 +6,38 @@
 
 ## 最終更新日
 
-2026-01-30（Migration 007 完了、Step 5-5 着手準備）
+2026-01-30（Phase 5-5 完了）
 
 ---
 
 ## 完了した機能
 
-### Migration 007: RLS 無限再帰解消 + 認証フロー修正（PR #19）
+### Step 5-5: payments + payment_splits RLS 強化（PR #21 レビュー待ち）
 
-**概要**: group_members SELECT ポリシーの自己参照による無限再帰を SECURITY DEFINER ヘルパー関数で解消。
+**概要**: payments / payment_splits テーブルの RLS を強化。グループ非メンバーによるアクセスを DB 層で完全遮断。
+
+#### RLS ポリシー
+
+| テーブル | SELECT | INSERT | UPDATE | DELETE |
+|---------|--------|--------|--------|--------|
+| payments | メンバーのみ | payer=自分 & メンバー | 支払者のみ | 支払者のみ |
+| payment_splits | メンバーのみ | メンバーのみ | 全拒否 | 全拒否(CASCADE) |
 
 #### 新規ファイル
 
 | ファイル | 説明 |
 |---------|------|
-| `supabase/migrations/007_fix_rls_auth_flow.sql` | RLS ポリシー再構築 + ヘルパー関数 |
-| `src/test/rls/profiles-demo-rls.test.ts` | 全テーブル RLS ポリシー仕様テスト (74テスト) |
+| `src/test/rls/payments-rls.test.ts` | RLS ポリシー仕様テスト（60テスト） |
+| `supabase/migrations/008_payments_rls.sql` | ヘルパー関数 + RLS ポリシー定義 |
 
-#### 修正内容
+#### 設計ポイント
 
-- **SECURITY DEFINER 関数**: `is_group_member()`, `is_group_owner()` を導入し、RLS 再帰チェーンを断ち切り
-- **profiles SELECT 分離**: `profiles_select_own` (自分自身) + `profiles_select_group_members` (同グループ) に分離
-- **demo_sessions**: `expires_at > now()` 制約を削除、期限管理をアプリ層に移行
-- **handle_new_user トリガー**: 冪等に再作成
+- `get_payment_group_id()` SECURITY DEFINER で cross-table RLS 依存チェーン解消
+- `payer_id = auth.uid()` で INSERT 時のなりすまし防止
+- payment_splits DELETE は `USING(false)` + FK CASCADE で安全に動作
+- パフォーマンスインデックス追加（payments.group_id, payments.payer_id, payment_splits.payment_id）
 
-**結果**: PR #19 作成、488テスト全パス。
+**結果**: PR #21 作成、CI パス。
 
 ### Step 5-4b: グループ削除機能（PR #18 マージ済み）
 
@@ -170,7 +177,7 @@ FOR SELECT USING (
 
 ## テスト状況
 
-- **488件のテストがパス** ✅
+- **548件のテストがパス** ✅
 - ビルド正常 ✅
 - Lint エラーなし ✅
 
@@ -202,8 +209,7 @@ FOR SELECT USING (
 - [x] Step 5-3: demo_sessions テーブル RLS（PR #15 マージ済み）
 - [x] Step 5-4: groups + group_members テーブル RLS（PR #17 マージ済み）
 - [x] Step 5-4b: グループ削除機能（PR #18 マージ済み）
-- [x] Migration 007: RLS 無限再帰解消（PR #19）
-- [ ] **Step 5-5: payments + payment_splits テーブル RLS** ← 次はここ
+- [x] Step 5-5: payments + payment_splits テーブル RLS（PR #21 レビュー待ち）
 
 ### 将来の機能要件
 
@@ -238,38 +244,23 @@ FOR SELECT USING (
 
 ### 現在のブランチ状態
 
-- ブランチ: `fix/rls-auth-flow` → PR #19（レビュー待ち）
-- 次の作業: `feature/phase5-5-payments-rls` ブランチを作成し、Step 5-5 に着手
+- ブランチ: `feature/phase5-5-payments-rls`
+- PR: #21（レビュー待ち）
+- Phase 5 RLS 設定は全テーブル完了
 
-### SECURITY DEFINER ヘルパー関数（Migration 007 で導入）
+### Phase 5 RLS 設定完了状況
 
-Step 5-5 でも再利用する関数:
-- `is_group_member(_group_id, _user_id)`: グループメンバーシップ確認（RLS バイパス）
-- `is_group_owner(_group_id, _user_id)`: グループオーナー確認（RLS バイパス）
+全テーブルの RLS が完了。Supabase ダッシュボードで Migration 008 を適用すれば本番反映可能。
 
-これらは payments/payment_splits の RLS ポリシーでも使用する。
-
-### Step 5-5: payments + payment_splits RLS（次に実行）
-
-#### 対象テーブル
-
-```
-payments: id, group_id, payer_id, category_id, amount, description, payment_date, created_at, updated_at
-payment_splits: id, payment_id, user_id, amount, is_paid, created_at
-```
-
-#### RLS 要件（設計書より）
-
-| テーブル | SELECT | INSERT | UPDATE | DELETE |
-|---------|--------|--------|--------|--------|
-| payments | メンバーのみ | メンバーのみ | payer のみ | payer のみ |
-| payment_splits | メンバーのみ | メンバーのみ | - | - |
-
-#### 注意点
-
-1. **グループメンバーシップ確認**: payments の group_id から group_members を JOIN
-2. **payer 権限**: 支払いの編集・削除は支払者本人のみ
-3. **デモデータ考慮**: is_demo フラグとの整合性
+| テーブル | Migration | PR | 状態 |
+|---------|-----------|-----|------|
+| categories | - | #12 | マージ済み |
+| profiles | 004 + 007 | #13, #14 | マージ済み |
+| demo_sessions | 005 + 007 | #15 | マージ済み |
+| groups | 006 + 007 | #17 | マージ済み |
+| group_members | 006 + 007 | #17 | マージ済み |
+| payments | 008 | #21 | レビュー待ち |
+| payment_splits | 008 | #21 | レビュー待ち |
 
 ### 仕様決定事項（継続）
 

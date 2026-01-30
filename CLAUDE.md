@@ -232,7 +232,7 @@ Phase/Step 開始時 → git checkout -b feature/phaseX-Y-description
 ```
 
 **禁止事項:**
-- `main` ブランチへの直接コミット・プッシュ（※ドキュメントのみの更新を除く）
+- `main` ブランチへの直接コミット・プッシュ（例外なし）
 - レビューなしでのマージ
 - Step 開始時にブランチを切らずに作業を進めること
 
@@ -241,9 +241,9 @@ Phase/Step 開始時 → git checkout -b feature/phaseX-Y-description
 - ただし **1 世代前（直近）の作業ブランチは削除せず残す**（緊急切り戻し用）
 - それより古いブランチから順に掃除する
 
-**ドキュメント更新の例外:**
-- `MEMORIES.md` や `CLAUDE.md` などドキュメントのみの更新は、PR を作成せず **直接 main へプッシュ可**
-- コード（SQL / TypeScript）を含む変更は、従来通りブランチ作成と PR を必須とする
+**ドキュメント更新ルール:**
+- `MEMORIES.md` や `CLAUDE.md` などドキュメントのみの更新も、作業ブランチ内でコミットし **PR 経由でマージ**する
+- セッション終了時の `MEMORIES.md` 記録は、その時点の作業ブランチにコミット・プッシュすればよい
 
 ### 6. Demo Mode Policy（本番常設型デモ）
 
