@@ -8,11 +8,10 @@ export function getSupabaseEnv(): { url: string; anonKey: string } {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  const missing: string[] = [];
-  if (!url) missing.push("NEXT_PUBLIC_SUPABASE_URL");
-  if (!anonKey) missing.push("NEXT_PUBLIC_SUPABASE_ANON_KEY");
-
-  if (missing.length > 0) {
+  if (!url || !anonKey) {
+    const missing: string[] = [];
+    if (!url) missing.push("NEXT_PUBLIC_SUPABASE_URL");
+    if (!anonKey) missing.push("NEXT_PUBLIC_SUPABASE_ANON_KEY");
     throw new Error(
       `Missing required environment variables: ${missing.join(", ")}. ` +
         "Check your .env.local file."
