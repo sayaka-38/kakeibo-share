@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { authenticateRequest } from "@/lib/api/authenticate";
 
 // グループメンバー上限
 const MAX_GROUP_MEMBERS = 20;
@@ -45,20 +45,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // 3. ユーザー認証確認（通常クライアント）
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      console.log("[API /groups/join] Auth failed:", authError?.message);
-      return NextResponse.json(
-        { error: "ログインが必要です" },
-        { status: 401 }
-      );
-    }
+    // 3. ユーザー認証確認
+    const auth = await authenticateRequest();
+    if (!auth.success) return auth.response;
+    const { user } = auth;
 
     // 4. 招待コードでグループを検索（admin クライアント = RLS バイパス）
     let adminClient;

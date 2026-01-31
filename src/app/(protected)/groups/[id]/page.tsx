@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
+import { formatCurrency } from "@/lib/format/currency";
 import InviteMemberForm from "@/components/InviteMemberForm";
 import { GroupPaymentForm } from "@/components/GroupPaymentForm";
 import { InviteLinkButton } from "@/components/InviteLinkButton";
@@ -120,7 +121,7 @@ export default async function GroupDetailPage({ params }: Props) {
                 {t("groups.detail.totalExpenses")}
               </p>
               <p className="text-2xl font-semibold text-gray-900">
-                ¥{totalExpenses.toLocaleString("ja-JP")}
+                {formatCurrency(totalExpenses)}
               </p>
             </div>
             <div className="bg-gray-50 rounded-lg p-4">

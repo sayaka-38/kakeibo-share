@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { authenticateRequest } from "@/lib/api/authenticate";
 
 /**
  * POST /api/groups/delete
@@ -24,18 +24,9 @@ export async function POST(request: Request) {
     }
 
     // 3. ユーザー認証確認
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: "ログインが必要です" },
-        { status: 401 }
-      );
-    }
+    const auth = await authenticateRequest();
+    if (!auth.success) return auth.response;
+    const { user, supabase } = auth;
 
     // 4. グループの存在確認とオーナー確認
     const { data: group, error: groupError } = await supabase
