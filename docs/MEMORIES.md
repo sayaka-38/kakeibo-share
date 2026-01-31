@@ -222,6 +222,9 @@
 - ~~カテゴリ選択がない~~ → InlinePaymentForm に追加
 - ~~Hydrationエラー~~ → `useSyncExternalStore` で解決
 - ~~DBカラム名不整合~~ → 実際のDBスキーマに合わせて修正
+- ~~RLS 無限再帰~~ → SECURITY DEFINER ヘルパー関数で解消 (Migration 007)
+- ~~認証フロー不安定~~ → profiles SELECT を自己参照なしの独立ポリシーに分離
+- ~~demo_sessions 期限切れで参照不可~~ → expires_at 制約をアプリ層に移行
 - ~~環境変数の `!` 非安全アサーション~~ → `getSupabaseEnv()` に統一で解決
 - ~~清算画面の攻撃的な色・表現~~ → blue/amber + 柔らかいラベルに変更で解決
 
@@ -376,7 +379,7 @@ const { user, supabase } = auth;
 ### 現在のブランチ状態
 
 - Phase 6 Supabase CLI 移行: **マージ済み**
-- Phase A: 即効改善 A-1〜A-4: **PR 作成済み** (`feature/phase-a-improvements`)
+- Phase A: 即効改善 A-1〜A-4: **PR #24** (`feature/phase-a-improvements`)
 
 ### Phase 5 RLS 設定完了状況
 
