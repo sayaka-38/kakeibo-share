@@ -8,6 +8,7 @@
  */
 import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
+import { formatCurrency } from "@/lib/format/currency";
 import type { DashboardPaymentResult } from "@/types/query-results";
 
 interface RecentPaymentListProps {
@@ -60,7 +61,7 @@ export async function RecentPaymentList({
               </p>
             </div>
             <span className="font-medium text-gray-900">
-              ¥{Number(payment.amount).toLocaleString("ja-JP")}
+              {formatCurrency(Number(payment.amount))}
             </span>
           </div>
         </li>

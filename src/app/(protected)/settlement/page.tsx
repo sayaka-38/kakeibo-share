@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
+import { formatCurrency } from "@/lib/format/currency";
 import {
   calculateBalances,
   suggestSettlements,
@@ -181,8 +182,7 @@ export default async function SettlementPage() {
                           {t("settlement.totalExpenses")}
                         </span>
                         <span className="font-medium text-blue-900">
-                          {t("common.currency")}
-                          {totalExpenses.toLocaleString()}
+                          {formatCurrency(totalExpenses)}
                         </span>
                       </div>
                       <div className="flex justify-between">
@@ -196,8 +196,7 @@ export default async function SettlementPage() {
                           {t("settlement.perPerson")}
                         </span>
                         <span className="font-bold text-blue-900">
-                          {t("common.currency")}
-                          {perPersonAmount.toLocaleString()}
+                          {formatCurrency(perPersonAmount)}
                         </span>
                       </div>
                       {unsettledRemainder > 0 && (
@@ -206,8 +205,7 @@ export default async function SettlementPage() {
                             {t("settlement.unsettledRemainder")}
                           </span>
                           <span className="text-blue-600">
-                            {t("common.currency")}
-                            {unsettledRemainder.toLocaleString()}
+                            {formatCurrency(unsettledRemainder)}
                           </span>
                         </div>
                       )}
@@ -230,23 +228,19 @@ export default async function SettlementPage() {
                           </span>
                           <div className="text-right">
                             <span className="text-gray-700 mr-4">
-                              {t("settlement.paid")}: {t("common.currency")}
-                              {balance.totalPaid.toLocaleString()}
+                              {t("settlement.paid")}: {formatCurrency(balance.totalPaid)}
                             </span>
                             <span className="text-gray-500 mr-4">
-                              {t("settlement.owed")}: {t("common.currency")}
-                              {balance.totalOwed.toLocaleString()}
+                              {t("settlement.owed")}: {formatCurrency(balance.totalOwed)}
                             </span>
                             <span
                               className={
                                 balance.balance >= 0
-                                  ? "text-green-600 font-medium"
+                                  ? "text-blue-600 font-medium"
                                   : "text-amber-600 font-medium"
                               }
                             >
-                              {balance.balance >= 0 ? "+" : ""}
-                              {t("common.currency")}
-                              {balance.balance.toLocaleString()}
+                              {formatCurrency(balance.balance, { showSign: true })}
                             </span>
                           </div>
                         </div>
@@ -288,8 +282,7 @@ export default async function SettlementPage() {
                               </span>
                             </div>
                             <span className="text-lg font-semibold text-blue-600">
-                              {t("common.currency")}
-                              {settlement.amount.toLocaleString()}
+                              {formatCurrency(settlement.amount)}
                             </span>
                           </div>
                         ))}
@@ -345,8 +338,7 @@ export default async function SettlementPage() {
                                     "-"}
                                 </td>
                                 <td className="py-2 px-2 text-right text-gray-900 font-medium">
-                                  {t("common.currency")}
-                                  {Number(payment.amount).toLocaleString()}
+                                  {formatCurrency(Number(payment.amount))}
                                 </td>
                               </tr>
                             ))}

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
+import { formatCurrency } from "@/lib/format/currency";
 import { DeletePaymentForm } from "@/components/DeletePaymentButton";
 
 export default async function PaymentsPage() {
@@ -124,7 +125,7 @@ export default async function PaymentsPage() {
                 <div className="px-4 py-3 border-b border-gray-200 flex justify-between items-center">
                   <h2 className="font-medium text-gray-900">{monthName}</h2>
                   <span className="text-sm font-medium text-gray-600">
-                    {t("common.total")}: {t("common.currency")}{monthTotal.toLocaleString()}
+                    {t("common.total")}: {formatCurrency(monthTotal)}
                   </span>
                 </div>
                 <ul className="divide-y divide-gray-200">
@@ -153,7 +154,7 @@ export default async function PaymentsPage() {
                         </div>
                         <div className="flex items-center gap-4 ml-4">
                           <span className="font-medium text-gray-900">
-                            {t("common.currency")}{Number(payment.amount).toLocaleString()}
+                            {formatCurrency(Number(payment.amount))}
                           </span>
                           {/* デモモード時のみ削除フォームを表示 */}
                           {(isDemo || process.env.NODE_ENV === "development") && (

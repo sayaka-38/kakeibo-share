@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
+import { formatCurrency } from "@/lib/format/currency";
 import type {
   GroupMembershipWithDescriptionResult,
   DashboardPaymentResult,
@@ -171,7 +172,7 @@ export default async function DashboardPage() {
                         </p>
                       </div>
                       <span className="font-medium text-gray-900">
-                        ¥{payment.amount.toLocaleString()}
+                        {formatCurrency(payment.amount)}
                       </span>
                     </div>
                   </li>
