@@ -30,14 +30,14 @@ function extractColumnNamesFromType(typeContent: string, tableName: string): str
 describe("Schema Consistency - スキーマ整合性", () => {
   // process.cwd() を使用してプロジェクトルートを取得
   const projectRoot = process.cwd();
-  const typesPath = join(projectRoot, "src/types/database.ts");
+  const typesPath = join(projectRoot, "src/types/database.generated.ts");
   const inviteCodeMigrationPath = join(
     projectRoot,
-    "supabase/migrations/002_add_invite_code.sql"
+    "supabase/migrations/20260101000002_add_invite_code.sql"
   );
   const columnRenameMigrationPath = join(
     projectRoot,
-    "supabase/migrations/003_rename_columns_for_consistency.sql"
+    "supabase/migrations/20260101000003_rename_columns_for_consistency.sql"
   );
 
   let typeContent: string;
@@ -111,24 +111,23 @@ describe("Schema Consistency - スキーマ整合性", () => {
 
 describe("RLS Policy Consistency - RLSポリシー整合性", () => {
   const projectRoot = process.cwd();
-  const initialSchemaPath = join(
+  const paymentsRlsPath = join(
     projectRoot,
-    "supabase/migrations/001_initial_schema.sql"
+    "supabase/migrations/20260101000008_payments_rls.sql"
   );
 
-  let initialSchemaContent: string;
+  let paymentsRlsContent: string;
 
   try {
-    initialSchemaContent = readFileSync(initialSchemaPath, "utf-8");
+    paymentsRlsContent = readFileSync(paymentsRlsPath, "utf-8");
   } catch {
-    initialSchemaContent = "";
+    paymentsRlsContent = "";
   }
 
   describe("payments RLSポリシー", () => {
     it("RLSポリシーで payer_id を使用するように定義されている", () => {
-      // 初期スキーマでRLSポリシーが payer_id を使用していることを確認
-      expect(initialSchemaContent).toContain("payments_update_payer");
-      expect(initialSchemaContent).toContain("payments_delete_payer");
+      expect(paymentsRlsContent).toContain("payments_update_payer");
+      expect(paymentsRlsContent).toContain("payments_delete_payer");
     });
   });
 });

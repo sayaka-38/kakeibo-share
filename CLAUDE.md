@@ -24,6 +24,26 @@ npm run test      # テスト実行（ウォッチモード）
 npm run test:run  # テスト実行（単発）
 ```
 
+### Supabase CLI コマンド
+
+```bash
+npm run db:start          # ローカル Supabase 起動（Docker）
+npm run db:stop           # ローカル Supabase 停止
+npm run db:reset          # ローカル DB リセット（全マイグレーション再適用）
+npm run db:gen-types      # TypeScript 型定義を自動生成（database.generated.ts）
+npm run db:migration:new  # 新規マイグレーションファイル作成
+npm run db:diff           # ローカル DB と最新マイグレーションの差分表示
+```
+
+### 型定義のファイル構成
+
+| ファイル | 役割 | 編集 |
+|---------|------|------|
+| `src/types/database.generated.ts` | Supabase CLI で自動生成 | **手動編集禁止** |
+| `src/types/database.ts` | ヘルパー型・リテラル型オーバーライド | 手動編集可 |
+
+型を更新する際は `npm run db:gen-types` を実行し、`database.generated.ts` をコミットすること。
+
 ## プロジェクト構造
 
 ```

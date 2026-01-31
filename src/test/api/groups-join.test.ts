@@ -116,7 +116,7 @@ describe("groups + group_members RLS ポリシー仕様", () => {
 describe("マイグレーションファイル", () => {
   const MIGRATION_PATH = path.join(
     process.cwd(),
-    "supabase/migrations/006_groups_rls.sql"
+    "supabase/migrations/20260101000006_groups_rls.sql"
   );
 
   it("groups RLS マイグレーションファイルが存在する", () => {

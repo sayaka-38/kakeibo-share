@@ -72,10 +72,41 @@ jobs:
           fail_ci_if_error: false
         continue-on-error: true
 
+  supabase:
+    name: Supabase Migration & Types
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start Supabase
+        run: supabase start
+
+      - name: Verify migrations applied
+        run: supabase migration list --local
+
+      - name: Check generated types are up to date
+        run: |
+          supabase gen types typescript --local 2>/dev/null > /tmp/database.generated.ts
+          if ! diff -q src/types/database.generated.ts /tmp/database.generated.ts > /dev/null 2>&1; then
+            echo "::error::database.generated.ts is out of date. Run 'npm run db:gen-types' and commit."
+            diff src/types/database.generated.ts /tmp/database.generated.ts || true
+            exit 1
+          fi
+          echo "Generated types are up to date."
+
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop
+
   build:
     name: Build
     runs-on: ubuntu-latest
-    needs: [lint, typecheck, test]
+    needs: [lint, typecheck, test, supabase]
     steps:
       - uses: actions/checkout@v4
 

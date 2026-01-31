@@ -5,9 +5,9 @@
 -- カラムリネームはスキップし、追加項目のみ実行
 -- ============================================
 
--- カラム名変更は既に適用済みのためスキップ
--- ALTER TABLE groups RENAME COLUMN created_by TO owner_id;
--- ALTER TABLE payments RENAME COLUMN paid_by TO payer_id;
+-- カラム名変更（ローカル DB 用に実行）
+ALTER TABLE groups RENAME COLUMN created_by TO owner_id;
+ALTER TABLE payments RENAME COLUMN paid_by TO payer_id;
 
 -- ============================================
 -- 3. profiles テーブル: is_demo カラム追加
