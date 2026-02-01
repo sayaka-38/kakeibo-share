@@ -2,7 +2,14 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format/currency";
+import { isCustomSplit } from "@/lib/calculation/split";
 import { DeletePaymentForm } from "@/components/DeletePaymentButton";
+import {
+  SplitAccordionProvider,
+  SplitBadge,
+  SplitContent,
+  type SplitWithProfile,
+} from "@/components/payment-list/PaymentSplitAccordion";
 
 export default async function PaymentsPage() {
   const supabase = await createClient();
@@ -32,6 +39,7 @@ export default async function PaymentsPage() {
   type PaymentSplitRow = {
     user_id: string;
     amount: number;
+    profiles: { display_name: string | null; email: string } | null;
   };
 
   type PaymentWithRelations = {
@@ -69,7 +77,11 @@ export default async function PaymentsPage() {
         ),
         payment_splits (
           user_id,
-          amount
+          amount,
+          profiles (
+            display_name,
+            email
+          )
         )
       `
         )
@@ -147,11 +159,25 @@ export default async function PaymentsPage() {
                           s.user_id === payment.payer_id && s.amount === 0
                       );
 
-                    return (
-                      <li key={payment.id} className="px-4 py-3">
+                    const custom = isCustomSplit(
+                      payment.payment_splits,
+                      payment.payer_id,
+                      Number(payment.amount)
+                    );
+
+                    const splitsWithProfile: SplitWithProfile[] =
+                      payment.payment_splits.map((s) => ({
+                        user_id: s.user_id,
+                        amount: s.amount,
+                        display_name: s.profiles?.display_name ?? null,
+                        email: s.profiles?.email ?? "",
+                      }));
+
+                    const rowContent = (
+                      <>
                         <div className="flex justify-between items-start">
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <p className="font-medium text-gray-900 truncate">
                                 {payment.description}
                               </p>
@@ -165,6 +191,7 @@ export default async function PaymentsPage() {
                                   {t("payments.display.proxyBadge")}
                                 </span>
                               )}
+                              {custom && <SplitBadge />}
                             </div>
                             <p className="text-sm text-gray-700">
                               {payment.profiles?.display_name ||
@@ -188,6 +215,19 @@ export default async function PaymentsPage() {
                             )}
                           </div>
                         </div>
+                        {custom && <SplitContent splits={splitsWithProfile} />}
+                      </>
+                    );
+
+                    return (
+                      <li key={payment.id} className="px-4 py-3">
+                        {custom ? (
+                          <SplitAccordionProvider>
+                            {rowContent}
+                          </SplitAccordionProvider>
+                        ) : (
+                          rowContent
+                        )}
                       </li>
                     );
                   })}

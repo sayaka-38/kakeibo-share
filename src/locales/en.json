@@ -158,6 +158,8 @@
       "splitEqually": "Split equally",
       "customSplit": "Custom split",
       "splitAmounts": "Split amounts",
+      "splitRemaining": "Remaining: {amount}",
+      "autoCalculated": "Auto",
       "splitProxy": "Pay for someone",
       "proxyBeneficiary": "Who is this for?",
       "proxyAutoConfirm": "Paying in full for {name}",
@@ -175,11 +177,13 @@
       "dateFuture": "Date cannot be in the future",
       "dateTooOld": "Date cannot be more than 1 year ago",
       "beneficiaryRequired": "Please select a beneficiary",
-      "beneficiarySameAsPayer": "Beneficiary must be someone other than yourself"
+      "beneficiarySameAsPayer": "Beneficiary must be someone other than yourself",
+      "customSplitMismatch": "Split total ({splitTotal}) doesn't match the payment amount ({total})"
     },
     "display": {
       "proxyBadge": "Paid for",
-      "proxyFor": "For {name}"
+      "proxyFor": "For {name}",
+      "customBadge": "Breakdown"
     },
     "errors": {
       "invalidAmount": "Please enter a valid amount",
