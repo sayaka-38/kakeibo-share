@@ -8,12 +8,18 @@ export function getSupabaseEnv(): { url: string; anonKey: string } {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!url || !anonKey) {
-    const missing: string[] = [];
-    if (!url) missing.push("NEXT_PUBLIC_SUPABASE_URL");
-    if (!anonKey) missing.push("NEXT_PUBLIC_SUPABASE_ANON_KEY");
+  if (!url) {
     throw new Error(
-      `Missing required environment variables: ${missing.join(", ")}. ` +
+      `Missing required environment variable: NEXT_PUBLIC_SUPABASE_URL. ` +
+        (!anonKey
+          ? "Also missing: NEXT_PUBLIC_SUPABASE_ANON_KEY. "
+          : "") +
+        "Check your .env.local file."
+    );
+  }
+  if (!anonKey) {
+    throw new Error(
+      "Missing required environment variable: NEXT_PUBLIC_SUPABASE_ANON_KEY. " +
         "Check your .env.local file."
     );
   }
