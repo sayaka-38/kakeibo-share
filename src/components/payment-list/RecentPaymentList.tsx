@@ -9,10 +9,18 @@
 import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format/currency";
+import { isCustomSplit } from "@/lib/calculation/split";
+import {
+  SplitAccordionProvider,
+  SplitBadge,
+  SplitContent,
+  type SplitWithProfile,
+} from "./PaymentSplitAccordion";
 
 type PaymentSplitRow = {
   user_id: string;
   amount: number;
+  profiles: { display_name: string | null; email: string } | null;
 };
 
 type RecentPaymentRow = {
@@ -51,7 +59,11 @@ export async function RecentPaymentList({
       ),
       payment_splits (
         user_id,
-        amount
+        amount,
+        profiles (
+          display_name,
+          email
+        )
       )
     `
     )
@@ -76,11 +88,25 @@ export async function RecentPaymentList({
             (s) => s.user_id === payment.payer_id && s.amount === 0
           );
 
-        return (
-          <li key={payment.id} className="px-4 py-3">
+        const custom = isCustomSplit(
+          payment.payment_splits,
+          payment.payer_id,
+          Number(payment.amount)
+        );
+
+        const splitsWithProfile: SplitWithProfile[] =
+          payment.payment_splits.map((s) => ({
+            user_id: s.user_id,
+            amount: s.amount,
+            display_name: s.profiles?.display_name ?? null,
+            email: s.profiles?.email ?? "",
+          }));
+
+        const rowContent = (
+          <>
             <div className="flex justify-between items-start">
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <p className="font-medium text-gray-900">
                     {payment.description}
                   </p>
@@ -89,6 +115,7 @@ export async function RecentPaymentList({
                       {t("payments.display.proxyBadge")}
                     </span>
                   )}
+                  {custom && <SplitBadge />}
                 </div>
                 <p className="text-sm text-gray-700">
                   {payment.profiles?.display_name || payment.profiles?.email} -{" "}
@@ -99,6 +126,17 @@ export async function RecentPaymentList({
                 {formatCurrency(Number(payment.amount))}
               </span>
             </div>
+            {custom && <SplitContent splits={splitsWithProfile} />}
+          </>
+        );
+
+        return (
+          <li key={payment.id} className="px-4 py-3">
+            {custom ? (
+              <SplitAccordionProvider>{rowContent}</SplitAccordionProvider>
+            ) : (
+              rowContent
+            )}
           </li>
         );
       })}

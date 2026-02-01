@@ -22,8 +22,9 @@
 | — | Phase 6 | Supabase CLI移行: マイグレーション標準化、ローカルDB、型自動生成 | マージ済み |
 | 2026-01-31 | Phase A | 即効改善: 認証共通化・通貨フォーマット・環境変数厳格化・清算UI改善 | #24 |
 | 2026-02-01 | Proxy Purchase | 代理購入機能: Step 1〜10 全完了（DB変更なし・splits参照方式）+ 2人グループUX改善 | PR作成済み |
+| 2026-02-01 | Custom Split UX | カスタム割り勘: バリデーション・自動補完・内訳アコーディオン表示 | 同ブランチ |
 
-テスト: 645件パス / ビルド正常 / Lint エラーなし（2026-02-01 セッション終了時点）
+テスト: 652件パス / ビルド正常 / Lint エラーなし（2026-02-01 セッション最新）
 
 ---
 
@@ -36,18 +37,25 @@
 - **splits参照方式**: `calculateBalances()` は splits がある支払いは各splitのamountで負担額を計算、ない場合はレガシーエクセル方式にフォールバック。端数は支払者吸収（`calculateEqualSplit` の `payerId` で remainder を加算）
 - **代理購入の判定**: DB にフラグなし。`payment_splits` で `payer.amount === 0` かつ他メンバーに全額割当のパターンで推定
 - **usePaymentForm**: `SplitType = "equal" | "custom" | "proxy"` で 3種の割り勘に対応。`proxyBeneficiaryId` でバリデーションも統合
+- **isCustomSplit()**: `split.ts` に追加。均等割り・代理購入でない分割をカスタムと判定（均等割りパターン: `floor(total/N)` + payer に remainder）
+- **カスタム割り勘の自動補完**: 2人→双方向自動計算、3人以上→最後のメンバーを自動計算（readOnly）。`lastEditedRef` で最後に編集されたフィールドを追跡
+- **PaymentSplitAccordion**: Context パターンで `SplitBadge`（タイトル行内）と `SplitContent`（行外）が状態共有。CSS Grid `grid-rows-[0fr]/[1fr]` でスムーズアニメーション
+- **payment_splits プロフィール結合**: クエリに `profiles (display_name, email)` を追加して内訳にメンバー名を表示
 
 ---
 
 ## 現在のブランチ
 
-- `main` — 代理購入 PR マージ後はここから次のブランチを切る
+- `feature/proxy-purchase` — 代理購入 + カスタム割り勘改善（全機能100%完了、コミット済み）
+- マージ後は `main` から次のブランチ `feature/delete-payment` を切る
 
 ---
 
 ## 次のタスク
 
-### 🔜 最優先: 自分の支払いの削除機能
+### 🔜 次回セッション再開ポイント: 自分の支払いの削除機能
+
+> **ブランチ**: `feature/delete-payment`（`main` マージ後に作成）
 
 - [ ] 支払い削除 API Route 作成（`DELETE /api/payments/[id]`）
 - [ ] 認証 + 権限チェック（支払者本人 or グループオーナーのみ削除可）

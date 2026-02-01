@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { t } from "@/lib/i18n";
+import { formatCurrency } from "@/lib/format/currency";
 import { usePaymentForm } from "./hooks/usePaymentForm";
 import { AmountField, DescriptionField, DateField } from "./fields";
 import {
@@ -46,6 +47,100 @@ export default function FullPaymentForm({
   const currentMembers = groupId ? members[groupId] || [] : [];
   const otherMembers = currentMembers.filter((m) => m.id !== currentUserId);
 
+  // --- カスタム割り勘: 自動補完ロジック ---
+  const lastEditedRef = useRef<string | null>(null);
+
+  /** 合計金額（パース済み） */
+  const totalAmount = parseFloat(form.amount) || 0;
+
+  /** カスタム割り勘の内訳合計 */
+  const customSplitTotal = Object.values(customSplits).reduce((sum, val) => {
+    const parsed = parseFloat(val);
+    return sum + (isNaN(parsed) || parsed < 0 ? 0 : Math.floor(parsed));
+  }, 0);
+
+  /** 残り金額 */
+  const splitRemaining = totalAmount - customSplitTotal;
+
+  /** 3人以上の場合、最後のメンバーが自動補完対象 */
+  const autoCompleteTargetId =
+    currentMembers.length >= 3
+      ? currentMembers[currentMembers.length - 1].id
+      : null;
+
+  /** カスタム割り勘の入力変更ハンドラ（自動補完付き） */
+  const handleCustomSplitChange = (memberId: string, value: string) => {
+    lastEditedRef.current = memberId;
+
+    setCustomSplits((prev) => {
+      const newSplits = { ...prev, [memberId]: value };
+      const total = parseFloat(form.amount) || 0;
+
+      if (total > 0 && currentMembers.length === 2) {
+        // 2人: もう一方を自動計算
+        const otherMember = currentMembers.find((m) => m.id !== memberId);
+        if (otherMember) {
+          const entered = Math.floor(parseFloat(value) || 0);
+          const remaining = total - entered;
+          newSplits[otherMember.id] =
+            remaining >= 0 ? String(remaining) : "0";
+        }
+      } else if (
+        total > 0 &&
+        currentMembers.length >= 3 &&
+        memberId !== currentMembers[currentMembers.length - 1].id
+      ) {
+        // 3人以上: 最後のメンバーを自動計算
+        const lastMemberId = currentMembers[currentMembers.length - 1].id;
+        const othersSum = currentMembers
+          .filter((m) => m.id !== lastMemberId)
+          .reduce((sum, m) => {
+            const val = m.id === memberId ? value : newSplits[m.id] || "0";
+            return sum + Math.floor(parseFloat(val) || 0);
+          }, 0);
+        const remaining = total - othersSum;
+        newSplits[lastMemberId] =
+          remaining >= 0 ? String(remaining) : "0";
+      }
+
+      return newSplits;
+    });
+  };
+
+  /** 金額変更時にカスタム割り勘の自動補完を再計算 */
+  const handleAmountChange = (value: string) => {
+    form.setAmount(value);
+    const newTotal = parseFloat(value.replace(/[^0-9]/g, "")) || 0;
+
+    if (form.splitType !== "custom" || currentMembers.length < 2 || newTotal <= 0) return;
+
+    setCustomSplits((prev) => {
+      const newSplits = { ...prev };
+
+      if (currentMembers.length === 2) {
+        const editedId = lastEditedRef.current || currentMembers[0].id;
+        const otherId = currentMembers.find((m) => m.id !== editedId)?.id;
+        if (otherId) {
+          const editedVal = Math.floor(parseFloat(prev[editedId] || "0") || 0);
+          const remaining = newTotal - editedVal;
+          newSplits[otherId] = remaining >= 0 ? String(remaining) : "0";
+        }
+      } else {
+        const lastMemberId = currentMembers[currentMembers.length - 1].id;
+        const othersSum = currentMembers
+          .filter((m) => m.id !== lastMemberId)
+          .reduce(
+            (sum, m) => sum + Math.floor(parseFloat(prev[m.id] || "0") || 0),
+            0
+          );
+        const remaining = newTotal - othersSum;
+        newSplits[lastMemberId] = remaining >= 0 ? String(remaining) : "0";
+      }
+
+      return newSplits;
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -55,8 +150,25 @@ export default function FullPaymentForm({
       return;
     }
 
-    const supabase = createClient();
+    // カスタム割り勘: 合計金額バリデーション
     const formData = form.getFormData();
+    if (formData.splitType === "custom") {
+      const splitTotal = Object.values(customSplits).reduce((sum, val) => {
+        const parsed = parseFloat(val);
+        return sum + (isNaN(parsed) || parsed < 0 ? 0 : Math.floor(parsed));
+      }, 0);
+      if (splitTotal !== formData.amount) {
+        setError(
+          t("payments.validation.customSplitMismatch", {
+            splitTotal: formatCurrency(splitTotal),
+            total: formatCurrency(formData.amount),
+          })
+        );
+        return;
+      }
+    }
+
+    const supabase = createClient();
 
     // Create payment
     const { data: payment, error: paymentError } = await supabase
@@ -152,7 +264,7 @@ export default function FullPaymentForm({
       <AmountField
         id="amount"
         value={form.amount}
-        onChange={form.setAmount}
+        onChange={handleAmountChange}
         error={form.errors.amount}
       />
 
@@ -260,30 +372,60 @@ export default function FullPaymentForm({
       {/* Custom Splits */}
       {form.splitType === "custom" && currentMembers.length > 0 && (
         <div className="space-y-3">
-          <label className="block text-sm font-medium text-gray-700">
-            {t("payments.form.splitAmounts")}
-          </label>
-          {currentMembers.map((member) => (
-            <div key={member.id} className="flex items-center gap-3">
-              <span className="text-sm text-gray-600 w-32 truncate">
-                {member.display_name || member.email}
+          <div className="flex items-center justify-between">
+            <label className="block text-sm font-medium text-gray-700">
+              {t("payments.form.splitAmounts")}
+            </label>
+            {totalAmount > 0 && (
+              <span
+                className={`text-xs font-medium ${
+                  splitRemaining === 0
+                    ? "text-green-600"
+                    : splitRemaining > 0
+                      ? "text-amber-600"
+                      : "text-red-600"
+                }`}
+              >
+                {t("payments.form.splitRemaining", {
+                  amount: formatCurrency(Math.abs(splitRemaining)),
+                })}
+                {splitRemaining === 0 && " ✓"}
               </span>
-              <input
-                type="number"
-                value={customSplits[member.id] || ""}
-                onChange={(e) =>
-                  setCustomSplits((prev) => ({
-                    ...prev,
-                    [member.id]: e.target.value,
-                  }))
-                }
-                min="0"
-                step="1"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="0"
-              />
-            </div>
-          ))}
+            )}
+          </div>
+          {currentMembers.map((member) => {
+            const isAutoTarget = autoCompleteTargetId === member.id;
+            return (
+              <div key={member.id} className="flex items-center gap-3">
+                <span className="text-sm text-gray-600 w-32 truncate">
+                  {member.display_name || member.email}
+                </span>
+                <div className="flex-1 relative">
+                  <input
+                    type="number"
+                    value={customSplits[member.id] || ""}
+                    onChange={(e) =>
+                      handleCustomSplitChange(member.id, e.target.value)
+                    }
+                    readOnly={isAutoTarget}
+                    min="0"
+                    step="1"
+                    className={`w-full px-3 py-2 border rounded-lg shadow-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      isAutoTarget
+                        ? "border-gray-200 bg-gray-50 text-gray-500"
+                        : "border-gray-300"
+                    }`}
+                    placeholder="0"
+                  />
+                  {isAutoTarget && (
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+                      {t("payments.form.autoCalculated")}
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 

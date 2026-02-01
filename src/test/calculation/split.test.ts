@@ -10,6 +10,7 @@ import {
   calculateEqualSplit,
   calculateCustomSplits,
   calculateProxySplit,
+  isCustomSplit,
 } from "@/lib/calculation/split";
 
 describe("calculateEqualSplit - 均等割り計算", () => {
@@ -372,6 +373,71 @@ describe("calculateProxySplit - 代理購入割り", () => {
         { payment_id: "payment-1", user_id: "user-2", amount: 0 },
         { payment_id: "payment-1", user_id: "user-3", amount: 0 },
       ]);
+    });
+  });
+});
+
+describe("isCustomSplit - カスタム割り勘判定", () => {
+  describe("均等割りと判定するケース", () => {
+    it("2人で均等割り → false", () => {
+      const splits = [
+        { user_id: "payer", amount: 500 },
+        { user_id: "user-2", amount: 500 },
+      ];
+      expect(isCustomSplit(splits, "payer", 1000)).toBe(false);
+    });
+
+    it("3人で均等割り（端数あり） → false", () => {
+      // 1000 / 3 = 333, payer = 334
+      const splits = [
+        { user_id: "payer", amount: 334 },
+        { user_id: "user-2", amount: 333 },
+        { user_id: "user-3", amount: 333 },
+      ];
+      expect(isCustomSplit(splits, "payer", 1000)).toBe(false);
+    });
+
+    it("空の splits → false", () => {
+      expect(isCustomSplit([], "payer", 1000)).toBe(false);
+    });
+  });
+
+  describe("代理購入と判定するケース", () => {
+    it("payer の amount が 0 → false（代理購入として扱われる）", () => {
+      const splits = [
+        { user_id: "payer", amount: 0 },
+        { user_id: "user-2", amount: 1000 },
+      ];
+      expect(isCustomSplit(splits, "payer", 1000)).toBe(false);
+    });
+  });
+
+  describe("カスタム割り勘と判定するケース", () => {
+    it("2人で不均等な分割 → true", () => {
+      const splits = [
+        { user_id: "payer", amount: 700 },
+        { user_id: "user-2", amount: 300 },
+      ];
+      expect(isCustomSplit(splits, "payer", 1000)).toBe(true);
+    });
+
+    it("3人でカスタム金額 → true", () => {
+      const splits = [
+        { user_id: "payer", amount: 500 },
+        { user_id: "user-2", amount: 300 },
+        { user_id: "user-3", amount: 200 },
+      ];
+      expect(isCustomSplit(splits, "payer", 1000)).toBe(true);
+    });
+
+    it("均等割りの端数処理と微妙に異なる金額 → true", () => {
+      // 均等なら payer=334, others=333 だが、実際は payer=335, user-2=332
+      const splits = [
+        { user_id: "payer", amount: 335 },
+        { user_id: "user-2", amount: 332 },
+        { user_id: "user-3", amount: 333 },
+      ];
+      expect(isCustomSplit(splits, "payer", 1000)).toBe(true);
     });
   });
 });

@@ -116,6 +116,44 @@ export function calculateCustomSplits(input: CustomSplitInput): SplitResult[] {
 }
 
 /**
+ * カスタム割り勘かどうかを判定
+ *
+ * 均等割り・代理購入のいずれでもない場合にカスタム割り勘とみなす。
+ * 均等割りの判定: 各メンバーの金額が floor(total/N) または floor(total/N)+remainder に一致するか
+ *
+ * @param splits - 各メンバーの分割結果
+ * @param payerId - 支払者のID
+ * @param totalAmount - 支払い総額
+ * @returns カスタム割り勘の場合 true
+ */
+export function isCustomSplit(
+  splits: { user_id: string; amount: number }[],
+  payerId: string,
+  totalAmount: number
+): boolean {
+  if (splits.length === 0) return false;
+
+  // 代理購入チェック: 支払者の負担が0
+  const isProxy = splits.some(
+    (s) => s.user_id === payerId && s.amount === 0
+  );
+  if (isProxy) return false;
+
+  // 均等割りパターンと比較
+  const memberCount = splits.length;
+  const perPerson = Math.floor(totalAmount / memberCount);
+  const remainder = totalAmount - perPerson * memberCount;
+
+  for (const s of splits) {
+    const expected =
+      s.user_id === payerId ? perPerson + remainder : perPerson;
+    if (s.amount !== expected) return true;
+  }
+
+  return false;
+}
+
+/**
  * 代理購入割り計算
  *
  * 支払者が全額を立て替え、受益者に100%を割り振る。
