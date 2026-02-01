@@ -9,7 +9,21 @@
 import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format/currency";
-import type { DashboardPaymentResult } from "@/types/query-results";
+
+type PaymentSplitRow = {
+  user_id: string;
+  amount: number;
+};
+
+type RecentPaymentRow = {
+  id: string;
+  amount: number;
+  description: string;
+  payment_date: string;
+  payer_id: string;
+  profiles: { display_name: string | null; email: string } | null;
+  payment_splits: PaymentSplitRow[];
+};
 
 interface RecentPaymentListProps {
   groupId: string;
@@ -30,15 +44,20 @@ export async function RecentPaymentList({
       amount,
       description,
       payment_date,
+      payer_id,
       profiles (
         display_name,
         email
+      ),
+      payment_splits (
+        user_id,
+        amount
       )
     `
     )
     .eq("group_id", groupId)
     .order("payment_date", { ascending: false })
-    .limit(limit)) as { data: DashboardPaymentResult[] | null };
+    .limit(limit)) as { data: RecentPaymentRow[] | null };
 
   if (!payments || payments.length === 0) {
     return (
@@ -50,22 +69,39 @@ export async function RecentPaymentList({
 
   return (
     <ul className="divide-y divide-gray-200">
-      {payments.map((payment) => (
-        <li key={payment.id} className="px-4 py-3">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="font-medium text-gray-900">{payment.description}</p>
-              <p className="text-sm text-gray-700">
-                {payment.profiles?.display_name || payment.profiles?.email} -{" "}
-                {payment.payment_date}
-              </p>
+      {payments.map((payment) => {
+        const isProxy =
+          payment.payment_splits.length > 0 &&
+          payment.payment_splits.some(
+            (s) => s.user_id === payment.payer_id && s.amount === 0
+          );
+
+        return (
+          <li key={payment.id} className="px-4 py-3">
+            <div className="flex justify-between items-start">
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium text-gray-900">
+                    {payment.description}
+                  </p>
+                  {isProxy && (
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700">
+                      {t("payments.display.proxyBadge")}
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-gray-700">
+                  {payment.profiles?.display_name || payment.profiles?.email} -{" "}
+                  {payment.payment_date}
+                </p>
+              </div>
+              <span className="font-medium text-gray-900">
+                {formatCurrency(Number(payment.amount))}
+              </span>
             </div>
-            <span className="font-medium text-gray-900">
-              {formatCurrency(Number(payment.amount))}
-            </span>
-          </div>
-        </li>
-      ))}
+          </li>
+        );
+      })}
     </ul>
   );
 }

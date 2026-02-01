@@ -158,6 +158,10 @@
       "splitEqually": "Split equally",
       "customSplit": "Custom split",
       "splitAmounts": "Split amounts",
+      "splitProxy": "Pay for someone",
+      "proxyBeneficiary": "Who is this for?",
+      "proxyAutoConfirm": "Paying in full for {name}",
+      "selectBeneficiary": "Select a member",
       "submit": "Add Payment",
       "submitting": "Adding...",
       "submitSuccess": "Added successfully"
@@ -169,7 +173,13 @@
       "descriptionRequired": "Please enter a description",
       "descriptionMax": "Description must be 100 characters or less",
       "dateFuture": "Date cannot be in the future",
-      "dateTooOld": "Date cannot be more than 1 year ago"
+      "dateTooOld": "Date cannot be more than 1 year ago",
+      "beneficiaryRequired": "Please select a beneficiary",
+      "beneficiarySameAsPayer": "Beneficiary must be someone other than yourself"
+    },
+    "display": {
+      "proxyBadge": "Paid for",
+      "proxyFor": "For {name}"
     },
     "errors": {
       "invalidAmount": "Please enter a valid amount",
@@ -195,7 +205,8 @@
     "description": "Description",
     "paidBy": "Paid by",
     "amount": "Amount",
-    "owed": "Owed"
+    "owed": "Owed",
+    "splitsBasedNote": "Calculated based on each payment's split amounts"
   },
   "navigation": {
     "dashboard": "Dashboard",

@@ -2,6 +2,10 @@
 
 import { useState, useCallback } from "react";
 import { validatePayment, type ValidationErrors } from "@/lib/validation/payment";
+import { t } from "@/lib/i18n";
+
+/** 割り勘タイプ */
+export type SplitType = "equal" | "custom" | "proxy";
 
 /**
  * フォームデータの型（送信時に使用）
@@ -11,6 +15,8 @@ export type PaymentFormData = {
   description: string;
   paymentDate: Date;
   categoryId: string | null;
+  splitType: SplitType;
+  proxyBeneficiaryId: string | null;
 };
 
 /**
@@ -22,6 +28,8 @@ export type UsePaymentFormReturn = {
   description: string;
   paymentDate: string;
   categoryId: string;
+  splitType: SplitType;
+  proxyBeneficiaryId: string;
   errors: ValidationErrors;
   isSubmitting: boolean;
 
@@ -30,9 +38,11 @@ export type UsePaymentFormReturn = {
   setDescription: (value: string) => void;
   setPaymentDate: (value: string) => void;
   setCategoryId: (value: string) => void;
+  setSplitType: (value: SplitType) => void;
+  setProxyBeneficiaryId: (value: string) => void;
 
   // アクション
-  validate: () => boolean;
+  validate: (options?: { currentUserId?: string }) => boolean;
   reset: () => void;
   getFormData: () => PaymentFormData;
   handleSubmit: (onSubmit: (data: PaymentFormData) => Promise<void>) => Promise<void>;
@@ -68,6 +78,8 @@ export function usePaymentForm(): UsePaymentFormReturn {
   const [description, setDescription] = useState("");
   const [paymentDate, setPaymentDate] = useState(getTodayString);
   const [categoryId, setCategoryId] = useState("");
+  const [splitType, setSplitType] = useState<SplitType>("equal");
+  const [proxyBeneficiaryId, setProxyBeneficiaryId] = useState("");
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -77,7 +89,7 @@ export function usePaymentForm(): UsePaymentFormReturn {
   }, []);
 
   // バリデーション
-  const validate = useCallback((): boolean => {
+  const validate = useCallback((options?: { currentUserId?: string }): boolean => {
     const input = {
       amount: amount === "" ? 0 : parseFloat(amount),
       description,
@@ -86,14 +98,25 @@ export function usePaymentForm(): UsePaymentFormReturn {
 
     const result = validatePayment(input);
 
-    if (!result.success) {
-      setErrors(result.errors);
+    const allErrors: ValidationErrors = result.success ? {} : { ...result.errors };
+
+    // 代理購入時の追加バリデーション
+    if (splitType === "proxy") {
+      if (!proxyBeneficiaryId) {
+        allErrors.proxyBeneficiaryId = t("payments.validation.beneficiaryRequired");
+      } else if (options?.currentUserId && proxyBeneficiaryId === options.currentUserId) {
+        allErrors.proxyBeneficiaryId = t("payments.validation.beneficiarySameAsPayer");
+      }
+    }
+
+    if (Object.keys(allErrors).length > 0) {
+      setErrors(allErrors);
       return false;
     }
 
     setErrors({});
     return true;
-  }, [amount, description, paymentDate]);
+  }, [amount, description, paymentDate, splitType, proxyBeneficiaryId]);
 
   // リセット
   const reset = useCallback(() => {
@@ -101,6 +124,8 @@ export function usePaymentForm(): UsePaymentFormReturn {
     setDescription("");
     setPaymentDate(getTodayString());
     setCategoryId("");
+    setSplitType("equal");
+    setProxyBeneficiaryId("");
     setErrors({});
   }, []);
 
@@ -111,8 +136,10 @@ export function usePaymentForm(): UsePaymentFormReturn {
       description: description.trim(),
       paymentDate: new Date(paymentDate),
       categoryId: categoryId || null,
+      splitType,
+      proxyBeneficiaryId: splitType === "proxy" ? proxyBeneficiaryId || null : null,
     };
-  }, [amount, description, paymentDate, categoryId]);
+  }, [amount, description, paymentDate, categoryId, splitType, proxyBeneficiaryId]);
 
   // 送信ハンドラ
   const handleSubmit = useCallback(
@@ -144,6 +171,8 @@ export function usePaymentForm(): UsePaymentFormReturn {
     description,
     paymentDate,
     categoryId,
+    splitType,
+    proxyBeneficiaryId,
     errors,
     isSubmitting,
 
@@ -152,6 +181,8 @@ export function usePaymentForm(): UsePaymentFormReturn {
     setDescription,
     setPaymentDate,
     setCategoryId,
+    setSplitType,
+    setProxyBeneficiaryId,
 
     // アクション
     validate,

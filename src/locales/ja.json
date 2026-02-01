@@ -176,6 +176,10 @@
       "splitEqually": "均等に分ける",
       "customSplit": "カスタム",
       "splitAmounts": "負担額",
+      "splitProxy": "全額立替",
+      "proxyBeneficiary": "誰の分？",
+      "proxyAutoConfirm": "{name}さんの分を全額立替えます",
+      "selectBeneficiary": "メンバーを選択",
       "submit": "登録する",
       "submitting": "登録中...",
       "submitSuccess": "登録しました"
@@ -187,7 +191,13 @@
       "descriptionRequired": "説明を入力してください",
       "descriptionMax": "説明は100文字以内で入力してください",
       "dateFuture": "未来の日付は指定できません",
-      "dateTooOld": "1年以上前の日付は指定できません"
+      "dateTooOld": "1年以上前の日付は指定できません",
+      "beneficiaryRequired": "立替先のメンバーを選択してください",
+      "beneficiarySameAsPayer": "立替先は自分以外を選択してください"
+    },
+    "display": {
+      "proxyBadge": "全額立替",
+      "proxyFor": "{name}さんの分"
     },
     "errors": {
       "invalidAmount": "有効な金額を入力してください",
@@ -213,7 +223,8 @@
     "description": "品目",
     "paidBy": "支払者",
     "amount": "金額",
-    "owed": "負担額"
+    "owed": "負担額",
+    "splitsBasedNote": "各支払いの負担額に基づく計算"
   },
   "navigation": {
     "dashboard": "ダッシュボード",

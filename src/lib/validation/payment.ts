@@ -14,6 +14,7 @@ export type ValidationErrors = {
   amount?: string;
   description?: string;
   paymentDate?: string;
+  proxyBeneficiaryId?: string;
 };
 
 export type ValidationResult =

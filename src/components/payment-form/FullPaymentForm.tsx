@@ -6,7 +6,11 @@ import { createClient } from "@/lib/supabase/client";
 import { t } from "@/lib/i18n";
 import { usePaymentForm } from "./hooks/usePaymentForm";
 import { AmountField, DescriptionField, DateField } from "./fields";
-import { calculateEqualSplit, calculateCustomSplits } from "@/lib/calculation/split";
+import {
+  calculateEqualSplit,
+  calculateCustomSplits,
+  calculateProxySplit,
+} from "@/lib/calculation/split";
 import type { Category, Group, Profile } from "@/types/database";
 
 type FullPaymentFormProps = {
@@ -20,7 +24,7 @@ type FullPaymentFormProps = {
  * フル機能の支払い登録フォーム
  *
  * /payments/new ページで使用
- * グループ選択、カテゴリ選択、割り勘設定を含む
+ * グループ選択、カテゴリ選択、割り勘設定（均等/カスタム/全額立替）を含む
  */
 export default function FullPaymentForm({
   groups,
@@ -35,19 +39,19 @@ export default function FullPaymentForm({
   // フル版専用の状態
   const [groupId, setGroupId] = useState(groups[0]?.id || "");
   const [categoryId, setCategoryId] = useState("");
-  const [splitType, setSplitType] = useState<"equal" | "custom">("equal");
   const [customSplits, setCustomSplits] = useState<{ [userId: string]: string }>(
     {}
   );
 
   const currentMembers = groupId ? members[groupId] || [] : [];
+  const otherMembers = currentMembers.filter((m) => m.id !== currentUserId);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    // 共通バリデーション
-    if (!form.validate()) {
+    // 共通バリデーション（代理購入チェック含む）
+    if (!form.validate({ currentUserId })) {
       return;
     }
 
@@ -73,18 +77,29 @@ export default function FullPaymentForm({
       return;
     }
 
-    // Create payment splits
-    const splits =
-      splitType === "equal"
-        ? calculateEqualSplit({
-            paymentId: payment.id,
-            totalAmount: formData.amount,
-            memberIds: currentMembers.map((m) => m.id),
-          })
-        : calculateCustomSplits({
-            paymentId: payment.id,
-            customAmounts: customSplits,
-          });
+    // Create payment splits based on splitType
+    let splits;
+    if (formData.splitType === "proxy" && formData.proxyBeneficiaryId) {
+      splits = calculateProxySplit({
+        paymentId: payment.id,
+        totalAmount: formData.amount,
+        payerId: currentUserId,
+        beneficiaryId: formData.proxyBeneficiaryId,
+        allMemberIds: currentMembers.map((m) => m.id),
+      });
+    } else if (formData.splitType === "custom") {
+      splits = calculateCustomSplits({
+        paymentId: payment.id,
+        customAmounts: customSplits,
+      });
+    } else {
+      splits = calculateEqualSplit({
+        paymentId: payment.id,
+        totalAmount: formData.amount,
+        memberIds: currentMembers.map((m) => m.id),
+        payerId: currentUserId,
+      });
+    }
 
     if (splits.length > 0) {
       await supabase.from("payment_splits").insert(splits);
@@ -180,19 +195,22 @@ export default function FullPaymentForm({
         error={form.errors.paymentDate}
       />
 
-      {/* Split Type */}
+      {/* Split Type - 3択ラジオ */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           {t("payments.form.split")}
         </label>
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-4">
           <label className="flex items-center">
             <input
               type="radio"
               name="splitType"
               value="equal"
-              checked={splitType === "equal"}
-              onChange={() => setSplitType("equal")}
+              checked={form.splitType === "equal"}
+              onChange={() => {
+                form.setSplitType("equal");
+                form.setProxyBeneficiaryId("");
+              }}
               className="mr-2"
             />
             <span className="text-sm text-gray-700">
@@ -204,19 +222,43 @@ export default function FullPaymentForm({
               type="radio"
               name="splitType"
               value="custom"
-              checked={splitType === "custom"}
-              onChange={() => setSplitType("custom")}
+              checked={form.splitType === "custom"}
+              onChange={() => {
+                form.setSplitType("custom");
+                form.setProxyBeneficiaryId("");
+              }}
               className="mr-2"
             />
             <span className="text-sm text-gray-700">
               {t("payments.form.customSplit")}
             </span>
           </label>
+          {otherMembers.length > 0 && (
+            <label className="flex items-center">
+              <input
+                type="radio"
+                name="splitType"
+                value="proxy"
+                checked={form.splitType === "proxy"}
+                onChange={() => {
+                  form.setSplitType("proxy");
+                  // 2人グループ: 自動的に相手を受益者にセット
+                  if (otherMembers.length === 1) {
+                    form.setProxyBeneficiaryId(otherMembers[0].id);
+                  }
+                }}
+                className="mr-2 accent-purple-600"
+              />
+              <span className="text-sm text-gray-700">
+                {t("payments.form.splitProxy")}
+              </span>
+            </label>
+          )}
         </div>
       </div>
 
       {/* Custom Splits */}
-      {splitType === "custom" && currentMembers.length > 0 && (
+      {form.splitType === "custom" && currentMembers.length > 0 && (
         <div className="space-y-3">
           <label className="block text-sm font-medium text-gray-700">
             {t("payments.form.splitAmounts")}
@@ -243,6 +285,60 @@ export default function FullPaymentForm({
             </div>
           ))}
         </div>
+      )}
+
+      {/* Proxy Beneficiary Selection */}
+      {form.splitType === "proxy" && (
+        otherMembers.length === 1 ? (
+          <p className="text-sm text-purple-700 bg-purple-50 rounded-lg px-3 py-2">
+            {t("payments.form.proxyAutoConfirm", {
+              name: otherMembers[0].display_name || otherMembers[0].email,
+            })}
+          </p>
+        ) : (
+          <div>
+            <label
+              htmlFor="full-proxy-beneficiary"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              {t("payments.form.proxyBeneficiary")}
+            </label>
+            <select
+              id="full-proxy-beneficiary"
+              value={form.proxyBeneficiaryId}
+              onChange={(e) => form.setProxyBeneficiaryId(e.target.value)}
+              className={`block w-full px-3 py-2 border rounded-lg shadow-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${
+                form.errors.proxyBeneficiaryId
+                  ? "border-red-500"
+                  : "border-gray-300"
+              }`}
+              aria-invalid={!!form.errors.proxyBeneficiaryId}
+              aria-describedby={
+                form.errors.proxyBeneficiaryId
+                  ? "full-proxy-beneficiary-error"
+                  : undefined
+              }
+            >
+              <option value="">
+                {t("payments.form.selectBeneficiary")}
+              </option>
+              {otherMembers.map((member) => (
+                <option key={member.id} value={member.id}>
+                  {member.display_name || member.email}
+                </option>
+              ))}
+            </select>
+            {form.errors.proxyBeneficiaryId && (
+              <p
+                id="full-proxy-beneficiary-error"
+                className="mt-1 text-sm text-red-600"
+                role="alert"
+              >
+                {form.errors.proxyBeneficiaryId}
+              </p>
+            )}
+          </div>
+        )
       )}
 
       {/* Submit Button */}

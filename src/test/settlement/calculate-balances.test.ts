@@ -361,3 +361,332 @@ describe("calculateBalances - 残高計算（エクセル方式）", () => {
     });
   });
 });
+
+// =============================================
+// splits参照方式のテスト
+// =============================================
+
+describe("calculateBalances - splits参照方式", () => {
+  // === 異常系 ===
+
+  describe("異常系", () => {
+    it("splitsが空配列の支払いはフォールバック（レガシー方式）", () => {
+      const members: Member[] = [
+        { id: "user-a", displayName: "A" },
+        { id: "user-b", displayName: "B" },
+      ];
+      const payments: Payment[] = [
+        { id: "pay-1", payerId: "user-a", amount: 1000, splits: [] },
+      ];
+
+      const result = calculateBalances(members, payments);
+
+      // splits=[] はレガシーフォールバック: 1000 ÷ 2 = 500
+      expect(result.find((b) => b.memberId === "user-a")!.totalOwed).toBe(500);
+      expect(result.find((b) => b.memberId === "user-b")!.totalOwed).toBe(500);
+    });
+  });
+
+  // === 正常系: 均等割り with splits ===
+
+  describe("正常系 - 均等割り（splits付き）", () => {
+    it("2人で1000円: splits=[500,500] → totalOwed が splits から計算される", () => {
+      const members: Member[] = [
+        { id: "user-a", displayName: "A" },
+        { id: "user-b", displayName: "B" },
+      ];
+      const payments: Payment[] = [
+        {
+          id: "pay-1",
+          payerId: "user-a",
+          amount: 1000,
+          splits: [
+            { userId: "user-a", amount: 500 },
+            { userId: "user-b", amount: 500 },
+          ],
+        },
+      ];
+
+      const result = calculateBalances(members, payments);
+
+      const balanceA = result.find((b) => b.memberId === "user-a")!;
+      const balanceB = result.find((b) => b.memberId === "user-b")!;
+
+      expect(balanceA.totalPaid).toBe(1000);
+      expect(balanceA.totalOwed).toBe(500);
+      expect(balanceA.balance).toBe(500);
+
+      expect(balanceB.totalPaid).toBe(0);
+      expect(balanceB.totalOwed).toBe(500);
+      expect(balanceB.balance).toBe(-500);
+    });
+
+    it("3人で1000円: splits=[334,333,333]（端数payer吸収）", () => {
+      const members: Member[] = [
+        { id: "user-a", displayName: "A" },
+        { id: "user-b", displayName: "B" },
+        { id: "user-c", displayName: "C" },
+      ];
+      const payments: Payment[] = [
+        {
+          id: "pay-1",
+          payerId: "user-a",
+          amount: 1000,
+          splits: [
+            { userId: "user-a", amount: 334 },
+            { userId: "user-b", amount: 333 },
+            { userId: "user-c", amount: 333 },
+          ],
+        },
+      ];
+
+      const result = calculateBalances(members, payments);
+
+      // splitsの合計 = 1000（端数なし）
+      expect(result.find((b) => b.memberId === "user-a")!.totalOwed).toBe(334);
+      expect(result.find((b) => b.memberId === "user-b")!.totalOwed).toBe(333);
+      expect(result.find((b) => b.memberId === "user-c")!.totalOwed).toBe(333);
+
+      // A: 1000-334=666, B: 0-333=-333, C: 0-333=-333
+      expect(result.find((b) => b.memberId === "user-a")!.balance).toBe(666);
+      expect(result.find((b) => b.memberId === "user-b")!.balance).toBe(-333);
+      expect(result.find((b) => b.memberId === "user-c")!.balance).toBe(-333);
+
+      // 残高合計 = 0（端数がsplitsで吸収済み）
+      const totalBalance = result.reduce((sum, b) => sum + b.balance, 0);
+      expect(totalBalance).toBe(0);
+    });
+  });
+
+  // === 正常系: 代理購入パターン ===
+
+  describe("正常系 - 代理購入（proxy purchase）", () => {
+    it("Aが1000円立替、Bが100%負担 → A:+1000, B:-1000", () => {
+      const members: Member[] = [
+        { id: "user-a", displayName: "A" },
+        { id: "user-b", displayName: "B" },
+      ];
+      const payments: Payment[] = [
+        {
+          id: "pay-1",
+          payerId: "user-a",
+          amount: 1000,
+          splits: [
+            { userId: "user-a", amount: 0 },
+            { userId: "user-b", amount: 1000 },
+          ],
+        },
+      ];
+
+      const result = calculateBalances(members, payments);
+
+      const balanceA = result.find((b) => b.memberId === "user-a")!;
+      const balanceB = result.find((b) => b.memberId === "user-b")!;
+
+      expect(balanceA.totalPaid).toBe(1000);
+      expect(balanceA.totalOwed).toBe(0);
+      expect(balanceA.balance).toBe(1000);
+
+      expect(balanceB.totalPaid).toBe(0);
+      expect(balanceB.totalOwed).toBe(1000);
+      expect(balanceB.balance).toBe(-1000);
+    });
+
+    it("3人グループ: Aが立替、Bが100%負担、Cは無関係", () => {
+      const members: Member[] = [
+        { id: "user-a", displayName: "A" },
+        { id: "user-b", displayName: "B" },
+        { id: "user-c", displayName: "C" },
+      ];
+      const payments: Payment[] = [
+        {
+          id: "pay-1",
+          payerId: "user-a",
+          amount: 3000,
+          splits: [
+            { userId: "user-a", amount: 0 },
+            { userId: "user-b", amount: 3000 },
+            { userId: "user-c", amount: 0 },
+          ],
+        },
+      ];
+
+      const result = calculateBalances(members, payments);
+
+      expect(result.find((b) => b.memberId === "user-a")!.balance).toBe(3000);
+      expect(result.find((b) => b.memberId === "user-b")!.balance).toBe(-3000);
+      expect(result.find((b) => b.memberId === "user-c")!.balance).toBe(0);
+    });
+
+    it("代理購入 + 通常割り勘が混在", () => {
+      const members: Member[] = [
+        { id: "user-a", displayName: "A" },
+        { id: "user-b", displayName: "B" },
+      ];
+      const payments: Payment[] = [
+        // 通常の均等割り（splitsあり）
+        {
+          id: "pay-1",
+          payerId: "user-a",
+          amount: 1000,
+          splits: [
+            { userId: "user-a", amount: 500 },
+            { userId: "user-b", amount: 500 },
+          ],
+        },
+        // 代理購入: AがBの分を立替
+        {
+          id: "pay-2",
+          payerId: "user-a",
+          amount: 2000,
+          splits: [
+            { userId: "user-a", amount: 0 },
+            { userId: "user-b", amount: 2000 },
+          ],
+        },
+      ];
+
+      const result = calculateBalances(members, payments);
+
+      const balanceA = result.find((b) => b.memberId === "user-a")!;
+      const balanceB = result.find((b) => b.memberId === "user-b")!;
+
+      // A: paid=3000, owed=500+0=500 → balance=2500
+      expect(balanceA.totalPaid).toBe(3000);
+      expect(balanceA.totalOwed).toBe(500);
+      expect(balanceA.balance).toBe(2500);
+
+      // B: paid=0, owed=500+2000=2500 → balance=-2500
+      expect(balanceB.totalPaid).toBe(0);
+      expect(balanceB.totalOwed).toBe(2500);
+      expect(balanceB.balance).toBe(-2500);
+    });
+  });
+
+  // === 混在ケース: splitsあり/なしが共存 ===
+
+  describe("混在 - splitsあり/なし", () => {
+    it("1つ目splitsあり + 2つ目splitsなし → 2つ目は均等割りフォールバック", () => {
+      const members: Member[] = [
+        { id: "user-a", displayName: "A" },
+        { id: "user-b", displayName: "B" },
+      ];
+      const payments: Payment[] = [
+        // splitsあり
+        {
+          id: "pay-1",
+          payerId: "user-a",
+          amount: 1000,
+          splits: [
+            { userId: "user-a", amount: 0 },
+            { userId: "user-b", amount: 1000 },
+          ],
+        },
+        // splitsなし → 均等割りフォールバック
+        {
+          id: "pay-2",
+          payerId: "user-b",
+          amount: 600,
+        },
+      ];
+
+      const result = calculateBalances(members, payments);
+
+      const balanceA = result.find((b) => b.memberId === "user-a")!;
+      const balanceB = result.find((b) => b.memberId === "user-b")!;
+
+      // A: paid=1000, owed=0+300=300 → balance=700
+      expect(balanceA.totalPaid).toBe(1000);
+      expect(balanceA.totalOwed).toBe(300);
+      expect(balanceA.balance).toBe(700);
+
+      // B: paid=600, owed=1000+300=1300 → balance=-700
+      expect(balanceB.totalPaid).toBe(600);
+      expect(balanceB.totalOwed).toBe(1300);
+      expect(balanceB.balance).toBe(-700);
+    });
+  });
+
+  // === 残高合計の検証 ===
+
+  describe("残高合計の検証（splits方式）", () => {
+    it("splitsの合計 = amount なら残高合計は0", () => {
+      const members: Member[] = [
+        { id: "user-a", displayName: "A" },
+        { id: "user-b", displayName: "B" },
+        { id: "user-c", displayName: "C" },
+      ];
+      const payments: Payment[] = [
+        {
+          id: "pay-1",
+          payerId: "user-a",
+          amount: 1000,
+          splits: [
+            { userId: "user-a", amount: 334 },
+            { userId: "user-b", amount: 333 },
+            { userId: "user-c", amount: 333 },
+          ],
+        },
+        {
+          id: "pay-2",
+          payerId: "user-b",
+          amount: 600,
+          splits: [
+            { userId: "user-a", amount: 200 },
+            { userId: "user-b", amount: 200 },
+            { userId: "user-c", amount: 200 },
+          ],
+        },
+      ];
+
+      const result = calculateBalances(members, payments);
+
+      const totalBalance = result.reduce((sum, b) => sum + b.balance, 0);
+      expect(totalBalance).toBe(0);
+    });
+
+    it("複数の代理購入でも残高合計は0", () => {
+      const members: Member[] = [
+        { id: "user-a", displayName: "A" },
+        { id: "user-b", displayName: "B" },
+        { id: "user-c", displayName: "C" },
+      ];
+      const payments: Payment[] = [
+        // AがBの分を立替
+        {
+          id: "pay-1",
+          payerId: "user-a",
+          amount: 1000,
+          splits: [
+            { userId: "user-a", amount: 0 },
+            { userId: "user-b", amount: 1000 },
+            { userId: "user-c", amount: 0 },
+          ],
+        },
+        // BがCの分を立替
+        {
+          id: "pay-2",
+          payerId: "user-b",
+          amount: 500,
+          splits: [
+            { userId: "user-a", amount: 0 },
+            { userId: "user-b", amount: 0 },
+            { userId: "user-c", amount: 500 },
+          ],
+        },
+      ];
+
+      const result = calculateBalances(members, payments);
+
+      // A: paid=1000, owed=0 → balance=1000
+      // B: paid=500, owed=1000 → balance=-500
+      // C: paid=0, owed=500 → balance=-500
+      expect(result.find((b) => b.memberId === "user-a")!.balance).toBe(1000);
+      expect(result.find((b) => b.memberId === "user-b")!.balance).toBe(-500);
+      expect(result.find((b) => b.memberId === "user-c")!.balance).toBe(-500);
+
+      const totalBalance = result.reduce((sum, b) => sum + b.balance, 0);
+      expect(totalBalance).toBe(0);
+    });
+  });
+});

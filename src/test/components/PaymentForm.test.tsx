@@ -239,6 +239,8 @@ describe("PaymentForm", () => {
           description: "スーパーで買い物",
           paymentDate: expect.any(Date),
           categoryId: null,
+          splitType: "equal",
+          proxyBeneficiaryId: null,
         });
       });
     });

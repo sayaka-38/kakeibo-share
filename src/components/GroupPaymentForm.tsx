@@ -4,14 +4,23 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { PaymentForm, type PaymentFormData } from "@/components/PaymentForm";
-import { calculateEqualSplit } from "@/lib/calculation/split";
+import {
+  calculateEqualSplit,
+  calculateProxySplit,
+} from "@/lib/calculation/split";
 import { t } from "@/lib/i18n";
 import type { Category } from "@/types/database";
+
+type MemberInfo = {
+  id: string;
+  displayName: string;
+};
 
 type GroupPaymentFormProps = {
   groupId: string;
   currentUserId: string;
   memberIds: string[];
+  members?: MemberInfo[];
   categories?: Category[];
 };
 
@@ -19,10 +28,14 @@ export function GroupPaymentForm({
   groupId,
   currentUserId,
   memberIds,
+  members = [],
   categories = [],
 }: GroupPaymentFormProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+
+  // 代理購入の受益者候補（自分以外のメンバー）
+  const otherMembers = members.filter((m) => m.id !== currentUserId);
 
   const handleSubmit = async (data: PaymentFormData) => {
     setError(null);
@@ -48,17 +61,26 @@ export function GroupPaymentForm({
       throw new Error(paymentError?.message);
     }
 
-    // 均等割り勘で分割データを登録
-    const splits = calculateEqualSplit({
-      paymentId: payment.id,
-      totalAmount: data.amount,
-      memberIds,
-    });
+    // splitType に応じて分割データを作成
+    const splits =
+      data.splitType === "proxy" && data.proxyBeneficiaryId
+        ? calculateProxySplit({
+            paymentId: payment.id,
+            totalAmount: data.amount,
+            payerId: currentUserId,
+            beneficiaryId: data.proxyBeneficiaryId,
+            allMemberIds: memberIds,
+          })
+        : calculateEqualSplit({
+            paymentId: payment.id,
+            totalAmount: data.amount,
+            memberIds,
+            payerId: currentUserId,
+          });
 
     if (splits.length > 0) {
       await supabase.from("payment_splits").insert(splits);
     }
-    // 端数は仕様なので、分割情報の保存結果は無視して成功扱い
 
     // 成功時はページをリフレッシュ
     router.refresh();
@@ -71,7 +93,12 @@ export function GroupPaymentForm({
           {error}
         </div>
       )}
-      <PaymentForm onSubmit={handleSubmit} categories={categories} />
+      <PaymentForm
+        onSubmit={handleSubmit}
+        categories={categories}
+        currentUserId={currentUserId}
+        otherMembers={otherMembers}
+      />
     </div>
   );
 }
