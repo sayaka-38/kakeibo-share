@@ -10,6 +10,11 @@ import {
 } from "@/lib/settlement";
 import type { GroupMembershipResult, MemberResult } from "@/types/query-results";
 
+type PaymentSplitRow = {
+  user_id: string;
+  amount: number;
+};
+
 type PaymentWithDetails = {
   id: string;
   payer_id: string;
@@ -17,6 +22,7 @@ type PaymentWithDetails = {
   description: string;
   payment_date: string;
   payer: { display_name: string | null; email: string } | null;
+  payment_splits: PaymentSplitRow[];
 };
 
 export default async function SettlementPage() {
@@ -55,6 +61,8 @@ export default async function SettlementPage() {
     memberCount: number;
     perPersonAmount: number;
     payments: PaymentWithDetails[];
+    hasSplits: boolean;
+    memberProfiles: { id: string; display_name: string | null; email: string }[];
   }[] = [];
 
   for (const group of groups) {
@@ -84,8 +92,7 @@ export default async function SettlementPage() {
       displayName: p.display_name || p.email,
     }));
 
-    // Get all payments for this group with payer info
-    // エクセル方式: payment_splits は使わず、総額のみで計算
+    // Get all payments for this group with payer info + splits
     const { data: rawPayments } = (await supabase
       .from("payments")
       .select(
@@ -98,6 +105,10 @@ export default async function SettlementPage() {
         payer:profiles!payments_payer_id_fkey (
           display_name,
           email
+        ),
+        payment_splits (
+          user_id,
+          amount
         )
       `
       )
@@ -108,11 +119,18 @@ export default async function SettlementPage() {
 
     const payments = rawPayments || [];
 
-    // 支払いを新ロジックの型に変換（エクセル方式: splitsは使わない）
+    // 支払いを新ロジックの型に変換（splits参照方式）
     const paymentList: Payment[] = payments.map((p) => ({
       id: p.id,
       payerId: p.payer_id,
       amount: Number(p.amount),
+      splits:
+        p.payment_splits.length > 0
+          ? p.payment_splits.map((s) => ({
+              userId: s.user_id,
+              amount: Number(s.amount),
+            }))
+          : undefined,
     }));
 
     // 新ロジックで残高計算
@@ -128,6 +146,8 @@ export default async function SettlementPage() {
     const { amountPerPerson } =
       memberList.length > 0 ? splitEqually(totalExpenses, memberList.length) : { amountPerPerson: 0 };
 
+    const hasSplits = payments.some((p) => p.payment_splits.length > 0);
+
     groupSettlements.push({
       group,
       balances,
@@ -137,6 +157,8 @@ export default async function SettlementPage() {
       memberCount: memberList.length,
       perPersonAmount: amountPerPerson,
       payments,
+      hasSplits,
+      memberProfiles,
     });
   }
 
@@ -162,6 +184,8 @@ export default async function SettlementPage() {
               memberCount,
               perPersonAmount,
               payments,
+              hasSplits,
+              memberProfiles,
             }) => (
               <div key={group.id} className="bg-white rounded-lg shadow">
                 <div className="px-4 py-3 border-b border-gray-200">
@@ -185,20 +209,30 @@ export default async function SettlementPage() {
                           {formatCurrency(totalExpenses)}
                         </span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-blue-700">
-                          {t("settlement.memberCount", { count: memberCount })}
-                        </span>
-                        <span className="text-blue-600">÷ {memberCount}</span>
-                      </div>
-                      <div className="border-t border-blue-200 pt-2 flex justify-between">
-                        <span className="text-blue-700">
-                          {t("settlement.perPerson")}
-                        </span>
-                        <span className="font-bold text-blue-900">
-                          {formatCurrency(perPersonAmount)}
-                        </span>
-                      </div>
+                      {hasSplits ? (
+                        <div className="border-t border-blue-200 pt-2">
+                          <p className="text-xs text-blue-600">
+                            {t("settlement.splitsBasedNote")}
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex justify-between">
+                            <span className="text-blue-700">
+                              {t("settlement.memberCount", { count: memberCount })}
+                            </span>
+                            <span className="text-blue-600">÷ {memberCount}</span>
+                          </div>
+                          <div className="border-t border-blue-200 pt-2 flex justify-between">
+                            <span className="text-blue-700">
+                              {t("settlement.perPerson")}
+                            </span>
+                            <span className="font-bold text-blue-900">
+                              {formatCurrency(perPersonAmount)}
+                            </span>
+                          </div>
+                        </>
+                      )}
                       {unsettledRemainder > 0 && (
                         <div className="flex justify-between text-xs">
                           <span className="text-blue-600">
@@ -319,29 +353,63 @@ export default async function SettlementPage() {
                             </tr>
                           </thead>
                           <tbody>
-                            {payments.slice(0, 10).map((payment) => (
-                              <tr
-                                key={payment.id}
-                                className="border-b border-gray-100 hover:bg-gray-50"
-                              >
-                                <td className="py-2 px-2 text-gray-600">
-                                  {new Date(
-                                    payment.payment_date
-                                  ).toLocaleDateString("ja-JP")}
-                                </td>
-                                <td className="py-2 px-2 text-gray-900">
-                                  {payment.description}
-                                </td>
-                                <td className="py-2 px-2 text-gray-600">
-                                  {payment.payer?.display_name ||
-                                    payment.payer?.email ||
-                                    "-"}
-                                </td>
-                                <td className="py-2 px-2 text-right text-gray-900 font-medium">
-                                  {formatCurrency(Number(payment.amount))}
-                                </td>
-                              </tr>
-                            ))}
+                            {payments.slice(0, 10).map((payment) => {
+                              // 代理購入判定: splitsがあり、payerのsplit.amount === 0
+                              const isProxy =
+                                payment.payment_splits.length > 0 &&
+                                payment.payment_splits.some(
+                                  (s) =>
+                                    s.user_id === payment.payer_id &&
+                                    s.amount === 0
+                                );
+                              // 代理購入の受益者を特定
+                              const beneficiary = isProxy
+                                ? payment.payment_splits.find(
+                                    (s) =>
+                                      s.user_id !== payment.payer_id &&
+                                      s.amount > 0
+                                  )
+                                : null;
+                              const beneficiaryName = beneficiary
+                                ? memberProfiles.find(
+                                    (p) => p.id === beneficiary.user_id
+                                  )?.display_name || undefined
+                                : undefined;
+
+                              return (
+                                <tr
+                                  key={payment.id}
+                                  className="border-b border-gray-100 hover:bg-gray-50"
+                                >
+                                  <td className="py-2 px-2 text-gray-600">
+                                    {new Date(
+                                      payment.payment_date
+                                    ).toLocaleDateString("ja-JP")}
+                                  </td>
+                                  <td className="py-2 px-2 text-gray-900">
+                                    <span>{payment.description}</span>
+                                    {isProxy && (
+                                      <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700">
+                                        {t("payments.display.proxyBadge")}
+                                        {beneficiaryName && (
+                                          <span className="ml-1 text-purple-500">
+                                            ({t("payments.display.proxyFor", { name: beneficiaryName })})
+                                          </span>
+                                        )}
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="py-2 px-2 text-gray-600">
+                                    {payment.payer?.display_name ||
+                                      payment.payer?.email ||
+                                      "-"}
+                                  </td>
+                                  <td className="py-2 px-2 text-right text-gray-900 font-medium">
+                                    {formatCurrency(Number(payment.amount))}
+                                  </td>
+                                </tr>
+                              );
+                            })}
                           </tbody>
                         </table>
                         {payments.length > 10 && (

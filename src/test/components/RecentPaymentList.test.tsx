@@ -23,14 +23,18 @@ describe("RecentPaymentList", () => {
       amount: 1500,
       description: "スーパーで買い物",
       payment_date: "2026-01-25",
+      payer_id: "user-1",
       profiles: { display_name: "田中太郎", email: "tanaka@example.com" },
+      payment_splits: [],
     },
     {
       id: "2",
       amount: 3000,
       description: "電気代",
       payment_date: "2026-01-24",
+      payer_id: "user-2",
       profiles: { display_name: null, email: "suzuki@example.com" },
+      payment_splits: [],
     },
   ];
 

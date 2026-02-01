@@ -12,7 +12,11 @@ export { default } from "./FullPaymentForm";
 export { default as FullPaymentForm } from "./FullPaymentForm";
 
 // フック
-export { usePaymentForm, type UsePaymentFormReturn } from "./hooks/usePaymentForm";
+export {
+  usePaymentForm,
+  type UsePaymentFormReturn,
+  type SplitType,
+} from "./hooks/usePaymentForm";
 
 // フィールドコンポーネント
 export {

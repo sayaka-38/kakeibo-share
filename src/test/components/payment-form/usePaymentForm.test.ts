@@ -33,6 +33,16 @@ describe("usePaymentForm", () => {
       const { result } = renderHook(() => usePaymentForm());
       expect(result.current.isSubmitting).toBe(false);
     });
+
+    it("splitType の初期値は 'equal' である", () => {
+      const { result } = renderHook(() => usePaymentForm());
+      expect(result.current.splitType).toBe("equal");
+    });
+
+    it("proxyBeneficiaryId の初期値は空文字である", () => {
+      const { result } = renderHook(() => usePaymentForm());
+      expect(result.current.proxyBeneficiaryId).toBe("");
+    });
   });
 
   // ============================================
@@ -234,6 +244,65 @@ describe("usePaymentForm", () => {
       expect(result.current.errors.description).toBeDefined();
     });
 
+    it("代理購入で受益者未選択の場合エラーを返す", () => {
+      const { result } = renderHook(() => usePaymentForm());
+
+      act(() => {
+        result.current.setAmount("1000");
+        result.current.setDescription("テスト");
+        result.current.setSplitType("proxy");
+      });
+
+      let isValid: boolean;
+      act(() => {
+        isValid = result.current.validate();
+      });
+
+      expect(isValid!).toBe(false);
+      expect(result.current.errors.proxyBeneficiaryId).toBe(
+        t("payments.validation.beneficiaryRequired")
+      );
+    });
+
+    it("代理購入で受益者が支払者と同じ場合エラーを返す", () => {
+      const { result } = renderHook(() => usePaymentForm());
+
+      act(() => {
+        result.current.setAmount("1000");
+        result.current.setDescription("テスト");
+        result.current.setSplitType("proxy");
+        result.current.setProxyBeneficiaryId("user-1");
+      });
+
+      let isValid: boolean;
+      act(() => {
+        isValid = result.current.validate({ currentUserId: "user-1" });
+      });
+
+      expect(isValid!).toBe(false);
+      expect(result.current.errors.proxyBeneficiaryId).toBe(
+        t("payments.validation.beneficiarySameAsPayer")
+      );
+    });
+
+    it("代理購入で受益者が正しく選択されている場合は通る", () => {
+      const { result } = renderHook(() => usePaymentForm());
+
+      act(() => {
+        result.current.setAmount("1000");
+        result.current.setDescription("テスト");
+        result.current.setSplitType("proxy");
+        result.current.setProxyBeneficiaryId("user-2");
+      });
+
+      let isValid: boolean;
+      act(() => {
+        isValid = result.current.validate({ currentUserId: "user-1" });
+      });
+
+      expect(isValid!).toBe(true);
+    });
+
     it("有効な入力の場合 true を返しエラーをクリアする", () => {
       const { result } = renderHook(() => usePaymentForm());
 
@@ -264,6 +333,8 @@ describe("usePaymentForm", () => {
         result.current.setAmount("1500");
         result.current.setDescription("テスト");
         result.current.setPaymentDate("2024-01-15");
+        result.current.setSplitType("proxy");
+        result.current.setProxyBeneficiaryId("user-2");
       });
 
       // リセット
@@ -275,6 +346,8 @@ describe("usePaymentForm", () => {
       expect(result.current.amount).toBe("");
       expect(result.current.description).toBe("");
       expect(result.current.paymentDate).toBe(today);
+      expect(result.current.splitType).toBe("equal");
+      expect(result.current.proxyBeneficiaryId).toBe("");
       expect(result.current.errors).toEqual({});
     });
 
@@ -317,6 +390,8 @@ describe("usePaymentForm", () => {
         description: "スーパーで買い物", // トリム済み
         paymentDate: new Date("2024-01-15"),
         categoryId: null,
+        splitType: "equal",
+        proxyBeneficiaryId: null,
       });
     });
   });
@@ -355,6 +430,8 @@ describe("usePaymentForm", () => {
         description: "テスト",
         paymentDate: expect.any(Date),
         categoryId: null,
+        splitType: "equal",
+        proxyBeneficiaryId: null,
       });
     });
 

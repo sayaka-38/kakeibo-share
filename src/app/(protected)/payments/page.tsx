@@ -29,6 +29,11 @@ export default async function PaymentsPage() {
   const groupIds = groupMemberships?.map((m) => m.group_id) || [];
 
   // Get payments from user's groups
+  type PaymentSplitRow = {
+    user_id: string;
+    amount: number;
+  };
+
   type PaymentWithRelations = {
     id: string;
     group_id: string;
@@ -42,6 +47,7 @@ export default async function PaymentsPage() {
     profiles: { display_name: string | null; email: string } | null;
     categories: { name: string; icon: string | null } | null;
     groups: { name: string } | null;
+    payment_splits: PaymentSplitRow[];
   };
 
   const { data: payments } = groupIds.length
@@ -60,6 +66,10 @@ export default async function PaymentsPage() {
         ),
         groups (
           name
+        ),
+        payment_splits (
+          user_id,
+          amount
         )
       `
         )
@@ -129,44 +139,58 @@ export default async function PaymentsPage() {
                   </span>
                 </div>
                 <ul className="divide-y divide-gray-200">
-                  {monthPayments.map((payment) => (
-                    <li key={payment.id} className="px-4 py-3">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium text-gray-900 truncate">
-                              {payment.description}
+                  {monthPayments.map((payment) => {
+                    const isProxy =
+                      payment.payment_splits.length > 0 &&
+                      payment.payment_splits.some(
+                        (s) =>
+                          s.user_id === payment.payer_id && s.amount === 0
+                      );
+
+                    return (
+                      <li key={payment.id} className="px-4 py-3">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium text-gray-900 truncate">
+                                {payment.description}
+                              </p>
+                              {payment.categories && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
+                                  {payment.categories.name}
+                                </span>
+                              )}
+                              {isProxy && (
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700">
+                                  {t("payments.display.proxyBadge")}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-700">
+                              {payment.profiles?.display_name ||
+                                payment.profiles?.email}{" "}
+                              - {payment.payment_date}
                             </p>
-                            {payment.categories && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
-                                {payment.categories.name}
-                              </span>
+                            <p className="text-xs text-gray-600">
+                              {payment.groups?.name}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-4 ml-4">
+                            <span className="font-medium text-gray-900">
+                              {formatCurrency(Number(payment.amount))}
+                            </span>
+                            {/* デモモード時のみ削除フォームを表示 */}
+                            {(isDemo || process.env.NODE_ENV === "development") && (
+                              <DeletePaymentForm
+                                paymentId={payment.id}
+                                groupId={payment.group_id}
+                              />
                             )}
                           </div>
-                          <p className="text-sm text-gray-700">
-                            {payment.profiles?.display_name ||
-                              payment.profiles?.email}{" "}
-                            - {payment.payment_date}
-                          </p>
-                          <p className="text-xs text-gray-600">
-                            {payment.groups?.name}
-                          </p>
                         </div>
-                        <div className="flex items-center gap-4 ml-4">
-                          <span className="font-medium text-gray-900">
-                            {formatCurrency(Number(payment.amount))}
-                          </span>
-                          {/* デモモード時のみ削除フォームを表示 */}
-                          {(isDemo || process.env.NODE_ENV === "development") && (
-                            <DeletePaymentForm
-                              paymentId={payment.id}
-                              groupId={payment.group_id}
-                            />
-                          )}
-                        </div>
-                      </div>
-                    </li>
-                  ))}
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             );

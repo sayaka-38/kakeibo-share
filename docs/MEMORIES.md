@@ -21,8 +21,9 @@
 | — | Phase 5 | RLS全テーブル完了 + グループ削除機能 | #12–#21 |
 | — | Phase 6 | Supabase CLI移行: マイグレーション標準化、ローカルDB、型自動生成 | マージ済み |
 | 2026-01-31 | Phase A | 即効改善: 認証共通化・通貨フォーマット・環境変数厳格化・清算UI改善 | #24 |
+| 2026-02-01 | Proxy Purchase | 代理購入機能: Step 1〜10 全完了（DB変更なし・splits参照方式）+ 2人グループUX改善 | PR作成済み |
 
-テスト: 621件パス / ビルド正常 / Lint エラーなし（Phase A 完了時点）
+テスト: 645件パス / ビルド正常 / Lint エラーなし（2026-02-01 セッション終了時点）
 
 ---
 
@@ -32,17 +33,26 @@
 - **Migration 003**: ローカルDB用に `RENAME COLUMN` のコメントアウトを解除済み（本番は適用済みだった）
 - **RLS 無限再帰**: SECURITY DEFINER ヘルパー関数で解消（Migration 007）
 - **Hydrationエラー**: `useSyncExternalStore` で解決済み
-- **エクセル方式**: 全支払い合計後に1回だけ切り捨て（端数誤差対策）
+- **splits参照方式**: `calculateBalances()` は splits がある支払いは各splitのamountで負担額を計算、ない場合はレガシーエクセル方式にフォールバック。端数は支払者吸収（`calculateEqualSplit` の `payerId` で remainder を加算）
+- **代理購入の判定**: DB にフラグなし。`payment_splits` で `payer.amount === 0` かつ他メンバーに全額割当のパターンで推定
+- **usePaymentForm**: `SplitType = "equal" | "custom" | "proxy"` で 3種の割り勘に対応。`proxyBeneficiaryId` でバリデーションも統合
 
 ---
 
 ## 現在のブランチ
 
-- `feature/phase-a-improvements` — Phase A (PR #24)
+- `main` — 代理購入 PR マージ後はここから次のブランチを切る
 
 ---
 
 ## 次のタスク
+
+### 🔜 最優先: 自分の支払いの削除機能
+
+- [ ] 支払い削除 API Route 作成（`DELETE /api/payments/[id]`）
+- [ ] 認証 + 権限チェック（支払者本人 or グループオーナーのみ削除可）
+- [ ] 支払い一覧・詳細からの削除UIとconfirmダイアログ
+- [ ] テスト: 異常系（権限なし・存在しないID）→ 正常系
 
 ### Phase B: 構造改善
 
@@ -62,5 +72,4 @@
 
 - [ ] 清算機能の実装検討
 - [ ] デモデータ自動削除機能（24時間後）
-- [ ] 通常ユーザーの支払い削除機能
 - [ ] グループ別カテゴリの追加・編集 UI

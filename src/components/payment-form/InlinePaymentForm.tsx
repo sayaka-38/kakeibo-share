@@ -9,9 +9,16 @@ import type { Category } from "@/types/database";
 
 export type { PaymentFormData };
 
+type MemberInfo = {
+  id: string;
+  displayName: string;
+};
+
 type InlinePaymentFormProps = {
   onSubmit: (data: PaymentFormData) => Promise<void>;
   categories?: Category[];
+  currentUserId?: string;
+  otherMembers?: MemberInfo[];
 };
 
 /**
@@ -25,7 +32,12 @@ type InlinePaymentFormProps = {
  * - 送信成功時に柔らかいフィードバック表示
  * - モバイル最適化されたタップ領域
  */
-export function InlinePaymentForm({ onSubmit, categories = [] }: InlinePaymentFormProps) {
+export function InlinePaymentForm({
+  onSubmit,
+  categories = [],
+  currentUserId,
+  otherMembers = [],
+}: InlinePaymentFormProps) {
   const form = usePaymentForm();
 
   // フィールドへのref（エラー時フォーカス用）
@@ -50,7 +62,7 @@ export function InlinePaymentForm({ onSubmit, categories = [] }: InlinePaymentFo
     e.preventDefault();
 
     // バリデーション実行
-    const isValid = form.validate();
+    const isValid = form.validate({ currentUserId });
 
     if (!isValid) {
       // エラー時に最初のエラーフィールドにフォーカス
@@ -141,6 +153,86 @@ export function InlinePaymentForm({ onSubmit, categories = [] }: InlinePaymentFo
               </option>
             ))}
           </select>
+        </div>
+      )}
+
+      {/* 代理購入トグル（メンバー情報がある場合のみ表示） */}
+      {otherMembers.length > 0 && (
+        <div className="space-y-3">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.splitType === "proxy"}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  form.setSplitType("proxy");
+                  // 2人グループ: 自動的に相手を受益者にセット
+                  if (otherMembers.length === 1) {
+                    form.setProxyBeneficiaryId(otherMembers[0].id);
+                  }
+                } else {
+                  form.setSplitType("equal");
+                  form.setProxyBeneficiaryId("");
+                }
+              }}
+              className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+            />
+            <span className="text-sm font-medium text-gray-700">
+              {t("payments.form.splitProxy")}
+            </span>
+          </label>
+
+          {/* 受益者: 2人グループ → 確認メッセージ / 3人以上 → セレクト */}
+          {form.splitType === "proxy" && (
+            otherMembers.length === 1 ? (
+              <p className="text-sm text-purple-700 bg-purple-50 rounded-lg px-3 py-2">
+                {t("payments.form.proxyAutoConfirm", { name: otherMembers[0].displayName })}
+              </p>
+            ) : (
+              <div>
+                <label
+                  htmlFor="proxy-beneficiary"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  {t("payments.form.proxyBeneficiary")}
+                </label>
+                <select
+                  id="proxy-beneficiary"
+                  value={form.proxyBeneficiaryId}
+                  onChange={(e) => form.setProxyBeneficiaryId(e.target.value)}
+                  className={`block w-full px-3 py-3 border rounded-lg shadow-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors ${
+                    form.errors.proxyBeneficiaryId
+                      ? "border-red-500"
+                      : "border-gray-300"
+                  }`}
+                  aria-invalid={!!form.errors.proxyBeneficiaryId}
+                  aria-describedby={
+                    form.errors.proxyBeneficiaryId
+                      ? "proxy-beneficiary-error"
+                      : undefined
+                  }
+                >
+                  <option value="">
+                    {t("payments.form.selectBeneficiary")}
+                  </option>
+                  {otherMembers.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.displayName}
+                    </option>
+                  ))}
+                </select>
+                {form.errors.proxyBeneficiaryId && (
+                  <p
+                    id="proxy-beneficiary-error"
+                    className="mt-1 text-sm text-red-600"
+                    role="alert"
+                  >
+                    {form.errors.proxyBeneficiaryId}
+                  </p>
+                )}
+              </div>
+            )
+          )}
         </div>
       )}
 
