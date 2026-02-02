@@ -212,7 +212,7 @@ export default async function GroupDetailPage({ params }: Props) {
             </Link>
           </div>
           <Suspense fallback={<PaymentListSkeleton count={3} />}>
-            <RecentPaymentList groupId={id} limit={5} />
+            <RecentPaymentList groupId={id} limit={5} currentUserId={user?.id} />
           </Suspense>
         </div>
       </div>

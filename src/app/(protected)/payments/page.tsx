@@ -18,15 +18,6 @@ export default async function PaymentsPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // デモモードかどうかを確認
-  const { data: profile } = (await supabase
-    .from("profiles")
-    .select("is_demo")
-    .eq("id", user?.id || "")
-    .single()) as { data: { is_demo: boolean } | null };
-
-  const isDemo = profile?.is_demo ?? false;
-
   // Get user's groups
   const { data: groupMemberships } = (await supabase
     .from("group_members")
@@ -106,17 +97,8 @@ export default async function PaymentsPage() {
 
   const months = Object.keys(paymentsByMonth).sort().reverse();
 
-  // デバッグ: コンソールに is_demo の値を出力
-  console.log("[DEBUG] isDemo:", isDemo, "profile:", profile);
-
   return (
     <div className="max-w-4xl mx-auto">
-      {/* デバッグ: is_demo の状態を表示 */}
-      {process.env.NODE_ENV === "development" && (
-        <div className="mb-4 p-2 bg-yellow-100 text-yellow-800 text-xs rounded">
-          DEBUG: isDemo = {String(isDemo)} | profile.is_demo = {String(profile?.is_demo)}
-        </div>
-      )}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">{t("payments.title")}</h1>
         <Link
@@ -206,11 +188,9 @@ export default async function PaymentsPage() {
                             <span className="font-medium text-gray-900">
                               {formatCurrency(Number(payment.amount))}
                             </span>
-                            {/* デモモード時のみ削除フォームを表示 */}
-                            {(isDemo || process.env.NODE_ENV === "development") && (
+                            {payment.payer_id === user?.id && (
                               <DeletePaymentForm
                                 paymentId={payment.id}
-                                groupId={payment.group_id}
                               />
                             )}
                           </div>

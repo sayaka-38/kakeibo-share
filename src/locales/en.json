@@ -188,6 +188,7 @@
     "errors": {
       "invalidAmount": "Please enter a valid amount",
       "createFailed": "Failed to create payment",
+      "deleteFailed": "Failed to delete payment",
       "splitFailed": "Payment created but failed to add splits: ",
       "noGroup": "You need to join or create a group before adding payments."
     }

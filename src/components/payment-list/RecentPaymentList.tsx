@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format/currency";
 import { isCustomSplit } from "@/lib/calculation/split";
+import { DeletePaymentForm } from "@/components/DeletePaymentButton";
 import {
   SplitAccordionProvider,
   SplitBadge,
@@ -36,11 +37,13 @@ type RecentPaymentRow = {
 interface RecentPaymentListProps {
   groupId: string;
   limit?: number;
+  currentUserId?: string;
 }
 
 export async function RecentPaymentList({
   groupId,
   limit = 5,
+  currentUserId,
 }: RecentPaymentListProps) {
   const supabase = await createClient();
 
@@ -122,9 +125,14 @@ export async function RecentPaymentList({
                   {payment.payment_date}
                 </p>
               </div>
-              <span className="font-medium text-gray-900">
-                {formatCurrency(Number(payment.amount))}
-              </span>
+              <div className="flex items-center gap-3">
+                <span className="font-medium text-gray-900">
+                  {formatCurrency(Number(payment.amount))}
+                </span>
+                {currentUserId && payment.payer_id === currentUserId && (
+                  <DeletePaymentForm paymentId={payment.id} />
+                )}
+              </div>
             </div>
             {custom && <SplitContent splits={splitsWithProfile} />}
           </>
