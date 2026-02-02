@@ -30,32 +30,35 @@ describe("DeletePaymentForm", () => {
 
   describe("表示", () => {
     it("削除ボタンが表示される", () => {
-      render(
-        <DeletePaymentForm paymentId="payment-1" groupId="group-1" />
-      );
+      render(<DeletePaymentForm paymentId="payment-1" />);
 
       const button = screen.getByRole("button", { name: /削除/i });
       expect(button).toBeInTheDocument();
     });
 
     it("削除ボタンはbuttonタイプである", () => {
-      render(
-        <DeletePaymentForm paymentId="payment-1" groupId="group-1" />
-      );
+      render(<DeletePaymentForm paymentId="payment-1" />);
 
       const button = screen.getByRole("button", { name: /削除/i });
       expect(button).toHaveAttribute("type", "button");
     });
+
+    it("ゴミ箱アイコン（SVG）が表示される", () => {
+      render(<DeletePaymentForm paymentId="payment-1" />);
+
+      const button = screen.getByRole("button", { name: /削除/i });
+      const svg = button.querySelector("svg");
+      expect(svg).toBeInTheDocument();
+    });
   });
 
   describe("ボタンのスタイル", () => {
-    it("削除ボタンは赤いテキスト色を持つ", () => {
-      render(
-        <DeletePaymentForm paymentId="payment-1" groupId="group-1" />
-      );
+    it("デフォルトはグレー、ホバーで赤色に変わる", () => {
+      render(<DeletePaymentForm paymentId="payment-1" />);
 
       const button = screen.getByRole("button", { name: /削除/i });
-      expect(button.className).toContain("text-red-600");
+      expect(button.className).toContain("text-gray-400");
+      expect(button.className).toContain("hover:text-red-600");
     });
   });
 
@@ -63,9 +66,7 @@ describe("DeletePaymentForm", () => {
     it("確認ダイアログでキャンセルすると削除しない", async () => {
       mockConfirm.mockReturnValue(false);
 
-      render(
-        <DeletePaymentForm paymentId="payment-1" groupId="group-1" />
-      );
+      render(<DeletePaymentForm paymentId="payment-1" />);
 
       const button = screen.getByRole("button", { name: /削除/i });
       fireEvent.click(button);
@@ -73,21 +74,17 @@ describe("DeletePaymentForm", () => {
       expect(mockFetch).not.toHaveBeenCalled();
     });
 
-    it("確認ダイアログで承認すると削除APIを呼び出す", async () => {
+    it("確認ダイアログで承認すると DELETE API を呼び出す", async () => {
       mockConfirm.mockReturnValue(true);
 
-      render(
-        <DeletePaymentForm paymentId="payment-1" groupId="group-1" />
-      );
+      render(<DeletePaymentForm paymentId="payment-1" />);
 
       const button = screen.getByRole("button", { name: /削除/i });
       fireEvent.click(button);
 
       await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledWith("/api/payments/delete", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ paymentId: "payment-1", groupId: "group-1" }),
+        expect(mockFetch).toHaveBeenCalledWith("/api/payments/payment-1", {
+          method: "DELETE",
         });
       });
     });
@@ -99,9 +96,7 @@ describe("DeletePaymentForm", () => {
         json: () => Promise.resolve({ success: true }),
       });
 
-      render(
-        <DeletePaymentForm paymentId="payment-1" groupId="group-1" />
-      );
+      render(<DeletePaymentForm paymentId="payment-1" />);
 
       const button = screen.getByRole("button", { name: /削除/i });
       fireEvent.click(button);

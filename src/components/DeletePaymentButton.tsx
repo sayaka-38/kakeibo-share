@@ -6,15 +6,15 @@ import { t } from "@/lib/i18n";
 
 type DeletePaymentFormProps = {
   paymentId: string;
-  groupId: string;
 };
 
 /**
- * 削除フォーム（Client Component）
+ * 支払い削除ボタン（Client Component）
  *
- * API Routeを使用して支払いを削除
+ * ゴミ箱アイコンで表示。クリックで確認ダイアログ → DELETE /api/payments/[id] を呼び出す。
+ * groupId は API 側で DB から導出するため、クライアントからは送信しない。
  */
-export function DeletePaymentForm({ paymentId, groupId }: DeletePaymentFormProps) {
+export function DeletePaymentForm({ paymentId }: DeletePaymentFormProps) {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -25,26 +25,21 @@ export function DeletePaymentForm({ paymentId, groupId }: DeletePaymentFormProps
     setIsDeleting(true);
 
     try {
-      const response = await fetch("/api/payments/delete", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ paymentId, groupId }),
+      const response = await fetch(`/api/payments/${paymentId}`, {
+        method: "DELETE",
       });
 
       if (!response.ok) {
         const data = await response.json();
         console.error("Delete failed:", data.error);
-        alert(data.error || "削除に失敗しました");
+        alert(data.error || t("payments.errors.deleteFailed"));
         return;
       }
 
-      // ページをリフレッシュして更新を反映
       router.refresh();
     } catch (error) {
       console.error("Delete error:", error);
-      alert("削除に失敗しました");
+      alert(t("payments.errors.deleteFailed"));
     } finally {
       setIsDeleting(false);
     }
@@ -55,15 +50,44 @@ export function DeletePaymentForm({ paymentId, groupId }: DeletePaymentFormProps
       type="button"
       onClick={handleDelete}
       disabled={isDeleting}
-      className="text-sm text-red-600 hover:text-red-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      className="text-gray-400 hover:text-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       aria-label={t("payments.delete")}
     >
-      {isDeleting ? t("common.deleting") : t("payments.delete")}
+      {isDeleting ? (
+        <svg
+          className="animate-spin w-4 h-4"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          />
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          />
+        </svg>
+      ) : (
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+          />
+        </svg>
+      )}
     </button>
   );
-}
-
-// 後方互換性のためにエクスポート（不要になったら削除）
-export function DeletePaymentButton() {
-  return null; // Deprecated
 }

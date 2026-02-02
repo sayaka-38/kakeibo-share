@@ -6,7 +6,7 @@
 
 ## 最終更新日
 
-2026-02-01
+2026-02-02
 
 ---
 
@@ -23,8 +23,9 @@
 | 2026-01-31 | Phase A | 即効改善: 認証共通化・通貨フォーマット・環境変数厳格化・清算UI改善 | #24 |
 | 2026-02-01 | Proxy Purchase | 代理購入機能: Step 1〜10 全完了（DB変更なし・splits参照方式）+ 2人グループUX改善 | PR作成済み |
 | 2026-02-01 | Custom Split UX | カスタム割り勘: バリデーション・自動補完・内訳アコーディオン表示 | 同ブランチ |
+| 2026-02-02 | Delete Payment | 支払い削除機能: RESTful DELETE API + RLS拡張 + ゴミ箱アイコンUI（100%完了・動作確認済み） | PR作成予定 |
 
-テスト: 652件パス / ビルド正常 / Lint エラーなし（2026-02-01 セッション最新）
+テスト: 677件パス / ビルド正常 / Lint エラーなし（2026-02-02 セッション最新）
 
 ---
 
@@ -41,31 +42,35 @@
 - **カスタム割り勘の自動補完**: 2人→双方向自動計算、3人以上→最後のメンバーを自動計算（readOnly）。`lastEditedRef` で最後に編集されたフィールドを追跡
 - **PaymentSplitAccordion**: Context パターンで `SplitBadge`（タイトル行内）と `SplitContent`（行外）が状態共有。CSS Grid `grid-rows-[0fr]/[1fr]` でスムーズアニメーション
 - **payment_splits プロフィール結合**: クエリに `profiles (display_name, email)` を追加して内訳にメンバー名を表示
+- **支払い削除の二重防御**: アプリ層（`DELETE /api/payments/[id]` で 403 応答）+ RLS（`payments_delete_payer_or_owner` ポリシー）。groupId はクライアントから受け取らず DB から導出（改ざん防止）
+- **既存デモ削除ルート**: `POST /api/payments/delete` はデモ専用として残存。将来 Phase B-2 で整理予定
 
 ---
 
 ## 現在のブランチ
 
-- `feature/proxy-purchase` — 代理購入 + カスタム割り勘改善（全機能100%完了、コミット済み）
-- マージ後は `main` から次のブランチ `feature/delete-payment` を切る
+- `feature/delete-payment` — 支払い削除機能 100% 完了・PR 作成済み
+- `feature/proxy-purchase` — main にマージ済み
 
 ---
 
 ## 次のタスク
 
-### 🔜 次回セッション再開ポイント: 自分の支払いの削除機能
+### 次回セッション再開ポイント: 支払い編集機能（Update）
 
-> **ブランチ**: `feature/delete-payment`（`main` マージ後に作成）
-
-- [ ] 支払い削除 API Route 作成（`DELETE /api/payments/[id]`）
-- [ ] 認証 + 権限チェック（支払者本人 or グループオーナーのみ削除可）
-- [ ] 支払い一覧・詳細からの削除UIとconfirmダイアログ
-- [ ] テスト: 異常系（権限なし・存在しないID）→ 正常系
+> **概要**: 既存の支払いを編集する機能の設計・実装
+> **前提**: 支払い削除（Delete）が完了しているので、CRUD の U（Update）を次に実装
+> **検討事項**:
+> - `PUT /api/payments/[id]` or `PATCH /api/payments/[id]` の新設
+> - 認可ルール: 支払者本人のみ？ or グループオーナーも可？
+> - payment_splits の更新戦略: 全削除→再作成 vs 差分更新
+> - RLS ポリシー `payments_update_payer` の拡張要否
+> - UI: 支払い行にペンアイコン追加 → PaymentForm を編集モードで開く
 
 ### Phase B: 構造改善
 
 - [ ] B-1: N+1クエリ解消 — グループ一覧のメンバー数を1クエリに統合
-- [ ] B-2: デモ削除ロジック共通化 — 重複関数の抽出・統合
+- [ ] B-2: デモ削除ロジック共通化 — 重複関数の抽出・統合（`POST /api/payments/delete` の整理含む）
 - [ ] B-3: インライン型定義の集約 — `query-results.ts` に集約
 - [ ] B-4: 削除ダイアログの表現修正 — 柔らかい文言 + i18n対応
 
