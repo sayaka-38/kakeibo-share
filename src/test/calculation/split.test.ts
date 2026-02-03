@@ -11,6 +11,8 @@ import {
   calculateCustomSplits,
   calculateProxySplit,
   isCustomSplit,
+  isProxySplit,
+  getProxyBeneficiaryId,
 } from "@/lib/calculation/split";
 
 describe("calculateEqualSplit - 均等割り計算", () => {
@@ -438,6 +440,84 @@ describe("isCustomSplit - カスタム割り勘判定", () => {
         { user_id: "user-3", amount: 333 },
       ];
       expect(isCustomSplit(splits, "payer", 1000)).toBe(true);
+    });
+  });
+});
+
+describe("isProxySplit - 代理購入判定", () => {
+  describe("代理購入と判定するケース", () => {
+    it("payer の amount が 0 → true", () => {
+      const splits = [
+        { user_id: "payer", amount: 0 },
+        { user_id: "user-2", amount: 1000 },
+      ];
+      expect(isProxySplit(splits, "payer")).toBe(true);
+    });
+
+    it("3人グループで payer の amount が 0 → true", () => {
+      const splits = [
+        { user_id: "payer", amount: 0 },
+        { user_id: "user-2", amount: 1000 },
+        { user_id: "user-3", amount: 0 },
+      ];
+      expect(isProxySplit(splits, "payer")).toBe(true);
+    });
+  });
+
+  describe("代理購入でないケース", () => {
+    it("均等割り → false", () => {
+      const splits = [
+        { user_id: "payer", amount: 500 },
+        { user_id: "user-2", amount: 500 },
+      ];
+      expect(isProxySplit(splits, "payer")).toBe(false);
+    });
+
+    it("空の splits → false", () => {
+      expect(isProxySplit([], "payer")).toBe(false);
+    });
+
+    it("payer が splits に含まれない → false", () => {
+      const splits = [
+        { user_id: "user-1", amount: 500 },
+        { user_id: "user-2", amount: 500 },
+      ];
+      expect(isProxySplit(splits, "payer")).toBe(false);
+    });
+  });
+});
+
+describe("getProxyBeneficiaryId - 代理購入受益者ID取得", () => {
+  describe("正常系", () => {
+    it("2人グループ: 受益者IDを返す", () => {
+      const splits = [
+        { user_id: "payer", amount: 0 },
+        { user_id: "user-2", amount: 1000 },
+      ];
+      expect(getProxyBeneficiaryId(splits, "payer")).toBe("user-2");
+    });
+
+    it("3人グループ: amount > 0 の受益者IDを返す", () => {
+      const splits = [
+        { user_id: "payer", amount: 0 },
+        { user_id: "user-2", amount: 1000 },
+        { user_id: "user-3", amount: 0 },
+      ];
+      expect(getProxyBeneficiaryId(splits, "payer")).toBe("user-2");
+    });
+  });
+
+  describe("代理購入でないケース", () => {
+    it("均等割り → null", () => {
+      const splits = [
+        { user_id: "payer", amount: 500 },
+        { user_id: "user-2", amount: 500 },
+      ];
+      expect(getProxyBeneficiaryId(splits, "payer")).toBeNull();
+    });
+
+    it("空の splits → null", () => {
+      expect(getProxyBeneficiaryId([], "payer")).toBeNull();
     });
   });
 });
