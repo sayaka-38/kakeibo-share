@@ -6,7 +6,7 @@
 
 ## 最終更新日
 
-2026-02-02
+2026-02-03
 
 ---
 
@@ -23,9 +23,10 @@
 | 2026-01-31 | Phase A | 即効改善: 認証共通化・通貨フォーマット・環境変数厳格化・清算UI改善 | #24 |
 | 2026-02-01 | Proxy Purchase | 代理購入機能: Step 1〜10 全完了（DB変更なし・splits参照方式）+ 2人グループUX改善 | PR作成済み |
 | 2026-02-01 | Custom Split UX | カスタム割り勘: バリデーション・自動補完・内訳アコーディオン表示 | 同ブランチ |
-| 2026-02-02 | Delete Payment | 支払い削除機能: RESTful DELETE API + RLS拡張 + ゴミ箱アイコンUI（100%完了・動作確認済み） | PR作成予定 |
+| 2026-02-02 | Delete Payment | 支払い削除機能: RESTful DELETE API + RLS拡張 + ゴミ箱アイコンUI（100%完了・動作確認済み） | #29 |
+| 2026-02-03 | 土台強化 | 認証ガード（ホワイトリスト方式）・isProxySplit共通化・バッジ整理・CI permissions | #30 |
 
-テスト: 677件パス / ビルド正常 / Lint エラーなし（2026-02-02 セッション最新）
+テスト: 686件パス / ビルド正常 / Lint エラーなし（2026-02-03 セッション最新）
 
 ---
 
@@ -38,18 +39,21 @@
 - **splits参照方式**: `calculateBalances()` は splits がある支払いは各splitのamountで負担額を計算、ない場合はレガシーエクセル方式にフォールバック。端数は支払者吸収（`calculateEqualSplit` の `payerId` で remainder を加算）
 - **代理購入の判定**: DB にフラグなし。`payment_splits` で `payer.amount === 0` かつ他メンバーに全額割当のパターンで推定
 - **usePaymentForm**: `SplitType = "equal" | "custom" | "proxy"` で 3種の割り勘に対応。`proxyBeneficiaryId` でバリデーションも統合
+- **isProxySplit() / getProxyBeneficiaryId()**: `split.ts` に追加。3箇所に重複していたインライン判定を共通化。`isCustomSplit()` 内部でも利用
 - **isCustomSplit()**: `split.ts` に追加。均等割り・代理購入でない分割をカスタムと判定（均等割りパターン: `floor(total/N)` + payer に remainder）
 - **カスタム割り勘の自動補完**: 2人→双方向自動計算、3人以上→最後のメンバーを自動計算（readOnly）。`lastEditedRef` で最後に編集されたフィールドを追跡
 - **PaymentSplitAccordion**: Context パターンで `SplitBadge`（タイトル行内）と `SplitContent`（行外）が状態共有。CSS Grid `grid-rows-[0fr]/[1fr]` でスムーズアニメーション
 - **payment_splits プロフィール結合**: クエリに `profiles (display_name, email)` を追加して内訳にメンバー名を表示
 - **支払い削除の二重防御**: アプリ層（`DELETE /api/payments/[id]` で 403 応答）+ RLS（`payments_delete_payer_or_owner` ポリシー）。groupId はクライアントから受け取らず DB から導出（改ざん防止）
 - **既存デモ削除ルート**: `POST /api/payments/delete` はデモ専用として残存。将来 Phase B-2 で整理予定
+- **認証ガード (proxy.ts)**: Next.js 16 は `middleware.ts` ではなく `proxy.ts` を使用。`updateSession()` は公開パスホワイトリスト方式（`PUBLIC_PATHS` 配列）。APIルートはセッションリフレッシュのみ、`authenticateRequest()` が 401 を返す二重防御
+- **CI permissions**: `contents: read` + `security-events: write` を明示。GitHub Actions の権限警告を解消
 
 ---
 
 ## 現在のブランチ
 
-- `feature/delete-payment` — 支払い削除機能 100% 完了・PR 作成済み
+- `feature/delete-payment` — main にマージ済み（#29 削除機能 + #30 土台強化）
 - `feature/proxy-purchase` — main にマージ済み
 
 ---
