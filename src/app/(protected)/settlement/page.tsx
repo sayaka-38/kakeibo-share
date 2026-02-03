@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format/currency";
+import { isProxySplit, getProxyBeneficiaryId } from "@/lib/calculation/split";
 import {
   calculateBalances,
   suggestSettlements,
@@ -354,25 +355,11 @@ export default async function SettlementPage() {
                           </thead>
                           <tbody>
                             {payments.slice(0, 10).map((payment) => {
-                              // 代理購入判定: splitsがあり、payerのsplit.amount === 0
-                              const isProxy =
-                                payment.payment_splits.length > 0 &&
-                                payment.payment_splits.some(
-                                  (s) =>
-                                    s.user_id === payment.payer_id &&
-                                    s.amount === 0
-                                );
-                              // 代理購入の受益者を特定
-                              const beneficiary = isProxy
-                                ? payment.payment_splits.find(
-                                    (s) =>
-                                      s.user_id !== payment.payer_id &&
-                                      s.amount > 0
-                                  )
-                                : null;
-                              const beneficiaryName = beneficiary
+                              const isProxy = isProxySplit(payment.payment_splits, payment.payer_id);
+                              const beneficiaryUserId = getProxyBeneficiaryId(payment.payment_splits, payment.payer_id);
+                              const beneficiaryName = beneficiaryUserId
                                 ? memberProfiles.find(
-                                    (p) => p.id === beneficiary.user_id
+                                    (p) => p.id === beneficiaryUserId
                                   )?.display_name || undefined
                                 : undefined;
 
@@ -389,14 +376,16 @@ export default async function SettlementPage() {
                                   <td className="py-2 px-2 text-gray-900">
                                     <span>{payment.description}</span>
                                     {isProxy && (
-                                      <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700">
-                                        {t("payments.display.proxyBadge")}
+                                      <>
+                                        <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700">
+                                          {t("payments.display.proxyBadge")}
+                                        </span>
                                         {beneficiaryName && (
-                                          <span className="ml-1 text-purple-500">
+                                          <span className="ml-1 text-xs text-purple-500">
                                             ({t("payments.display.proxyFor", { name: beneficiaryName })})
                                           </span>
                                         )}
-                                      </span>
+                                      </>
                                     )}
                                   </td>
                                   <td className="py-2 px-2 text-gray-600">

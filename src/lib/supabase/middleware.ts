@@ -2,6 +2,18 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseEnv } from "@/lib/env";
 
+/**
+ * 公開パス（認証不要）
+ * ここに列挙されたパスは未ログインでもアクセス可能。
+ * それ以外の非APIパスは未ログイン時に /login へリダイレクトする。
+ */
+const PUBLIC_PATHS = ["/", "/login", "/signup", "/auth/callback", "/groups/join"];
+
+/**
+ * ログイン済みユーザーがアクセスすべきでない認証ページ
+ */
+const AUTH_PATHS = ["/login", "/signup"];
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -33,28 +45,33 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protect routes that require authentication
-  const protectedPaths = ["/dashboard", "/payments", "/settlement", "/groups"];
-  const isProtectedPath = protectedPaths.some((path) =>
-    request.nextUrl.pathname.startsWith(path)
-  );
+  const pathname = request.nextUrl.pathname;
 
-  if (isProtectedPath && !user) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
+  // APIルート: セッションリフレッシュのみ（リダイレクトしない）
+  if (pathname.startsWith("/api/")) {
+    return supabaseResponse;
   }
 
-  // Redirect authenticated users away from auth pages
-  const authPaths = ["/login", "/signup"];
-  const isAuthPath = authPaths.some((path) =>
-    request.nextUrl.pathname.startsWith(path)
+  // 公開パスかどうかを判定
+  const isPublicPath = PUBLIC_PATHS.some(
+    (path) => pathname === path || pathname.startsWith(path + "/")
   );
 
+  // 未ログインユーザーが非公開パスにアクセス → /login にリダイレクト
+  if (!isPublicPath && !user) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/login";
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  // ログイン済みユーザーが認証ページにアクセス → /dashboard にリダイレクト
+  const isAuthPath = AUTH_PATHS.some(
+    (path) => pathname === path || pathname.startsWith(path + "/")
+  );
   if (isAuthPath && user) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    return NextResponse.redirect(url);
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/dashboard";
+    return NextResponse.redirect(redirectUrl);
   }
 
   return supabaseResponse;

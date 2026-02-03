@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format/currency";
-import { isCustomSplit } from "@/lib/calculation/split";
+import { isCustomSplit, isProxySplit } from "@/lib/calculation/split";
 import { DeletePaymentForm } from "@/components/DeletePaymentButton";
 import {
   SplitAccordionProvider,
@@ -134,12 +134,7 @@ export default async function PaymentsPage() {
                 </div>
                 <ul className="divide-y divide-gray-200">
                   {monthPayments.map((payment) => {
-                    const isProxy =
-                      payment.payment_splits.length > 0 &&
-                      payment.payment_splits.some(
-                        (s) =>
-                          s.user_id === payment.payer_id && s.amount === 0
-                      );
+                    const isProxy = isProxySplit(payment.payment_splits, payment.payer_id);
 
                     const custom = isCustomSplit(
                       payment.payment_splits,

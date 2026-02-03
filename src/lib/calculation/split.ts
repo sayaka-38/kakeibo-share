@@ -116,6 +116,46 @@ export function calculateCustomSplits(input: CustomSplitInput): SplitResult[] {
 }
 
 /**
+ * 代理購入かどうかを判定
+ *
+ * splits のうち支払者の負担額が 0 であれば代理購入とみなす。
+ *
+ * @param splits - 各メンバーの分割結果
+ * @param payerId - 支払者のID
+ * @returns 代理購入の場合 true
+ */
+export function isProxySplit(
+  splits: { user_id: string; amount: number }[],
+  payerId: string
+): boolean {
+  return (
+    splits.length > 0 &&
+    splits.some((s) => s.user_id === payerId && s.amount === 0)
+  );
+}
+
+/**
+ * 代理購入の受益者IDを取得
+ *
+ * 支払者以外で amount > 0 の最初のメンバーを受益者として返す。
+ * 代理購入でない場合や受益者が見つからない場合は null を返す。
+ *
+ * @param splits - 各メンバーの分割結果
+ * @param payerId - 支払者のID
+ * @returns 受益者のユーザーID、または null
+ */
+export function getProxyBeneficiaryId(
+  splits: { user_id: string; amount: number }[],
+  payerId: string
+): string | null {
+  if (!isProxySplit(splits, payerId)) return null;
+  const beneficiary = splits.find(
+    (s) => s.user_id !== payerId && s.amount > 0
+  );
+  return beneficiary?.user_id ?? null;
+}
+
+/**
  * カスタム割り勘かどうかを判定
  *
  * 均等割り・代理購入のいずれでもない場合にカスタム割り勘とみなす。
@@ -134,10 +174,7 @@ export function isCustomSplit(
   if (splits.length === 0) return false;
 
   // 代理購入チェック: 支払者の負担が0
-  const isProxy = splits.some(
-    (s) => s.user_id === payerId && s.amount === 0
-  );
-  if (isProxy) return false;
+  if (isProxySplit(splits, payerId)) return false;
 
   // 均等割りパターンと比較
   const memberCount = splits.length;
