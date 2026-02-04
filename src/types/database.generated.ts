@@ -362,6 +362,10 @@ export type Database = {
         Args: { p_group_id: string; p_user_id: string }
         Returns: number
       }
+      delete_payment_splits_for_payer: {
+        Args: { p_payment_id: string; p_user_id: string }
+        Returns: number
+      }
       get_payment_group_id: { Args: { _payment_id: string }; Returns: string }
       is_group_member: {
         Args: { _group_id: string; _user_id: string }
@@ -370,6 +374,14 @@ export type Database = {
       is_group_owner: {
         Args: { _group_id: string; _user_id: string }
         Returns: boolean
+      }
+      is_payment_payer: {
+        Args: { _payment_id: string; _user_id: string }
+        Returns: boolean
+      }
+      replace_payment_splits: {
+        Args: { p_payment_id: string; p_splits: Json; p_user_id: string }
+        Returns: number
       }
     }
     Enums: {

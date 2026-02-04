@@ -143,8 +143,8 @@ export default async function PaymentsPage() {
                     );
 
                     const splitsWithProfile: SplitWithProfile[] =
-                      payment.payment_splits.map((s) => ({
-                        user_id: s.user_id,
+                      payment.payment_splits.map((s, idx) => ({
+                        user_id: `${s.user_id}-${idx}`,
                         amount: s.amount,
                         display_name: s.profiles?.display_name ?? null,
                         email: s.profiles?.email ?? "",
@@ -184,6 +184,27 @@ export default async function PaymentsPage() {
                               {formatCurrency(Number(payment.amount))}
                             </span>
                             {payment.payer_id === user?.id && (
+                              <Link
+                                href={`/payments/${payment.id}/edit`}
+                                className="text-gray-400 hover:text-blue-600 transition-colors"
+                                aria-label={t("payments.edit")}
+                              >
+                                <svg
+                                  className="w-4 h-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                                  />
+                                </svg>
+                              </Link>
+                            )}
+                            {payment.payer_id === user?.id && (
                               <DeletePaymentForm
                                 paymentId={payment.id}
                               />
@@ -195,7 +216,7 @@ export default async function PaymentsPage() {
                     );
 
                     return (
-                      <li key={payment.id} className="px-4 py-3">
+                      <li key={`${payment.id}-${payment.updated_at}`} className="px-4 py-3">
                         {custom ? (
                           <SplitAccordionProvider>
                             {rowContent}

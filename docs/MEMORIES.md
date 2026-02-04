@@ -6,7 +6,7 @@
 
 ## 最終更新日
 
-2026-02-03
+2026-02-04
 
 ---
 
@@ -25,8 +25,9 @@
 | 2026-02-01 | Custom Split UX | カスタム割り勘: バリデーション・自動補完・内訳アコーディオン表示 | 同ブランチ |
 | 2026-02-02 | Delete Payment | 支払い削除機能: RESTful DELETE API + RLS拡張 + ゴミ箱アイコンUI（100%完了・動作確認済み） | #29 |
 | 2026-02-03 | 土台強化 | 認証ガード（ホワイトリスト方式）・isProxySplit共通化・バッジ整理・CI permissions | #30 |
+| 2026-02-04 | Edit Payment | 支払い編集機能: PUT API + RPC原子的置換 + 編集UI + E2E動作確認済み | PR作成中 |
 
-テスト: 686件パス / ビルド正常 / Lint エラーなし（2026-02-03 セッション最新）
+テスト: 742件パス / ビルド正常（2026-02-04 セッション最新）
 
 ---
 
@@ -48,28 +49,70 @@
 - **既存デモ削除ルート**: `POST /api/payments/delete` はデモ専用として残存。将来 Phase B-2 で整理予定
 - **認証ガード (proxy.ts)**: Next.js 16 は `middleware.ts` ではなく `proxy.ts` を使用。`updateSession()` は公開パスホワイトリスト方式（`PUBLIC_PATHS` 配列）。APIルートはセッションリフレッシュのみ、`authenticateRequest()` が 401 を返す二重防御
 - **CI permissions**: `contents: read` + `security-events: write` を明示。GitHub Actions の権限警告を解消
+- **PUT splits RPC 原子的置換（決定打・Migration 015）**: PostgREST の DELETE 操作で `auth.uid()` が正しく解決されず RLS DELETE ポリシーがサイレントに失敗する問題を、SECURITY DEFINER RPC `replace_payment_splits(p_payment_id, p_user_id, p_splits JSONB)` で完全に回避。DELETE + INSERT を単一トランザクション内で原子的に実行し、RLS を完全にバイパス。RPC 内部で payer_id 検証の二重防御。戻り値: >= 0 = 挿入件数, -1 = 支払い不在, -2 = 権限なし
+- **FullPaymentForm 二重送信防止**: ローカル `isSubmitting` 状態を追加。`form.handleSubmit` を使わない独自 handleSubmit で `isSubmitting` ガードと `try/finally` パターンを実装
+
+---
+
+## PostgREST RLS DELETE 問題 — 根本原因と解決経緯
+
+支払い編集機能の実装中に遭遇した最大の障壁。将来同様の問題に再遭遇した場合のために経緯を記録する。
+
+### 症状
+
+PUT `/api/payments/[id]` で payment_splits を更新する際、Supabase JS クライアント経由の DELETE 操作が**エラーなしで 0 行削除**になる。INSERT は成功するため、編集するたびに splits が二重登録される。
+
+### 根本原因
+
+PostgREST（Supabase の REST API レイヤー）が DELETE 操作を実行する際、RLS ポリシー内の `auth.uid()` が**サーバーサイド API Route のセッションコンテキストでは正しく解決されない**ケースがある。
+
+- `auth.uid()` は Supabase Auth のセッショントークンに依存
+- サーバーサイド（API Route）からの呼び出しでは、`createServerClient` で Cookie からセッションを復元するが、PostgREST が RLS を評価する時点で `auth.uid()` が `NULL` になることがある
+- RLS ポリシーが `auth.uid() = (SELECT payer_id FROM payments ...)` を評価 → `NULL != payer_id` → **行が一致しない** → **0 行削除（サイレント失敗）**
+- SELECT / INSERT / UPDATE は正常に動作するのに DELETE だけ失敗するため、切り分けが困難だった
+
+### 試行錯誤の経緯（Migration 011→014）
+
+1. **Migration 011**: `payment_splits` に DELETE ポリシー追加 → 効果なし
+2. **Migration 012**: `is_payment_payer()` PL/pgSQL ヘルパー関数で判定 → 効果なし
+3. **Migration 013**: RPC で DELETE を実行 → 部分的に動作するが不安定
+4. **Migration 014**: ポリシー条件の書き換え → 効果なし
+
+いずれも RLS ポリシーの修正では `auth.uid()` の NULL 問題自体を解決できなかった。
+
+### 最終解決策: SECURITY DEFINER RPC（Migration 015）
+
+`replace_payment_splits(p_payment_id, p_user_id, p_splits)` — **RLS を完全にバイパス**する SECURITY DEFINER 関数で、DELETE + INSERT を単一トランザクション内で原子的に実行。
+
+- RLS を通さないため `auth.uid()` の問題が根本的に回避される
+- RPC 内部で `payer_id = p_user_id` を検証（アプリ層の認可チェックと合わせて二重防御）
+- 戻り値で結果を通知: `>= 0` = 挿入件数, `-1` = 支払い不在, `-2` = 権限なし
+
+### 教訓
+
+- **PostgREST の DELETE + RLS + `auth.uid()` の組み合わせは信頼できない場合がある**（特にサーバーサイドからの呼び出し）
+- DELETE が「エラーなし・0 行削除」になる場合、RLS のサイレント失敗を疑う
+- 対処法: SECURITY DEFINER RPC でバイパスし、認可ロジックは RPC 内部で自前実装
 
 ---
 
 ## 現在のブランチ
 
+- `feature/edit-payment` — main にマージ予定（支払い編集機能・E2E確認済み）
 - `feature/delete-payment` — main にマージ済み（#29 削除機能 + #30 土台強化）
 - `feature/proxy-purchase` — main にマージ済み
 
 ---
 
+## 環境情報
+
+- `.env.local`: リモートDB（`byvtpkuocvjnwvihipvy.supabase.co`）に設定済み
+- ローカル Docker 環境: Codespaces で不安定（`supabase status` は running だが接続不可の場合あり）
+- Migration 015: リモート・ローカルともに適用済み
+
+---
+
 ## 次のタスク
-
-### 次回セッション再開ポイント: 支払い編集機能（Update）
-
-> **概要**: 既存の支払いを編集する機能の設計・実装
-> **前提**: 支払い削除（Delete）が完了しているので、CRUD の U（Update）を次に実装
-> **検討事項**:
-> - `PUT /api/payments/[id]` or `PATCH /api/payments/[id]` の新設
-> - 認可ルール: 支払者本人のみ？ or グループオーナーも可？
-> - payment_splits の更新戦略: 全削除→再作成 vs 差分更新
-> - RLS ポリシー `payments_update_payer` の拡張要否
-> - UI: 支払い行にペンアイコン追加 → PaymentForm を編集モードで開く
 
 ### Phase B: 構造改善
 

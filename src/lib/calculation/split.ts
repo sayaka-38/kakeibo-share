@@ -128,10 +128,18 @@ export function isProxySplit(
   splits: { user_id: string; amount: number }[],
   payerId: string
 ): boolean {
-  return (
-    splits.length > 0 &&
-    splits.some((s) => s.user_id === payerId && s.amount === 0)
+  if (splits.length === 0) return false;
+
+  // 支払者の負担が 0 円であること
+  const payerSplit = splits.find((s) => s.user_id === payerId);
+  if (!payerSplit || payerSplit.amount !== 0) return false;
+
+  // 受益者（amount > 0）がちょうど 1 人であること
+  // 支払者0円で複数人に割り振る場合はカスタム割り勘として扱う
+  const beneficiaries = splits.filter(
+    (s) => s.user_id !== payerId && s.amount > 0
   );
+  return beneficiaries.length === 1;
 }
 
 /**

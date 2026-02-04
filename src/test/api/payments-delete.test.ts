@@ -59,10 +59,17 @@ describe("DELETE /api/payments/[id] API Route", () => {
         expect.fail("API Route ファイルが存在しない（Red フェーズ）");
       }
       const content = fs.readFileSync(API_ROUTE_PATH, "utf-8");
-      // request.json() を呼んで body から groupId を取得していない
-      expect(content).not.toContain("request.json()");
+      // DELETE ハンドラ部分のみ検証（PUT ハンドラは request.json() を使うため）
+      const deleteHandler = content.slice(
+        content.indexOf("export async function DELETE"),
+        content.indexOf("export async function PUT") === -1
+          ? undefined
+          : content.indexOf("export async function PUT")
+      );
+      // DELETE ハンドラでは request.json() を呼んでいない
+      expect(deleteHandler).not.toContain("request.json()");
       // groups テーブルから owner_id を結合取得している
-      expect(content).toContain("groups");
+      expect(deleteHandler).toContain("groups");
     });
   });
 
