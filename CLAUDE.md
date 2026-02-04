@@ -117,6 +117,26 @@ src/
 
 ---
 
+## DB操作・環境ルール
+
+### payment_splits の更新は RPC 経由
+
+- `payment_splits` の DELETE/INSERT を直接実行しない。必ず RPC `replace_payment_splits` を使用する
+- 理由: PostgREST の DELETE + RLS で `auth.uid()` がサイレントに失敗し、二重登録が発生するため
+- RPC は SECURITY DEFINER で RLS をバイパスし、DELETE + INSERT を単一トランザクションで原子的に実行する
+
+### 複数テーブル更新は RPC で原子性を担保
+
+- 削除+挿入がセットになる処理や、複数テーブルにまたがる更新は PostgreSQL 関数（RPC）として実装する
+- RPC を作成・修正した際は `npm run db:gen-types` を実行して TypeScript の型を同期すること
+
+### 開発環境の優先順位
+
+- リモートDB（Supabase）を優先して開発する
+- ローカル Docker 環境が不安定な場合は無理に復旧せず、リモート設定のまま開発を継続してよい
+
+---
+
 ## DBスキーマ辞書
 
 **推測禁止。以下のテーブル定義のみ使用可。**
