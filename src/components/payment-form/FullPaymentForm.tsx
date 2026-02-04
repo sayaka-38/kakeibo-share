@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { t } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format/currency";
 import { usePaymentForm } from "./hooks/usePaymentForm";
+import type { PaymentFormInitialData } from "./hooks/usePaymentForm";
 import { AmountField, DescriptionField, DateField } from "./fields";
 import {
   calculateEqualSplit,
@@ -14,11 +15,27 @@ import {
 } from "@/lib/calculation/split";
 import type { Category, Group, Profile } from "@/types/database";
 
+/**
+ * 編集モード用の初期データ（支払い + splits 情報）
+ */
+export type EditPaymentData = {
+  paymentId: string;
+  groupId: string;
+  amount: number;
+  description: string;
+  categoryId: string | null;
+  paymentDate: string;
+  splitType: "equal" | "custom" | "proxy";
+  proxyBeneficiaryId: string | null;
+  customSplits: { [userId: string]: string };
+};
+
 type FullPaymentFormProps = {
   groups: Group[];
   categories: Category[];
   members: { [groupId: string]: Profile[] };
   currentUserId: string;
+  editData?: EditPaymentData;
 };
 
 /**
@@ -32,16 +49,31 @@ export default function FullPaymentForm({
   categories,
   members,
   currentUserId,
+  editData,
 }: FullPaymentFormProps) {
   const router = useRouter();
-  const form = usePaymentForm();
+  const isEditMode = !!editData;
+
+  const initialData: PaymentFormInitialData | undefined = editData
+    ? {
+        amount: String(editData.amount),
+        description: editData.description,
+        paymentDate: editData.paymentDate,
+        categoryId: editData.categoryId ?? "",
+        splitType: editData.splitType,
+        proxyBeneficiaryId: editData.proxyBeneficiaryId ?? "",
+      }
+    : undefined;
+
+  const form = usePaymentForm(initialData);
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // フル版専用の状態
-  const [groupId, setGroupId] = useState(groups[0]?.id || "");
-  const [categoryId, setCategoryId] = useState("");
+  const [groupId, setGroupId] = useState(editData?.groupId || groups[0]?.id || "");
+  const [categoryId, setCategoryId] = useState(editData?.categoryId ?? "");
   const [customSplits, setCustomSplits] = useState<{ [userId: string]: string }>(
-    {}
+    editData?.customSplits ?? {}
   );
 
   const currentMembers = groupId ? members[groupId] || [] : [];
@@ -143,6 +175,7 @@ export default function FullPaymentForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return; // 二重送信防止
     setError(null);
 
     // 共通バリデーション（代理購入チェック含む）
@@ -168,57 +201,96 @@ export default function FullPaymentForm({
       }
     }
 
-    const supabase = createClient();
+    setIsSubmitting(true);
 
-    // Create payment
-    const { data: payment, error: paymentError } = await supabase
-      .from("payments")
-      .insert({
-        group_id: groupId,
-        payer_id: currentUserId,
-        amount: formData.amount,
-        description: formData.description,
-        category_id: categoryId || null,
-        payment_date: formData.paymentDate.toISOString().split("T")[0],
-      })
-      .select()
-      .single();
+    try {
+      // splits を計算（create / edit 共通）
+      const paymentId = editData?.paymentId ?? "temp";
+      let splits;
+      if (formData.splitType === "proxy" && formData.proxyBeneficiaryId) {
+        splits = calculateProxySplit({
+          paymentId,
+          totalAmount: formData.amount,
+          payerId: currentUserId,
+          beneficiaryId: formData.proxyBeneficiaryId,
+          allMemberIds: currentMembers.map((m) => m.id),
+        });
+      } else if (formData.splitType === "custom") {
+        splits = calculateCustomSplits({
+          paymentId,
+          customAmounts: customSplits,
+        });
+      } else {
+        splits = calculateEqualSplit({
+          paymentId,
+          totalAmount: formData.amount,
+          memberIds: currentMembers.map((m) => m.id),
+          payerId: currentUserId,
+        });
+      }
 
-    if (paymentError || !payment) {
-      setError(paymentError?.message || t("payments.errors.createFailed"));
-      return;
+      if (isEditMode) {
+        // --- 編集モード: PUT API Route ---
+        const res = await fetch(`/api/payments/${editData.paymentId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: formData.amount,
+            description: formData.description,
+            categoryId: categoryId || null,
+            paymentDate: formData.paymentDate.toISOString().split("T")[0],
+            splits: splits.map((s) => ({
+              userId: s.user_id,
+              amount: s.amount,
+            })),
+          }),
+        });
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          setError(data.error || t("payments.errors.updateFailed"));
+          return;
+        }
+      } else {
+        // --- 新規作成モード: Supabase 直接 INSERT ---
+        const supabase = createClient();
+
+        const { data: payment, error: paymentError } = await supabase
+          .from("payments")
+          .insert({
+            group_id: groupId,
+            payer_id: currentUserId,
+            amount: formData.amount,
+            description: formData.description,
+            category_id: categoryId || null,
+            payment_date: formData.paymentDate.toISOString().split("T")[0],
+          })
+          .select()
+          .single();
+
+        if (paymentError || !payment) {
+          setError(paymentError?.message || t("payments.errors.createFailed"));
+          return;
+        }
+
+        // splits の paymentId を実際の ID に置き換え
+        const splitsToInsert = splits.map((s) => ({
+          ...s,
+          payment_id: payment.id,
+        }));
+
+        if (splitsToInsert.length > 0) {
+          await supabase.from("payment_splits").insert(splitsToInsert);
+        }
+      }
+
+      router.push("/payments");
+      router.refresh();
+    } catch {
+      setError(t("payments.errors.updateFailed"));
+    } finally {
+      setIsSubmitting(false);
     }
-
-    // Create payment splits based on splitType
-    let splits;
-    if (formData.splitType === "proxy" && formData.proxyBeneficiaryId) {
-      splits = calculateProxySplit({
-        paymentId: payment.id,
-        totalAmount: formData.amount,
-        payerId: currentUserId,
-        beneficiaryId: formData.proxyBeneficiaryId,
-        allMemberIds: currentMembers.map((m) => m.id),
-      });
-    } else if (formData.splitType === "custom") {
-      splits = calculateCustomSplits({
-        paymentId: payment.id,
-        customAmounts: customSplits,
-      });
-    } else {
-      splits = calculateEqualSplit({
-        paymentId: payment.id,
-        totalAmount: formData.amount,
-        memberIds: currentMembers.map((m) => m.id),
-        payerId: currentUserId,
-      });
-    }
-
-    if (splits.length > 0) {
-      await supabase.from("payment_splits").insert(splits);
-    }
-
-    router.push("/payments");
-    router.refresh();
   };
 
   if (groups.length === 0) {
@@ -250,7 +322,10 @@ export default function FullPaymentForm({
           value={groupId}
           onChange={(e) => setGroupId(e.target.value)}
           required
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          disabled={isEditMode}
+          className={`mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+            isEditMode ? "bg-gray-100 cursor-not-allowed" : ""
+          }`}
         >
           {groups.map((group) => (
             <option key={group.id} value={group.id}>
@@ -258,6 +333,11 @@ export default function FullPaymentForm({
             </option>
           ))}
         </select>
+        {isEditMode && (
+          <p className="mt-1 text-xs text-gray-500">
+            {t("payments.form.groupNotEditable")}
+          </p>
+        )}
       </div>
 
       {/* Amount - 共通コンポーネント使用 */}
@@ -486,12 +566,12 @@ export default function FullPaymentForm({
       {/* Submit Button */}
       <button
         type="submit"
-        disabled={form.isSubmitting}
+        disabled={isSubmitting}
         className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {form.isSubmitting
-          ? t("payments.form.submitting")
-          : t("payments.form.submit")}
+        {isSubmitting
+          ? t(isEditMode ? "payments.form.updating" : "payments.form.submitting")
+          : t(isEditMode ? "payments.form.update" : "payments.form.submit")}
       </button>
     </form>
   );

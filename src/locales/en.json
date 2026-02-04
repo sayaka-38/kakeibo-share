@@ -145,6 +145,8 @@
     "noPayments": "No payments yet",
     "delete": "Delete",
     "deleteConfirm": "Are you sure you want to delete this payment?",
+    "edit": "Edit",
+    "editPayment": "Edit Payment",
     "form": {
       "group": "Group",
       "amount": "Amount",
@@ -166,7 +168,11 @@
       "selectBeneficiary": "Select a member",
       "submit": "Add Payment",
       "submitting": "Adding...",
-      "submitSuccess": "Added successfully"
+      "submitSuccess": "Added successfully",
+      "update": "Save Changes",
+      "updating": "Saving...",
+      "updateSuccess": "Changes saved",
+      "groupNotEditable": "Group cannot be changed as it affects member composition"
     },
     "validation": {
       "amountMin": "Amount must be at least ¥1",
@@ -188,7 +194,9 @@
     "errors": {
       "invalidAmount": "Please enter a valid amount",
       "createFailed": "Failed to create payment",
+      "updateFailed": "Failed to save changes",
       "deleteFailed": "Failed to delete payment",
+      "paymentNotFound": "This payment was not found",
       "splitFailed": "Payment created but failed to add splits: ",
       "noGroup": "You need to join or create a group before adding payments."
     }

@@ -10,6 +10,7 @@ export {
 // フル版（旧 FullPaymentForm）
 export { default } from "./FullPaymentForm";
 export { default as FullPaymentForm } from "./FullPaymentForm";
+export type { EditPaymentData } from "./FullPaymentForm";
 
 // フック
 export {

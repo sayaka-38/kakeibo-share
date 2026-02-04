@@ -56,7 +56,21 @@ function getTodayString(): string {
 }
 
 /**
+ * usePaymentForm の初期値（編集モード用）
+ */
+export type PaymentFormInitialData = {
+  amount: string;
+  description: string;
+  paymentDate: string;
+  categoryId: string;
+  splitType: SplitType;
+  proxyBeneficiaryId: string;
+};
+
+/**
  * 支払いフォームの共通ロジックを提供するカスタムフック
+ *
+ * @param initialData 編集モード時の初期値（省略時は新規作成モード）
  *
  * @example
  * ```tsx
@@ -72,14 +86,14 @@ function getTodayString(): string {
  * }
  * ```
  */
-export function usePaymentForm(): UsePaymentFormReturn {
+export function usePaymentForm(initialData?: PaymentFormInitialData): UsePaymentFormReturn {
   // 状態
-  const [amount, setAmountRaw] = useState("");
-  const [description, setDescription] = useState("");
-  const [paymentDate, setPaymentDate] = useState(getTodayString);
-  const [categoryId, setCategoryId] = useState("");
-  const [splitType, setSplitType] = useState<SplitType>("equal");
-  const [proxyBeneficiaryId, setProxyBeneficiaryId] = useState("");
+  const [amount, setAmountRaw] = useState(initialData?.amount ?? "");
+  const [description, setDescription] = useState(initialData?.description ?? "");
+  const [paymentDate, setPaymentDate] = useState(initialData?.paymentDate ?? getTodayString());
+  const [categoryId, setCategoryId] = useState(initialData?.categoryId ?? "");
+  const [splitType, setSplitType] = useState<SplitType>(initialData?.splitType ?? "equal");
+  const [proxyBeneficiaryId, setProxyBeneficiaryId] = useState(initialData?.proxyBeneficiaryId ?? "");
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 

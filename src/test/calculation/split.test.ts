@@ -405,12 +405,37 @@ describe("isCustomSplit - カスタム割り勘判定", () => {
   });
 
   describe("代理購入と判定するケース", () => {
-    it("payer の amount が 0 → false（代理購入として扱われる）", () => {
+    it("payer 0円 + 受益者1人 → false（代理購入として扱われる）", () => {
       const splits = [
         { user_id: "payer", amount: 0 },
         { user_id: "user-2", amount: 1000 },
       ];
       expect(isCustomSplit(splits, "payer", 1000)).toBe(false);
+    });
+  });
+
+  describe("支払者0円 + 複数受益者はカスタムと判定するケース", () => {
+    it("payer 0円 + Aさん500円 + Bさん500円 → true（カスタム割り勘）", () => {
+      const splits = [
+        { user_id: "payer", amount: 0 },
+        { user_id: "user-2", amount: 500 },
+        { user_id: "user-3", amount: 500 },
+      ];
+      // isProxySplit は false（受益者が2人）
+      expect(isProxySplit(splits, "payer")).toBe(false);
+      // isCustomSplit は true（代理購入でも均等割りでもない）
+      expect(isCustomSplit(splits, "payer", 1000)).toBe(true);
+    });
+
+    it("payer 0円 + 不均等に3人分配 → true（カスタム割り勘）", () => {
+      const splits = [
+        { user_id: "payer", amount: 0 },
+        { user_id: "user-2", amount: 600 },
+        { user_id: "user-3", amount: 200 },
+        { user_id: "user-4", amount: 200 },
+      ];
+      expect(isProxySplit(splits, "payer")).toBe(false);
+      expect(isCustomSplit(splits, "payer", 1000)).toBe(true);
     });
   });
 
@@ -481,6 +506,25 @@ describe("isProxySplit - 代理購入判定", () => {
       const splits = [
         { user_id: "user-1", amount: 500 },
         { user_id: "user-2", amount: 500 },
+      ];
+      expect(isProxySplit(splits, "payer")).toBe(false);
+    });
+
+    it("payer 0円 + 受益者2人以上 → false（カスタム割り勘として扱う）", () => {
+      const splits = [
+        { user_id: "payer", amount: 0 },
+        { user_id: "user-2", amount: 500 },
+        { user_id: "user-3", amount: 500 },
+      ];
+      expect(isProxySplit(splits, "payer")).toBe(false);
+    });
+
+    it("payer 0円 + 3人に均等割り振り → false（カスタム割り勘として扱う）", () => {
+      const splits = [
+        { user_id: "payer", amount: 0 },
+        { user_id: "user-2", amount: 400 },
+        { user_id: "user-3", amount: 300 },
+        { user_id: "user-4", amount: 300 },
       ];
       expect(isProxySplit(splits, "payer")).toBe(false);
     });

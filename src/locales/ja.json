@@ -163,6 +163,8 @@
     "noPayments": "支払いがありません",
     "delete": "削除",
     "deleteConfirm": "この支払いを削除しますか？",
+    "edit": "編集",
+    "editPayment": "支払いを編集",
     "form": {
       "group": "グループ",
       "amount": "金額",
@@ -184,7 +186,11 @@
       "selectBeneficiary": "メンバーを選択",
       "submit": "登録する",
       "submitting": "登録中...",
-      "submitSuccess": "登録しました"
+      "submitSuccess": "登録しました",
+      "update": "変更を保存する",
+      "updating": "保存中...",
+      "updateSuccess": "変更を保存しました",
+      "groupNotEditable": "グループはメンバー構成に影響するため変更できません"
     },
     "validation": {
       "amountMin": "金額は1円以上で入力してください",
@@ -206,7 +212,9 @@
     "errors": {
       "invalidAmount": "有効な金額を入力してください",
       "createFailed": "支払いの作成に失敗しました",
+      "updateFailed": "変更の保存に失敗しました",
       "deleteFailed": "支払いの削除に失敗しました",
+      "paymentNotFound": "この支払いが見つかりませんでした",
       "splitFailed": "支払いは作成されましたが、割り勘の追加に失敗しました: ",
       "noGroup": "支払いを追加する前に、グループに参加または作成してください。"
     }
