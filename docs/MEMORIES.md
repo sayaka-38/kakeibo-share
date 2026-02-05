@@ -26,9 +26,11 @@
 | 2026-02-02 | Delete Payment | 支払い削除機能: RESTful DELETE API + RLS拡張 + ゴミ箱アイコンUI（100%完了・動作確認済み） | #29 |
 | 2026-02-03 | 土台強化 | 認証ガード（ホワイトリスト方式）・isProxySplit共通化・バッジ整理・CI permissions | #30 |
 | 2026-02-04 | Edit Payment | 支払い編集機能: PUT API + RPC原子的置換 + 編集UI + E2E動作確認済み | マージ済み |
-| 2026-02-05 | Phase 7 | 清算エンジン完全実装: DB設計 + API + 固定費UI + 清算準備室 + 確定処理 + 履歴表示 + 相殺結果 | PR準備中 |
+| 2026-02-05 | Phase 7 | 清算エンジン完全実装: DB設計 + API + 固定費UI + 清算準備室 + 確定処理 + 履歴表示 + 相殺結果 + UI/UX仕上げ | ユーザーテスト中 |
 
 テスト: 742件パス / ビルド正常（2026-02-05 セッション最新）
+
+**Phase 7 ステータス**: UI/UX仕上げ完了、ユーザー手動テスト中（マージ前）
 
 ---
 
@@ -137,7 +139,7 @@ PostgREST（Supabase の REST API レイヤー）が DELETE 操作を実行す�
 
 ## 次のタスク
 
-### Phase 7: 清算準備室 & 固定費エンジン（100% 完了）
+### Phase 7: 清算準備室 & 固定費エンジン（100% 完了 → ユーザーテスト中）
 
 - [x] Step 1: DB設計 — テーブル5個 + RPC7個 + API8本
 - [x] Step 2: 固定費ルール設定UI — `/groups/[id]/recurring-rules` ページ
@@ -151,6 +153,8 @@ PostgREST（Supabase の REST API レイヤー）が DELETE 操作を実行す�
   - 期間選択バグ修正（開始日 > 終了日 問題 + 今日を含まない）
   - 相殺結果カード（SettlementResultCard）追加
   - 清算履歴ページ（`/groups/[id]/settlement/history` + 詳細表示）追加
+  - 0件ガード（全て清算済み / 対象なし のメッセージ表示）
+- [ ] ユーザーテスト後にマージ
 
 ### Phase B: 構造改善
 
