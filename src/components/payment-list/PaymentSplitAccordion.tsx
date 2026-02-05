@@ -108,9 +108,9 @@ export function SplitContent({ splits }: { splits: SplitWithProfile[] }) {
     >
       <div className="overflow-hidden">
         <div className="mt-1.5 bg-gray-50 rounded-md px-3 py-2 space-y-1">
-          {splits.map((split) => (
+          {splits.map((split, index) => (
             <div
-              key={split.user_id}
+              key={`${split.user_id}-${index}`}
               className="flex justify-between text-xs text-gray-600"
             >
               <span>{split.display_name || split.email}</span>
