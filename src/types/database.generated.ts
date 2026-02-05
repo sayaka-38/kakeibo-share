@@ -223,6 +223,7 @@ export type Database = {
           id: string
           payer_id: string
           payment_date: string
+          settlement_id: string | null
           updated_at: string
         }
         Insert: {
@@ -234,6 +235,7 @@ export type Database = {
           id?: string
           payer_id: string
           payment_date: string
+          settlement_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -245,6 +247,7 @@ export type Database = {
           id?: string
           payer_id?: string
           payment_date?: string
+          settlement_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -300,6 +303,322 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      recurring_rules: {
+        Row: {
+          id: string
+          group_id: string
+          category_id: string | null
+          description: string
+          default_amount: number | null
+          is_variable: boolean
+          day_of_month: number
+          default_payer_id: string
+          split_type: string
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          group_id: string
+          category_id?: string | null
+          description: string
+          default_amount?: number | null
+          is_variable?: boolean
+          day_of_month: number
+          default_payer_id: string
+          split_type?: string
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          group_id?: string
+          category_id?: string | null
+          description?: string
+          default_amount?: number | null
+          is_variable?: boolean
+          day_of_month?: number
+          default_payer_id?: string
+          split_type?: string
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_rules_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_rules_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_rules_default_payer_id_fkey"
+            columns: ["default_payer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recurring_rule_splits: {
+        Row: {
+          id: string
+          rule_id: string
+          user_id: string
+          amount: number | null
+          percentage: number | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          rule_id: string
+          user_id: string
+          amount?: number | null
+          percentage?: number | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          rule_id?: string
+          user_id?: string
+          amount?: number | null
+          percentage?: number | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_rule_splits_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_rule_splits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      settlement_sessions: {
+        Row: {
+          id: string
+          group_id: string
+          period_start: string
+          period_end: string
+          status: string
+          created_by: string
+          created_at: string
+          confirmed_at: string | null
+          confirmed_by: string | null
+        }
+        Insert: {
+          id?: string
+          group_id: string
+          period_start: string
+          period_end: string
+          status?: string
+          created_by: string
+          created_at?: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+        }
+        Update: {
+          id?: string
+          group_id?: string
+          period_start?: string
+          period_end?: string
+          status?: string
+          created_by?: string
+          created_at?: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "settlement_sessions_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settlement_sessions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settlement_sessions_confirmed_by_fkey"
+            columns: ["confirmed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      settlement_entries: {
+        Row: {
+          id: string
+          session_id: string
+          rule_id: string | null
+          payment_id: string | null
+          description: string
+          category_id: string | null
+          expected_amount: number | null
+          actual_amount: number | null
+          payer_id: string
+          payment_date: string
+          status: string
+          split_type: string
+          filled_by: string | null
+          filled_at: string | null
+          created_at: string
+          entry_type: string
+          source_payment_id: string | null
+        }
+        Insert: {
+          id?: string
+          session_id: string
+          rule_id?: string | null
+          payment_id?: string | null
+          description: string
+          category_id?: string | null
+          expected_amount?: number | null
+          actual_amount?: number | null
+          payer_id: string
+          payment_date: string
+          status?: string
+          split_type?: string
+          filled_by?: string | null
+          filled_at?: string | null
+          created_at?: string
+          entry_type?: string
+          source_payment_id?: string | null
+        }
+        Update: {
+          id?: string
+          session_id?: string
+          rule_id?: string | null
+          payment_id?: string | null
+          description?: string
+          category_id?: string | null
+          expected_amount?: number | null
+          actual_amount?: number | null
+          payer_id?: string
+          payment_date?: string
+          status?: string
+          split_type?: string
+          filled_by?: string | null
+          filled_at?: string | null
+          created_at?: string
+          entry_type?: string
+          source_payment_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "settlement_entries_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "settlement_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settlement_entries_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settlement_entries_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settlement_entries_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settlement_entries_payer_id_fkey"
+            columns: ["payer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settlement_entries_filled_by_fkey"
+            columns: ["filled_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settlement_entries_source_payment_id_fkey"
+            columns: ["source_payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      settlement_entry_splits: {
+        Row: {
+          id: string
+          entry_id: string
+          user_id: string
+          amount: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          entry_id: string
+          user_id: string
+          amount: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          entry_id?: string
+          user_id?: string
+          amount?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "settlement_entry_splits_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "settlement_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settlement_entry_splits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       settlements: {
         Row: {
@@ -362,11 +681,37 @@ export type Database = {
         Args: { p_group_id: string; p_user_id: string }
         Returns: number
       }
+      confirm_settlement: {
+        Args: { p_session_id: string; p_user_id: string }
+        Returns: number
+      }
       delete_payment_splits_for_payer: {
         Args: { p_payment_id: string; p_user_id: string }
         Returns: number
       }
+      generate_settlement_entries: {
+        Args: { p_session_id: string; p_user_id: string }
+        Returns: number
+      }
+      get_actual_day_of_month: {
+        Args: { p_day_of_month: number; p_year: number; p_month: number }
+        Returns: number
+      }
+      get_last_day_of_month: {
+        Args: { p_year: number; p_month: number }
+        Returns: number
+      }
       get_payment_group_id: { Args: { _payment_id: string }; Returns: string }
+      get_settlement_period_suggestion: {
+        Args: { p_group_id: string; p_user_id: string }
+        Returns: {
+          suggested_start: string
+          suggested_end: string
+          oldest_unsettled_date: string | null
+          last_confirmed_end: string | null
+          unsettled_count: number
+        }[]
+      }
       is_group_member: {
         Args: { _group_id: string; _user_id: string }
         Returns: boolean
@@ -381,6 +726,21 @@ export type Database = {
       }
       replace_payment_splits: {
         Args: { p_payment_id: string; p_splits: Json; p_user_id: string }
+        Returns: number
+      }
+      replace_settlement_entry_splits: {
+        Args: { p_entry_id: string; p_user_id: string; p_splits: Json }
+        Returns: number
+      }
+      update_settlement_entry: {
+        Args: {
+          p_entry_id: string
+          p_user_id: string
+          p_actual_amount: number
+          p_payer_id?: string
+          p_payment_date?: string
+          p_status?: string
+        }
         Returns: number
       }
     }
