@@ -122,9 +122,16 @@ export default function SettlementSessionManager({
         return;
       }
 
-      const { session: newSession } = await res.json();
-      setSession(newSession);
-      await fetchSessionDetails(newSession.id);
+      const data = await res.json();
+      console.log("[handleCreateSession] response:", data);
+
+      // RPC エラーがあった場合は警告表示
+      if (data.rpcError || data.rpcErrorCode) {
+        console.warn("[handleCreateSession] RPC error:", data.rpcError || data.rpcErrorMessage);
+      }
+
+      setSession(data.session);
+      await fetchSessionDetails(data.session.id);
     } catch {
       setError(t("settlementSession.errors.createFailed"));
     } finally {

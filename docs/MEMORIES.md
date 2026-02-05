@@ -131,7 +131,7 @@ PostgREST（Supabase の REST API レイヤー）が DELETE 操作を実行す�
 
 ## 次のタスク
 
-### Phase 7: 清算準備室 & 固定費エンジン（100%完了）
+### Phase 7: 清算準備室 & 固定費エンジン（99% — RPC修正待ち）
 
 - [x] Step 1: DB設計 — テーブル5個 + RPC7個 + API8本
 - [x] Step 2: 固定費ルール設定UI — `/groups/[id]/recurring-rules` ページ
@@ -139,6 +139,28 @@ PostgREST（Supabase の REST API レイヤー）が DELETE 操作を実行す�
 - [x] Step 4: チェックリスト入力UI — 金額入力・ステータス変更
 - [x] Step 5: 確定処理 & 清算済み表示（バッジ + 最新期間表示）
 - [x] UX修正: Navigation 清算リンク動的化 + PaymentSplitAccordion duplicate key 修正
+- [ ] **BUG FIX待ち**: エントリ0件問題 — 下記「未解決バグ」参照
+
+### 未解決バグ: エントリ0件問題
+
+**症状**: スマート提案で「7件」と表示されるが、準備室に進むとエントリが0件
+
+**原因（推定）**:
+1. **RPC `generate_settlement_entries` の `group_id` 重複問題**
+   - `SELECT ss.*, g.id as group_id` で `group_id` が2回定義される
+   - PostgreSQL RECORD 型への代入時に予期しない動作の可能性
+2. **フロントエンドのタイムゾーン問題**
+   - `toISOString().split("T")[0]` は UTC 日付を返す
+   - 日本時間 0:00〜9:00 の間は前日の日付になる
+
+**修正済みファイル（コミット待ち）**:
+- `src/app/(protected)/groups/[id]/settlement/PeriodSelector.tsx` — ローカル日付に修正
+- `supabase/migrations/20260101000018_fix_generate_entries_rpc.sql` — RPC修正SQL
+
+**次のステップ**:
+1. Supabase Dashboard で上記 RPC SQL を実行
+2. 清算セッションを再作成してテスト
+3. 動作確認後、ブランチをマージ
 
 ### Phase B: 構造改善
 

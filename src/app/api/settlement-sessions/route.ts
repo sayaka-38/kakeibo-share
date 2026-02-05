@@ -158,9 +158,39 @@ export async function POST(request: NextRequest) {
       p_user_id: user.id,
     });
 
+  console.log("[generate_settlement_entries] session_id:", session.id, "user_id:", user.id);
+  console.log("[generate_settlement_entries] result:", entryCount, "error:", rpcError);
+
   if (rpcError) {
     console.error("Failed to generate settlement entries:", rpcError);
-    // セッションは作成済みなので続行
+    // セッションは作成済みなので続行（エラー情報をレスポンスに含める）
+    return NextResponse.json(
+      {
+        session,
+        entriesGenerated: 0,
+        rpcError: rpcError.message,
+      },
+      { status: 201 }
+    );
+  }
+
+  // RPCの戻り値が負の場合はエラーコード
+  if (typeof entryCount === "number" && entryCount < 0) {
+    const errorMessages: Record<number, string> = {
+      [-1]: "Session not found",
+      [-2]: "Permission denied",
+      [-3]: "Session is not in draft status",
+    };
+    console.error("RPC returned error code:", entryCount, errorMessages[entryCount]);
+    return NextResponse.json(
+      {
+        session,
+        entriesGenerated: 0,
+        rpcErrorCode: entryCount,
+        rpcErrorMessage: errorMessages[entryCount] || "Unknown error",
+      },
+      { status: 201 }
+    );
   }
 
   return NextResponse.json(
