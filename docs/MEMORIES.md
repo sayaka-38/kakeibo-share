@@ -132,10 +132,10 @@ PostgREST（Supabase の REST API レイヤー）が DELETE 操作を実行す�
 ### Phase 7: 清算準備室 & 固定費エンジン（進行中）
 
 - [x] Step 1: DB設計 — テーブル5個 + RPC7個 + API8本
-- [ ] Step 2: 固定費ルール設定UI — `/groups/[id]/recurring-rules` ページ
-- [ ] Step 3: 清算準備室UI — `/groups/[id]/settlement` ページ
-- [ ] Step 4: チェックリスト入力UI — 金額入力・ステータス変更
-- [ ] Step 5: 確定処理 & 清算済み表示
+- [x] Step 2: 固定費ルール設定UI — `/groups/[id]/recurring-rules` ページ
+- [x] Step 3: 清算準備室UI — `/groups/[id]/settlement` ページ
+- [x] Step 4: チェックリスト入力UI — 金額入力・ステータス変更
+- [ ] Step 5: 確定処理 & 清算済み表示（確定後の視覚的フィードバック）
 
 ### Phase B: 構造改善
 
