@@ -85,6 +85,16 @@ export default async function GroupDetailPage({ params }: Props) {
     .select("*")
     .or(`is_default.eq.true,group_id.eq.${id}`)) as { data: Category[] | null };
 
+  // Get latest confirmed settlement session
+  const { data: latestSettlement } = await supabase
+    .from("settlement_sessions")
+    .select("period_start, period_end, confirmed_at")
+    .eq("group_id", id)
+    .eq("status", "confirmed")
+    .order("confirmed_at", { ascending: false })
+    .limit(1)
+    .single();
+
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-6">
@@ -133,6 +143,16 @@ export default async function GroupDetailPage({ params }: Props) {
               </p>
             </div>
           </div>
+
+          {/* Latest Settlement Info */}
+          {latestSettlement && (
+            <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-3">
+              <p className="text-sm text-green-800">
+                <span className="font-medium">最新の清算期間:</span>{" "}
+                {latestSettlement.period_start} 〜 {latestSettlement.period_end}
+              </p>
+            </div>
+          )}
 
           {/* Quick Links */}
           <div className="mt-6 flex flex-wrap gap-3">

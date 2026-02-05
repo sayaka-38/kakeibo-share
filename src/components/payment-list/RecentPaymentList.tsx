@@ -30,6 +30,7 @@ type RecentPaymentRow = {
   description: string;
   payment_date: string;
   payer_id: string;
+  settlement_id: string | null;
   profiles: { display_name: string | null; email: string } | null;
   payment_splits: PaymentSplitRow[];
 };
@@ -56,6 +57,7 @@ export async function RecentPaymentList({
       description,
       payment_date,
       payer_id,
+      settlement_id,
       profiles (
         display_name,
         email
@@ -109,6 +111,11 @@ export async function RecentPaymentList({
                   <p className="font-medium text-gray-900">
                     {payment.description}
                   </p>
+                  {payment.settlement_id && (
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">
+                      清算済
+                    </span>
+                  )}
                   {isProxy && (
                     <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700">
                       {t("payments.display.proxyBadge")}
