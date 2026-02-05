@@ -47,6 +47,12 @@ export default function EntryCard({
     members.find((m) => m.id === entry.payer_id)?.email ||
     "Unknown";
 
+  // 入力者名（filled の場合）
+  const filledByMember = entry.filled_by
+    ? members.find((m) => m.id === entry.filled_by)
+    : null;
+  const filledByName = filledByMember?.display_name || filledByMember?.email;
+
   // スキップ処理
   const handleSkip = async () => {
     setIsSkipping(true);
@@ -113,8 +119,15 @@ export default function EntryCard({
 
         <div className="text-right shrink-0">
           {entry.status === "filled" ? (
-            <div className="text-lg font-semibold text-green-600">
-              {formatCurrency(entry.actual_amount || 0)}
+            <div>
+              <div className="text-lg font-semibold text-green-600">
+                {formatCurrency(entry.actual_amount || 0)}
+              </div>
+              {filledByName && (
+                <div className="text-xs text-green-600 mt-0.5">
+                  入力: {filledByName}
+                </div>
+              )}
             </div>
           ) : entry.status === "skipped" ? (
             <div className="text-sm text-gray-500">

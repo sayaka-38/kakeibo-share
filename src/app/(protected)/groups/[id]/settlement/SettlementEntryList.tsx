@@ -8,6 +8,7 @@ import type { Profile, Category } from "@/types/database";
 import type { SessionData, EntryData } from "./SettlementSessionManager";
 import EntryCard from "./EntryCard";
 import EntryEditModal from "./EntryEditModal";
+import SettlementResultCard from "./SettlementResultCard";
 
 type Stats = {
   total: number;
@@ -53,6 +54,9 @@ export default function SettlementEntryList({
   const pendingEntries = entries.filter((e) => e.status === "pending");
   const filledEntries = entries.filter((e) => e.status === "filled");
   const skippedEntries = entries.filter((e) => e.status === "skipped");
+
+  // エントリが0件の場合
+  const isEmpty = entries.length === 0;
 
   return (
     <div className="space-y-6">
@@ -100,7 +104,28 @@ export default function SettlementEntryList({
         </div>
       </div>
 
+      {/* Empty State */}
+      {isEmpty && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 text-center">
+          <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3">
+            <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h3 className="font-medium text-amber-800 mb-1">
+            対象の支払いがありません
+          </h3>
+          <p className="text-sm text-amber-700">
+            選択した期間に未清算の支払いや固定費ルールがありません。
+          </p>
+          <p className="text-xs text-amber-600 mt-2">
+            期間を変更するか、このセッションを削除してください。
+          </p>
+        </div>
+      )}
+
       {/* Stats Summary */}
+      {!isEmpty && (
       <div className="bg-white rounded-lg shadow p-4">
         <h3 className="text-sm font-medium text-gray-700 mb-3">
           {t("settlementSession.summary")}
@@ -142,6 +167,7 @@ export default function SettlementEntryList({
           </div>
         )}
       </div>
+      )}
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
@@ -214,6 +240,14 @@ export default function SettlementEntryList({
           </div>
         </div>
       )}
+
+      {/* Settlement Result Card */}
+      <SettlementResultCard
+        session={session}
+        entries={entries}
+        members={members}
+        currentUserId={currentUserId}
+      />
 
       {/* Confirm Button */}
       <div className="bg-white rounded-lg shadow p-4">

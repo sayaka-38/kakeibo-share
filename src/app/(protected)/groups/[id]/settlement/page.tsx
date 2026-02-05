@@ -113,6 +113,16 @@ export default async function SettlementPage({ params }: PageProps) {
           unsettledCount: suggestionData.unsettled_count,
         } : null}
       />
+
+      {/* History Link */}
+      <div className="mt-6 text-center">
+        <Link
+          href={`/groups/${groupId}/settlement/history`}
+          className="text-sm text-gray-500 hover:text-gray-700"
+        >
+          過去の清算履歴を見る &rarr;
+        </Link>
+      </div>
     </div>
   );
 }

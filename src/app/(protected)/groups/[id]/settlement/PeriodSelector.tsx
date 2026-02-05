@@ -12,12 +12,53 @@ type PeriodSelectorProps = {
   error: string | null;
 };
 
-// ローカルタイムゾーンでの今日の日付を取得（YYYY-MM-DD形式）
+// ローカルタイムゾーンでの日付を取得（YYYY-MM-DD形式）
 function getLocalDateString(date: Date = new Date()): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+// 昨日の日付を取得
+function getYesterdayString(): string {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  return getLocalDateString(yesterday);
+}
+
+// デフォルト期間を計算
+function getDefaultPeriod(suggestion: SuggestionData | null): { start: string; end: string } {
+  const today = getLocalDateString();
+  const yesterday = getYesterdayString();
+
+  // suggestion がある場合
+  if (suggestion?.suggestedStart && suggestion?.suggestedEnd) {
+    let start = suggestion.suggestedStart;
+    let end = suggestion.suggestedEnd;
+
+    // 終了日が今日なら昨日に修正（今日を含まない）
+    if (end === today) {
+      end = yesterday;
+    }
+
+    // 開始日が終了日より後なら修正
+    if (start > end) {
+      start = end;
+    }
+
+    return { start, end };
+  }
+
+  // suggestion がない場合: 今月1日〜昨日
+  const firstOfMonth = new Date();
+  firstOfMonth.setDate(1);
+  const defaultStart = getLocalDateString(firstOfMonth);
+
+  return {
+    start: defaultStart > yesterday ? yesterday : defaultStart,
+    end: yesterday,
+  };
 }
 
 export default function PeriodSelector({
@@ -27,13 +68,10 @@ export default function PeriodSelector({
   error,
 }: PeriodSelectorProps) {
   const today = getLocalDateString();
+  const defaultPeriod = getDefaultPeriod(suggestion);
 
-  const [periodStart, setPeriodStart] = useState(
-    suggestion?.suggestedStart || today
-  );
-  const [periodEnd, setPeriodEnd] = useState(
-    suggestion?.suggestedEnd || today
-  );
+  const [periodStart, setPeriodStart] = useState(defaultPeriod.start);
+  const [periodEnd, setPeriodEnd] = useState(defaultPeriod.end);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,13 +79,36 @@ export default function PeriodSelector({
   };
 
   const handleUseSuggestion = () => {
-    if (suggestion?.suggestedStart) {
-      setPeriodStart(suggestion.suggestedStart);
-    }
-    if (suggestion?.suggestedEnd) {
-      setPeriodEnd(suggestion.suggestedEnd);
-    }
+    const period = getDefaultPeriod(suggestion);
+    setPeriodStart(period.start);
+    setPeriodEnd(period.end);
   };
+
+  // 未清算データがない場合（全て清算済み）
+  const isAllSettled = suggestion && suggestion.unsettledCount === 0 && !suggestion.oldestUnsettledDate;
+
+  if (isAllSettled) {
+    return (
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="text-center py-8">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            全て清算完了
+          </h2>
+          <p className="text-gray-600">
+            現在のグループは全て清算完了しています。
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            新しい支払いを登録すると、次回の清算対象になります。
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
