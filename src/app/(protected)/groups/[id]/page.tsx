@@ -133,6 +133,16 @@ export default async function GroupDetailPage({ params }: Props) {
               </p>
             </div>
           </div>
+
+          {/* Quick Links */}
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link
+              href={`/groups/${id}/recurring-rules`}
+              className="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+            >
+              {t("recurringRules.title")}
+            </Link>
+          </div>
         </div>
       </div>
 

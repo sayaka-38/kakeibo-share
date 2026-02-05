@@ -254,5 +254,56 @@
     "entertainment": "娯楽費",
     "healthcare": "医療費",
     "other": "その他"
+  },
+  "recurringRules": {
+    "title": "固定費ルール",
+    "subtitle": "毎月発生する固定費のテンプレートを設定",
+    "addRule": "ルールを追加",
+    "editRule": "ルールを編集",
+    "noRules": "固定費ルールがまだありません",
+    "noRulesHint": "家賃や光熱費など、毎月発生する支払いのテンプレートを作成しましょう",
+    "dayOfMonth": "発生日",
+    "dayOfMonthHint": "毎月{day}日",
+    "dayOfMonthEndHint": "※31日を指定すると、月末として扱います（2月なら28/29日）",
+    "isVariable": "金額タイプ",
+    "fixedAmount": "固定額",
+    "variableAmount": "変動",
+    "variableAmountHint": "毎回金額を入力",
+    "defaultPayer": "デフォルト支払者",
+    "splitType": "分割方法",
+    "splitEqual": "均等",
+    "splitCustom": "カスタム（%指定）",
+    "splitPercentage": "負担割合",
+    "percentageTotal": "合計: {total}%",
+    "percentageMismatch": "合計が100%になるように調整してください",
+    "active": "有効",
+    "inactive": "無効",
+    "deleteConfirm": "このルールを削除しますか？",
+    "deleteNote": "削除しても、既に登録された支払いには影響しません",
+    "form": {
+      "description": "項目名",
+      "descriptionPlaceholder": "例: 家賃",
+      "amount": "金額",
+      "amountPlaceholder": "例: 100000",
+      "category": "カテゴリ",
+      "selectCategory": "カテゴリを選択",
+      "selectPayer": "支払者を選択",
+      "selectDay": "日を選択",
+      "save": "保存",
+      "saving": "保存中...",
+      "cancel": "キャンセル"
+    },
+    "validation": {
+      "descriptionRequired": "項目名を入力してください",
+      "amountRequired": "固定額ルールには金額が必要です",
+      "dayRequired": "発生日を選択してください",
+      "payerRequired": "デフォルト支払者を選択してください"
+    },
+    "errors": {
+      "fetchFailed": "ルールの取得に失敗しました",
+      "createFailed": "ルールの作成に失敗しました",
+      "updateFailed": "ルールの更新に失敗しました",
+      "deleteFailed": "ルールの削除に失敗しました"
+    }
   }
 }

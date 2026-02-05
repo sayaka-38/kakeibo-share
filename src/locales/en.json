@@ -236,5 +236,56 @@
     "entertainment": "Entertainment",
     "healthcare": "Healthcare",
     "other": "Other"
+  },
+  "recurringRules": {
+    "title": "Recurring Rules",
+    "subtitle": "Set up templates for monthly recurring expenses",
+    "addRule": "Add Rule",
+    "editRule": "Edit Rule",
+    "noRules": "No recurring rules yet",
+    "noRulesHint": "Create templates for recurring expenses like rent and utilities",
+    "dayOfMonth": "Day of Month",
+    "dayOfMonthHint": "Every {day}th",
+    "dayOfMonthEndHint": "* Day 31 will be treated as the last day of the month (Feb 28/29)",
+    "isVariable": "Amount Type",
+    "fixedAmount": "Fixed",
+    "variableAmount": "Variable",
+    "variableAmountHint": "Enter amount each time",
+    "defaultPayer": "Default Payer",
+    "splitType": "Split Method",
+    "splitEqual": "Equal",
+    "splitCustom": "Custom (%)",
+    "splitPercentage": "Split Percentage",
+    "percentageTotal": "Total: {total}%",
+    "percentageMismatch": "Please adjust to total 100%",
+    "active": "Active",
+    "inactive": "Inactive",
+    "deleteConfirm": "Are you sure you want to delete this rule?",
+    "deleteNote": "Deleting this rule will not affect existing payments",
+    "form": {
+      "description": "Name",
+      "descriptionPlaceholder": "e.g. Rent",
+      "amount": "Amount",
+      "amountPlaceholder": "e.g. 100000",
+      "category": "Category",
+      "selectCategory": "Select a category",
+      "selectPayer": "Select payer",
+      "selectDay": "Select day",
+      "save": "Save",
+      "saving": "Saving...",
+      "cancel": "Cancel"
+    },
+    "validation": {
+      "descriptionRequired": "Please enter a name",
+      "amountRequired": "Fixed amount rules require an amount",
+      "dayRequired": "Please select a day",
+      "payerRequired": "Please select a default payer"
+    },
+    "errors": {
+      "fetchFailed": "Failed to fetch rules",
+      "createFailed": "Failed to create rule",
+      "updateFailed": "Failed to update rule",
+      "deleteFailed": "Failed to delete rule"
+    }
   }
 }
