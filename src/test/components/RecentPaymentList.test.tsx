@@ -44,13 +44,17 @@ describe("RecentPaymentList", () => {
 
   describe("支払いがある場合", () => {
     beforeEach(() => {
+      const orderResult = {
+        order: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockResolvedValue({ data: mockPayments }),
+      } as Record<string, ReturnType<typeof vi.fn>>;
+      orderResult.order.mockReturnValue(orderResult);
+
       const mockSupabase = {
         from: vi.fn().mockReturnValue({
           select: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnValue({
-              order: vi.fn().mockReturnValue({
-                limit: vi.fn().mockResolvedValue({ data: mockPayments }),
-              }),
+              order: vi.fn().mockReturnValue(orderResult),
             }),
           }),
         }),
@@ -94,13 +98,17 @@ describe("RecentPaymentList", () => {
 
   describe("支払いがない場合", () => {
     beforeEach(() => {
+      const orderResult = {
+        order: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockResolvedValue({ data: [] }),
+      } as Record<string, ReturnType<typeof vi.fn>>;
+      orderResult.order.mockReturnValue(orderResult);
+
       const mockSupabase = {
         from: vi.fn().mockReturnValue({
           select: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnValue({
-              order: vi.fn().mockReturnValue({
-                limit: vi.fn().mockResolvedValue({ data: [] }),
-              }),
+              order: vi.fn().mockReturnValue(orderResult),
             }),
           }),
         }),

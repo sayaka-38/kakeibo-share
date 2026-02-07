@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/format/currency";
-import type { Profile, Category } from "@/types/database";
+import type { Profile } from "@/types/database";
 import SettlementResultCard from "../../SettlementResultCard";
 import type { EntryData, SessionData } from "../../SettlementSessionManager";
 
@@ -70,7 +70,7 @@ export default async function SettlementHistoryDetailPage({ params }: PageProps)
     .eq("group_id", groupId)
     .single();
 
-  if (!session || session.status !== "confirmed") {
+  if (!session || session.status === "draft") {
     redirect(`/groups/${groupId}/settlement/history`);
   }
 
@@ -88,7 +88,7 @@ export default async function SettlementHistoryDetailPage({ params }: PageProps)
       )
     `)
     .eq("session_id", sessionId)
-    .order("payment_date", { ascending: true });
+    .order("created_at", { ascending: false });
 
   // エントリデータを整形
   const entries: EntryData[] = (entriesData || []).map((e) => ({
@@ -128,6 +128,12 @@ export default async function SettlementHistoryDetailPage({ params }: PageProps)
     created_at: session.created_at,
     confirmed_at: session.confirmed_at,
     confirmed_by: session.confirmed_by,
+    net_transfers: (session.net_transfers as SessionData["net_transfers"]) ?? null,
+    is_zero_settlement: session.is_zero_settlement ?? false,
+    payment_reported_at: session.payment_reported_at ?? null,
+    payment_reported_by: session.payment_reported_by ?? null,
+    settled_at: session.settled_at ?? null,
+    settled_by: session.settled_by ?? null,
   };
 
   const filledEntries = entries.filter((e) => e.status === "filled");
@@ -140,17 +146,17 @@ export default async function SettlementHistoryDetailPage({ params }: PageProps)
       <div className="mb-6">
         <Link
           href={`/groups/${groupId}/settlement/history`}
-          className="text-sm text-blue-600 hover:text-blue-800 mb-2 inline-block"
+          className="text-sm text-theme-primary hover:text-theme-primary/80 mb-2 inline-block"
         >
           &larr; 清算履歴
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-2xl font-bold text-theme-headline">
           {session.period_start} 〜 {session.period_end}
         </h1>
-        <p className="text-sm text-gray-600 mt-1">
+        <p className="text-sm text-theme-muted mt-1">
           {session.confirmed_at && new Date(session.confirmed_at).toLocaleDateString("ja-JP")} 確定
           {confirmer && (
-            <span className="text-gray-500">
+            <span className="text-theme-muted">
               （{confirmer.display_name || confirmer.email}）
             </span>
           )}
@@ -168,23 +174,23 @@ export default async function SettlementHistoryDetailPage({ params }: PageProps)
       </div>
 
       {/* Summary */}
-      <div className="bg-white rounded-lg shadow p-4 mb-6">
+      <div className="bg-theme-card-bg rounded-lg shadow p-4 mb-6">
         <div className="flex justify-between items-center">
-          <span className="text-gray-600">総支出</span>
-          <span className="text-xl font-semibold">{formatCurrency(totalAmount)}</span>
+          <span className="text-theme-muted">総支出</span>
+          <span className="text-xl font-semibold text-theme-headline">{formatCurrency(totalAmount)}</span>
         </div>
-        <div className="flex justify-between items-center mt-2 text-sm text-gray-500">
+        <div className="flex justify-between items-center mt-2 text-sm text-theme-muted">
           <span>支払い件数</span>
           <span>{filledEntries.length}件</span>
         </div>
       </div>
 
       {/* Entry List */}
-      <div className="bg-white rounded-lg shadow">
-        <h3 className="px-4 py-3 font-medium text-gray-900 border-b">
+      <div className="bg-theme-card-bg rounded-lg shadow">
+        <h3 className="px-4 py-3 font-medium text-theme-headline border-b border-theme-card-border">
           含まれる支払い
         </h3>
-        <ul className="divide-y divide-gray-200">
+        <ul className="divide-y divide-theme-card-border">
           {filledEntries.map((entry) => {
             const payerName =
               entry.payer?.display_name ||
@@ -193,24 +199,49 @@ export default async function SettlementHistoryDetailPage({ params }: PageProps)
               members.find((m) => m.id === entry.payer_id)?.email ||
               "Unknown";
 
+            const hasSplits = entry.splits && entry.splits.length > 0;
+
             return (
               <li key={entry.id} className="px-4 py-3">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="font-medium text-gray-900">{entry.description}</p>
-                    <p className="text-sm text-gray-500">
+                    <p className="font-medium text-theme-headline">{entry.description}</p>
+                    <p className="text-sm text-theme-muted">
                       {payerName} ・ {entry.payment_date}
                       {entry.category && (
-                        <span className="ml-2 text-xs bg-gray-100 px-1.5 py-0.5 rounded">
+                        <span className="ml-2 text-xs bg-theme-bg px-1.5 py-0.5 rounded">
                           {entry.category.name}
+                        </span>
+                      )}
+                      {entry.split_type === "custom" && (
+                        <span className="ml-2 text-xs bg-theme-secondary/20 text-theme-text px-1.5 py-0.5 rounded">
+                          カスタム分割
                         </span>
                       )}
                     </p>
                   </div>
-                  <span className="font-medium text-gray-900">
+                  <span className="font-medium text-theme-headline">
                     {formatCurrency(entry.actual_amount || 0)}
                   </span>
                 </div>
+                {/* Splits breakdown */}
+                {hasSplits && (
+                  <div className="mt-2 ml-2 space-y-1">
+                    {entry.splits!.map((split) => {
+                      const splitUserName =
+                        split.user?.display_name ||
+                        split.user?.email ||
+                        members.find((m) => m.id === split.user_id)?.display_name ||
+                        "Unknown";
+                      return (
+                        <div key={split.id} className="flex justify-between text-xs text-theme-muted">
+                          <span>{splitUserName}</span>
+                          <span>{formatCurrency(split.amount)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </li>
             );
           })}
@@ -221,13 +252,13 @@ export default async function SettlementHistoryDetailPage({ params }: PageProps)
       <div className="mt-8 flex justify-center gap-4 text-sm">
         <Link
           href={`/groups/${groupId}/settlement/history`}
-          className="text-gray-500 hover:text-gray-700"
+          className="text-theme-muted hover:text-theme-text"
         >
           履歴に戻る
         </Link>
         <Link
           href={`/groups/${groupId}`}
-          className="text-gray-500 hover:text-gray-700"
+          className="text-theme-muted hover:text-theme-text"
         >
           グループに戻る
         </Link>

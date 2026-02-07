@@ -77,7 +77,7 @@ describe("DemoBanner - デモモード表示バナー", () => {
 
       const banner = screen.getByRole("banner");
       // Tailwind のクラスが適用されていることを確認
-      expect(banner).toHaveClass("bg-amber-50");
+      expect(banner).toHaveClass("bg-theme-primary/10");
     });
   });
 });

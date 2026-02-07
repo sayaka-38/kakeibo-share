@@ -67,7 +67,7 @@ export default function Navigation() {
   };
 
   return (
-    <nav className="bg-white border-b border-gray-200 md:border-b-0 md:border-r md:w-64 md:min-h-[calc(100vh-4rem)]">
+    <nav className="bg-theme-card-bg border-b border-theme-card-border md:border-b-0 md:border-r md:w-64 md:min-h-[calc(100vh-4rem)]">
       {/* Mobile navigation */}
       <div className="md:hidden flex overflow-x-auto">
         {navItems.map((item) => {
@@ -78,8 +78,8 @@ export default function Navigation() {
               href={item.href}
               className={`flex-1 flex flex-col items-center py-3 px-4 text-xs ${
                 isActive
-                  ? "text-blue-600 border-b-2 border-blue-600"
-                  : "text-gray-700 hover:text-gray-900"
+                  ? "text-theme-primary border-b-2 border-theme-primary"
+                  : "text-theme-text hover:text-theme-headline"
               }`}
             >
               <NavIcon name={item.icon} />
@@ -100,8 +100,8 @@ export default function Navigation() {
                   href={item.href}
                   className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm ${
                     isActive
-                      ? "bg-blue-50 text-blue-600"
-                      : "text-gray-600 hover:bg-gray-50"
+                      ? "bg-theme-primary/15 text-theme-primary"
+                      : "text-theme-muted hover:bg-theme-bg"
                   }`}
                 >
                   <NavIcon name={item.icon} />

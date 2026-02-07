@@ -30,7 +30,7 @@ export const DateField = memo(function DateField({
     <div>
       <label
         htmlFor={id}
-        className="block text-sm font-medium text-gray-700 mb-1"
+        className="block text-sm font-medium text-theme-text mb-1"
       >
         {t("payments.form.date")}
       </label>
@@ -39,14 +39,14 @@ export const DateField = memo(function DateField({
         type="date"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={`block w-full px-3 py-3 border rounded-lg shadow-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-          error ? "border-red-500" : "border-gray-300"
+        className={`block w-full px-3 py-3 border rounded-lg shadow-sm text-theme-headline focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-colors ${
+          error ? "border-theme-accent" : "border-theme-card-border"
         }`}
         aria-invalid={!!error}
         aria-describedby={error ? errorId : undefined}
       />
       {error && (
-        <p id={errorId} className="mt-1 text-sm text-red-600" role="alert">
+        <p id={errorId} className="mt-1 text-sm text-theme-accent" role="alert">
           {error}
         </p>
       )}

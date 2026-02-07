@@ -21,7 +21,7 @@ export function Skeleton({
   className = "",
   ...props
 }: SkeletonProps) {
-  const baseClasses = "animate-pulse bg-gray-200";
+  const baseClasses = "animate-pulse bg-theme-card-border";
   const shapeClass = variant === "circle" ? "rounded-full" : "rounded";
   const sizeClasses = [width, height].filter(Boolean).join(" ");
 
@@ -77,7 +77,7 @@ type SkeletonCardProps = HTMLAttributes<HTMLDivElement>;
 export function SkeletonCard({ className = "", ...props }: SkeletonCardProps) {
   return (
     <div
-      className={`bg-white rounded-lg shadow p-4 ${className}`.trim()}
+      className={`bg-theme-card-bg rounded-lg shadow p-4 ${className}`.trim()}
       {...props}
     >
       <div className="space-y-3">

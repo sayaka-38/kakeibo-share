@@ -62,7 +62,7 @@ export function DeleteGroupButton({ groupId, groupName }: Props) {
       <button
         type="button"
         onClick={() => setShowDialog(true)}
-        className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+        className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-theme-accent hover:text-theme-accent/80 hover:bg-theme-accent/10 rounded-md transition-colors"
         aria-label="グループを削除"
       >
         <svg
@@ -91,17 +91,17 @@ export function DeleteGroupButton({ groupId, groupName }: Props) {
         >
           {/* オーバーレイ */}
           <div
-            className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+            className="fixed inset-0 bg-theme-muted bg-opacity-75 transition-opacity"
             onClick={handleCancel}
           />
 
           {/* ダイアログ本体 */}
           <div className="flex min-h-full items-center justify-center p-4">
-            <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="relative bg-theme-card-bg rounded-lg shadow-xl max-w-md w-full p-6">
               {/* アイコン */}
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 mb-4">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-theme-accent/15 mb-4">
                 <svg
-                  className="h-6 w-6 text-red-600"
+                  className="h-6 w-6 text-theme-accent"
                   fill="none"
                   viewBox="0 0 24 24"
                   strokeWidth="1.5"
@@ -118,19 +118,19 @@ export function DeleteGroupButton({ groupId, groupName }: Props) {
               {/* タイトル */}
               <h3
                 id="delete-dialog-title"
-                className="text-lg font-semibold text-gray-900 text-center mb-2"
+                className="text-lg font-semibold text-theme-headline text-center mb-2"
               >
                 グループを削除しますか？
               </h3>
 
               {/* グループ名 */}
-              <p className="text-center text-gray-700 font-medium mb-4">
+              <p className="text-center text-theme-text font-medium mb-4">
                 「{groupName}」
               </p>
 
               {/* 警告メッセージ */}
-              <div className="bg-amber-50 border border-amber-200 rounded-md p-3 mb-4">
-                <ul className="text-sm text-amber-800 space-y-1">
+              <div className="bg-theme-primary/10 border border-theme-card-border rounded-md p-3 mb-4">
+                <ul className="text-sm text-theme-headline space-y-1">
                   <li>・このグループに関連するすべての支払い記録が削除されます。</li>
                   <li>・他のメンバーの画面からも、このグループの記録がすべて消去されます。</li>
                   <li className="font-medium">・この操作は取り消せません。</li>
@@ -139,8 +139,8 @@ export function DeleteGroupButton({ groupId, groupName }: Props) {
 
               {/* エラーメッセージ */}
               {error && (
-                <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-4">
-                  <p className="text-sm text-red-700">{error}</p>
+                <div className="bg-theme-accent/10 border border-theme-accent rounded-md p-3 mb-4">
+                  <p className="text-sm text-theme-accent">{error}</p>
                 </div>
               )}
 
@@ -150,7 +150,7 @@ export function DeleteGroupButton({ groupId, groupName }: Props) {
                   type="button"
                   onClick={handleCancel}
                   disabled={isDeleting}
-                  className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                  className="flex-1 px-4 py-2 text-sm font-medium text-theme-text bg-theme-card-bg border border-theme-card-border rounded-md hover:bg-theme-bg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-theme-primary disabled:opacity-50"
                 >
                   キャンセル
                 </button>
@@ -158,7 +158,7 @@ export function DeleteGroupButton({ groupId, groupName }: Props) {
                   type="button"
                   onClick={handleDelete}
                   disabled={isDeleting}
-                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-theme-accent rounded-md hover:bg-theme-accent/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-theme-accent disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isDeleting ? (
                     <span className="flex items-center justify-center">

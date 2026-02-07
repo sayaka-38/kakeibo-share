@@ -64,10 +64,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       )
     `)
     .eq("session_id", id)
-    .order("payment_date", { ascending: true })
-    .order("description", { ascending: true });
+    .order("created_at", { ascending: false });
 
-  console.log("[GET settlement-sessions/id] session_id:", id, "entries count:", entries?.length ?? 0);
   if (entriesError) {
     console.error("Failed to fetch settlement entries:", entriesError);
     return NextResponse.json(

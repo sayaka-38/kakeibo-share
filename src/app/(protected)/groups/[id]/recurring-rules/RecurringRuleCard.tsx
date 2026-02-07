@@ -78,7 +78,7 @@ export default function RecurringRuleCard({
 
   return (
     <div
-      className={`bg-white rounded-lg shadow border p-4 ${
+      className={`bg-theme-card-bg rounded-lg shadow border p-4 ${
         !rule.is_active ? "opacity-60" : ""
       }`}
     >
@@ -86,55 +86,55 @@ export default function RecurringRuleCard({
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="font-medium text-gray-900 truncate">
+            <h3 className="font-medium text-theme-headline truncate">
               {rule.description}
             </h3>
             {!rule.is_active && (
-              <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded">
+              <span className="text-xs bg-theme-card-border text-theme-muted px-2 py-0.5 rounded">
                 {t("recurringRules.inactive")}
               </span>
             )}
           </div>
           {rule.category && (
-            <span className="text-xs text-gray-500">{rule.category.name}</span>
+            <span className="text-xs text-theme-muted">{rule.category.name}</span>
           )}
         </div>
         <div className="text-right shrink-0">
           <div
             className={`font-semibold ${
-              rule.is_variable ? "text-amber-600" : "text-gray-900"
+              rule.is_variable ? "text-theme-primary" : "text-theme-headline"
             }`}
           >
             {amountDisplay}
           </div>
-          <div className="text-xs text-gray-500">{dayDisplay}</div>
+          <div className="text-xs text-theme-muted">{dayDisplay}</div>
         </div>
       </div>
 
       {/* Details Row */}
-      <div className="mt-3 flex items-center gap-4 text-sm text-gray-600">
+      <div className="mt-3 flex items-center gap-4 text-sm text-theme-muted">
         <div className="flex items-center gap-1">
-          <span className="text-gray-400">支払:</span>
+          <span className="text-theme-muted/70">支払:</span>
           <span>
             {rule.default_payer?.display_name || rule.default_payer?.email}
           </span>
         </div>
         <div className="flex items-center gap-1">
-          <span className="text-gray-400">分割:</span>
+          <span className="text-theme-muted/70">分割:</span>
           <span>{splitDisplay}</span>
         </div>
       </div>
 
       {/* Custom Split Details */}
       {splitDetails && (
-        <div className="mt-2 text-xs text-gray-500 bg-gray-50 rounded px-2 py-1">
+        <div className="mt-2 text-xs text-theme-muted bg-theme-bg rounded px-2 py-1">
           {splitDetails}
         </div>
       )}
 
       {/* Error */}
       {error && (
-        <div className="mt-2 text-sm text-red-600">{error}</div>
+        <div className="mt-2 text-sm text-theme-accent">{error}</div>
       )}
 
       {/* Actions */}
@@ -146,7 +146,7 @@ export default function RecurringRuleCard({
           <>
             {showDeleteConfirm ? (
               <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-theme-muted">
                   {t("recurringRules.deleteConfirm")}
                 </span>
                 <Button
@@ -171,7 +171,7 @@ export default function RecurringRuleCard({
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowDeleteConfirm(true)}
-                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                className="text-theme-accent hover:text-theme-accent/80 hover:bg-theme-accent/10"
               >
                 {t("common.delete")}
               </Button>

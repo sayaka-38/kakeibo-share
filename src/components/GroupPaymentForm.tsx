@@ -89,7 +89,7 @@ export function GroupPaymentForm({
   return (
     <div>
       {error && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+        <div className="mb-4 bg-theme-accent/10 border border-theme-accent text-theme-accent px-4 py-3 rounded-lg text-sm">
           {error}
         </div>
       )}

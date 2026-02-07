@@ -17,7 +17,7 @@ export function PaymentListSkeleton({ count = 3 }: PaymentListSkeletonProps) {
   return (
     <ul
       data-testid="payment-list-skeleton"
-      className="divide-y divide-gray-200"
+      className="divide-y divide-theme-card-border"
       aria-busy="true"
       aria-label={t("common.loading")}
     >

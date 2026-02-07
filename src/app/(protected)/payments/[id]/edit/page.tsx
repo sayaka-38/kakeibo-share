@@ -138,7 +138,7 @@ export default async function EditPaymentPage({ params }: PageProps) {
       <div className="flex items-center gap-4 mb-6">
         <Link
           href="/payments"
-          className="text-gray-500 hover:text-gray-700"
+          className="text-theme-muted hover:text-theme-text"
           aria-label={t("common.back")}
         >
           <svg
@@ -155,12 +155,12 @@ export default async function EditPaymentPage({ params }: PageProps) {
             />
           </svg>
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-2xl font-bold text-theme-headline">
           {t("payments.editPayment")}
         </h1>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-theme-card-bg rounded-lg shadow p-6">
         <FullPaymentForm
           groups={groups}
           categories={categories || []}

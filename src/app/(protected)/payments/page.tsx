@@ -77,7 +77,8 @@ export default async function PaymentsPage() {
       `
         )
         .in("group_id", groupIds)
-        .order("payment_date", { ascending: false })) as {
+        .order("payment_date", { ascending: false })
+        .order("created_at", { ascending: false })) as {
         data: PaymentWithRelations[] | null;
       })
     : { data: [] as PaymentWithRelations[] };
@@ -100,10 +101,10 @@ export default async function PaymentsPage() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">{t("payments.title")}</h1>
+        <h1 className="text-2xl font-bold text-theme-headline">{t("payments.title")}</h1>
         <Link
           href="/payments/new"
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-theme-primary hover:bg-theme-primary/80"
         >
           {t("payments.addPayment")}
         </Link>
@@ -125,14 +126,14 @@ export default async function PaymentsPage() {
             });
 
             return (
-              <div key={month} className="bg-white rounded-lg shadow">
-                <div className="px-4 py-3 border-b border-gray-200 flex justify-between items-center">
-                  <h2 className="font-medium text-gray-900">{monthName}</h2>
-                  <span className="text-sm font-medium text-gray-600">
+              <div key={month} className="bg-theme-card-bg rounded-lg shadow">
+                <div className="px-4 py-3 border-b border-theme-card-border flex justify-between items-center">
+                  <h2 className="font-medium text-theme-headline">{monthName}</h2>
+                  <span className="text-sm font-medium text-theme-muted">
                     {t("common.total")}: {formatCurrency(monthTotal)}
                   </span>
                 </div>
-                <ul className="divide-y divide-gray-200">
+                <ul className="divide-y divide-theme-card-border">
                   {monthPayments.map((payment) => {
                     const isProxy = isProxySplit(payment.payment_splits, payment.payer_id);
 
@@ -155,38 +156,38 @@ export default async function PaymentsPage() {
                         <div className="flex justify-between items-start">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <p className="font-medium text-gray-900 truncate">
+                              <p className="font-medium text-theme-headline truncate">
                                 {payment.description}
                               </p>
                               {payment.categories && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-theme-bg text-theme-muted">
                                   {payment.categories.name}
                                 </span>
                               )}
                               {isProxy && (
-                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700">
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-theme-secondary/15 text-theme-secondary">
                                   {t("payments.display.proxyBadge")}
                                 </span>
                               )}
                               {custom && <SplitBadge />}
                             </div>
-                            <p className="text-sm text-gray-700">
+                            <p className="text-sm text-theme-text">
                               {payment.profiles?.display_name ||
                                 payment.profiles?.email}{" "}
                               - {payment.payment_date}
                             </p>
-                            <p className="text-xs text-gray-600">
+                            <p className="text-xs text-theme-muted">
                               {payment.groups?.name}
                             </p>
                           </div>
                           <div className="flex items-center gap-4 ml-4">
-                            <span className="font-medium text-gray-900">
+                            <span className="font-medium text-theme-headline">
                               {formatCurrency(Number(payment.amount))}
                             </span>
                             {payment.payer_id === user?.id && (
                               <Link
                                 href={`/payments/${payment.id}/edit`}
-                                className="text-gray-400 hover:text-blue-600 transition-colors"
+                                className="text-theme-muted/70 hover:text-theme-primary transition-colors"
                                 aria-label={t("payments.edit")}
                               >
                                 <svg
@@ -233,11 +234,11 @@ export default async function PaymentsPage() {
           })}
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow p-6 text-center">
-          <p className="text-gray-700 mb-4">{t("payments.noPayments")}</p>
+        <div className="bg-theme-card-bg rounded-lg shadow p-6 text-center">
+          <p className="text-theme-text mb-4">{t("payments.noPayments")}</p>
           <Link
             href="/payments/new"
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-theme-primary hover:bg-theme-primary/80"
           >
             {t("payments.addFirstPayment")}
           </Link>

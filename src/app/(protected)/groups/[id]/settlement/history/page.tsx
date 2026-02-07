@@ -1,10 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { t } from "@/lib/i18n";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/format/currency";
-import type { Profile } from "@/types/database";
-
 type PageProps = {
   params: Promise<{ id: string }>;
 };
@@ -13,6 +10,7 @@ type ConfirmedSession = {
   id: string;
   period_start: string;
   period_end: string;
+  status: string;
   confirmed_at: string;
   confirmed_by: string;
   confirmer?: { display_name: string | null; email: string } | null;
@@ -55,25 +53,12 @@ export default async function SettlementHistoryPage({ params }: PageProps) {
     redirect("/groups");
   }
 
-  // メンバー一覧を取得
-  const { data: membersData } = await supabase
-    .from("group_members")
-    .select(`
-      user_id,
-      profiles (id, display_name, email)
-    `)
-    .eq("group_id", groupId);
-
-  const members: Profile[] =
-    membersData
-      ?.map((m) => m.profiles as unknown as Profile)
-      .filter((p): p is Profile => p !== null) || [];
-
-  // 確定済みセッションを取得
+  // 確定済みセッションを取得（confirmed, pending_payment, settled を含む）
   const { data: sessions } = await supabase
     .from("settlement_sessions")
     .select(`
       id,
+      status,
       period_start,
       period_end,
       confirmed_at,
@@ -81,7 +66,7 @@ export default async function SettlementHistoryPage({ params }: PageProps) {
       profiles:profiles!confirmed_by (display_name, email)
     `)
     .eq("group_id", groupId)
-    .eq("status", "confirmed")
+    .in("status", ["confirmed", "pending_payment", "settled"])
     .order("confirmed_at", { ascending: false });
 
   // 各セッションのエントリ統計を取得
@@ -102,6 +87,7 @@ export default async function SettlementHistoryPage({ params }: PageProps) {
         id: session.id,
         period_start: session.period_start,
         period_end: session.period_end,
+        status: session.status,
         confirmed_at: session.confirmed_at || "",
         confirmed_by: session.confirmed_by || "",
         confirmer: session.profiles as { display_name: string | null; email: string } | null,
@@ -117,23 +103,23 @@ export default async function SettlementHistoryPage({ params }: PageProps) {
       <div className="mb-6">
         <Link
           href={`/groups/${groupId}/settlement`}
-          className="text-sm text-blue-600 hover:text-blue-800 mb-2 inline-block"
+          className="text-sm text-theme-primary hover:text-theme-primary/80 mb-2 inline-block"
         >
           &larr; 清算準備室
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">清算履歴</h1>
-        <p className="text-sm text-gray-600 mt-1">
+        <h1 className="text-2xl font-bold text-theme-headline">清算履歴</h1>
+        <p className="text-sm text-theme-muted mt-1">
           過去に確定した清算の一覧
         </p>
       </div>
 
       {/* Session List */}
       {sessionsWithStats.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-8 text-center">
-          <p className="text-gray-500">まだ確定した清算がありません</p>
+        <div className="bg-theme-card-bg rounded-lg shadow p-8 text-center">
+          <p className="text-theme-muted">まだ確定した清算がありません</p>
           <Link
             href={`/groups/${groupId}/settlement`}
-            className="mt-4 inline-block text-blue-600 hover:text-blue-800"
+            className="mt-4 inline-block text-theme-primary hover:text-theme-primary/80"
           >
             清算を開始する
           </Link>
@@ -144,17 +130,29 @@ export default async function SettlementHistoryPage({ params }: PageProps) {
             <Link
               key={session.id}
               href={`/groups/${groupId}/settlement/history/${session.id}`}
-              className="block bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow"
+              className="block bg-theme-card-bg rounded-lg shadow p-4 hover:shadow-md transition-shadow"
             >
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="font-medium text-gray-900">
-                    {session.period_start} 〜 {session.period_end}
-                  </h3>
-                  <p className="text-sm text-gray-500 mt-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-medium text-theme-headline">
+                      {session.period_start} 〜 {session.period_end}
+                    </h3>
+                    {session.status === "pending_payment" && (
+                      <span className="text-xs bg-theme-primary/15 text-theme-primary px-1.5 py-0.5 rounded">
+                        支払い待ち
+                      </span>
+                    )}
+                    {session.status === "settled" && (
+                      <span className="text-xs bg-theme-text/15 text-theme-text px-1.5 py-0.5 rounded">
+                        完了
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-theme-muted mt-1">
                     {session.entry_count}件の支払い
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs text-theme-muted/70 mt-1">
                     {new Date(session.confirmed_at).toLocaleDateString("ja-JP")} 確定
                     {session.confirmer && (
                       <span>
@@ -164,10 +162,10 @@ export default async function SettlementHistoryPage({ params }: PageProps) {
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-lg font-semibold text-gray-900">
+                  <p className="text-lg font-semibold text-theme-headline">
                     {formatCurrency(session.total_amount)}
                   </p>
-                  <p className="text-xs text-gray-500">総支出</p>
+                  <p className="text-xs text-theme-muted">総支出</p>
                 </div>
               </div>
             </Link>
@@ -179,7 +177,7 @@ export default async function SettlementHistoryPage({ params }: PageProps) {
       <div className="mt-8 text-center">
         <Link
           href={`/groups/${groupId}`}
-          className="text-sm text-gray-500 hover:text-gray-700"
+          className="text-sm text-theme-muted hover:text-theme-text"
         >
           グループに戻る
         </Link>

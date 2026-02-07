@@ -44,7 +44,7 @@ export default async function ProtectedLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-theme-bg">
       <DemoBanner isDemo={isDemo} expiresAt={demoExpiresAt} />
       <Header user={profile} />
       <div className="flex flex-col md:flex-row">

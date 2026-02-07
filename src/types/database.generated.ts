@@ -7,6 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.1"
+  }
   graphql_public: {
     Tables: {
       [_ in never]: never
@@ -37,29 +42,40 @@ export type Database = {
       categories: {
         Row: {
           color: string | null
+          created_at: string
           group_id: string | null
           icon: string | null
           id: string
-          is_default: boolean
+          is_default: boolean | null
           name: string
         }
         Insert: {
           color?: string | null
+          created_at?: string
           group_id?: string | null
           icon?: string | null
           id?: string
-          is_default?: boolean
+          is_default?: boolean | null
           name: string
         }
         Update: {
           color?: string | null
+          created_at?: string
           group_id?: string | null
           icon?: string | null
           id?: string
-          is_default?: boolean
+          is_default?: boolean | null
           name?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "categories_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       demo_sessions: {
         Row: {
@@ -102,23 +118,23 @@ export type Database = {
       }
       group_members: {
         Row: {
+          created_at: string
           group_id: string
           id: string
-          joined_at: string
           role: string
           user_id: string
         }
         Insert: {
+          created_at?: string
           group_id: string
           id?: string
-          joined_at?: string
           role: string
           user_id: string
         }
         Update: {
+          created_at?: string
           group_id?: string
           id?: string
-          joined_at?: string
           role?: string
           user_id?: string
         }
@@ -169,7 +185,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "groups_created_by_fkey"
+            foreignKeyName: "groups_owner_id_fkey"
             columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -180,19 +196,25 @@ export type Database = {
       payment_splits: {
         Row: {
           amount: number
+          created_at: string
           id: string
+          is_paid: boolean
           payment_id: string
           user_id: string
         }
         Insert: {
           amount: number
+          created_at?: string
           id?: string
+          is_paid?: boolean
           payment_id: string
           user_id: string
         }
         Update: {
           amount?: number
+          created_at?: string
           id?: string
+          is_paid?: boolean
           payment_id?: string
           user_id?: string
         }
@@ -266,10 +288,17 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "payments_paid_by_fkey"
+            foreignKeyName: "payments_payer_id_fkey"
             columns: ["payer_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "settlement_sessions"
             referencedColumns: ["id"]
           },
         ]
@@ -289,7 +318,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           email: string
-          id?: string
+          id: string
           is_demo?: boolean
           updated_at?: string
         }
@@ -304,97 +333,30 @@ export type Database = {
         }
         Relationships: []
       }
-      recurring_rules: {
-        Row: {
-          id: string
-          group_id: string
-          category_id: string | null
-          description: string
-          default_amount: number | null
-          is_variable: boolean
-          day_of_month: number
-          default_payer_id: string
-          split_type: string
-          is_active: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          group_id: string
-          category_id?: string | null
-          description: string
-          default_amount?: number | null
-          is_variable?: boolean
-          day_of_month: number
-          default_payer_id: string
-          split_type?: string
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          group_id?: string
-          category_id?: string | null
-          description?: string
-          default_amount?: number | null
-          is_variable?: boolean
-          day_of_month?: number
-          default_payer_id?: string
-          split_type?: string
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "recurring_rules_group_id_fkey"
-            columns: ["group_id"]
-            isOneToOne: false
-            referencedRelation: "groups"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "recurring_rules_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "recurring_rules_default_payer_id_fkey"
-            columns: ["default_payer_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       recurring_rule_splits: {
         Row: {
+          amount: number | null
+          created_at: string
           id: string
+          percentage: number | null
           rule_id: string
           user_id: string
-          amount: number | null
-          percentage: number | null
-          created_at: string
         }
         Insert: {
+          amount?: number | null
+          created_at?: string
           id?: string
+          percentage?: number | null
           rule_id: string
           user_id: string
-          amount?: number | null
-          percentage?: number | null
-          created_at?: string
         }
         Update: {
+          amount?: number | null
+          created_at?: string
           id?: string
+          percentage?: number | null
           rule_id?: string
           user_id?: string
-          amount?: number | null
-          percentage?: number | null
-          created_at?: string
         }
         Relationships: [
           {
@@ -413,149 +375,144 @@ export type Database = {
           },
         ]
       }
-      settlement_sessions: {
+      recurring_rules: {
         Row: {
-          id: string
-          group_id: string
-          period_start: string
-          period_end: string
-          status: string
-          created_by: string
+          category_id: string | null
           created_at: string
-          confirmed_at: string | null
-          confirmed_by: string | null
+          day_of_month: number
+          default_amount: number | null
+          default_payer_id: string
+          description: string
+          group_id: string
+          id: string
+          is_active: boolean
+          is_variable: boolean
+          split_type: string
+          updated_at: string
         }
         Insert: {
-          id?: string
-          group_id: string
-          period_start: string
-          period_end: string
-          status?: string
-          created_by: string
+          category_id?: string | null
           created_at?: string
-          confirmed_at?: string | null
-          confirmed_by?: string | null
+          day_of_month: number
+          default_amount?: number | null
+          default_payer_id: string
+          description: string
+          group_id: string
+          id?: string
+          is_active?: boolean
+          is_variable?: boolean
+          split_type?: string
+          updated_at?: string
         }
         Update: {
-          id?: string
-          group_id?: string
-          period_start?: string
-          period_end?: string
-          status?: string
-          created_by?: string
+          category_id?: string | null
           created_at?: string
-          confirmed_at?: string | null
-          confirmed_by?: string | null
+          day_of_month?: number
+          default_amount?: number | null
+          default_payer_id?: string
+          description?: string
+          group_id?: string
+          id?: string
+          is_active?: boolean
+          is_variable?: boolean
+          split_type?: string
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "settlement_sessions_group_id_fkey"
+            foreignKeyName: "recurring_rules_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_rules_default_payer_id_fkey"
+            columns: ["default_payer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_rules_group_id_fkey"
             columns: ["group_id"]
             isOneToOne: false
             referencedRelation: "groups"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "settlement_sessions_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "settlement_sessions_confirmed_by_fkey"
-            columns: ["confirmed_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
       }
       settlement_entries: {
         Row: {
-          id: string
-          session_id: string
-          rule_id: string | null
-          payment_id: string | null
-          description: string
-          category_id: string | null
-          expected_amount: number | null
           actual_amount: number | null
+          category_id: string | null
+          created_at: string
+          description: string
+          entry_type: string
+          expected_amount: number | null
+          filled_at: string | null
+          filled_by: string | null
+          id: string
           payer_id: string
           payment_date: string
-          status: string
-          split_type: string
-          filled_by: string | null
-          filled_at: string | null
-          created_at: string
-          entry_type: string
+          payment_id: string | null
+          rule_id: string | null
+          session_id: string
           source_payment_id: string | null
+          split_type: string
+          status: string
         }
         Insert: {
-          id?: string
-          session_id: string
-          rule_id?: string | null
-          payment_id?: string | null
-          description: string
-          category_id?: string | null
-          expected_amount?: number | null
           actual_amount?: number | null
+          category_id?: string | null
+          created_at?: string
+          description: string
+          entry_type?: string
+          expected_amount?: number | null
+          filled_at?: string | null
+          filled_by?: string | null
+          id?: string
           payer_id: string
           payment_date: string
-          status?: string
-          split_type?: string
-          filled_by?: string | null
-          filled_at?: string | null
-          created_at?: string
-          entry_type?: string
+          payment_id?: string | null
+          rule_id?: string | null
+          session_id: string
           source_payment_id?: string | null
+          split_type?: string
+          status?: string
         }
         Update: {
-          id?: string
-          session_id?: string
-          rule_id?: string | null
-          payment_id?: string | null
-          description?: string
-          category_id?: string | null
-          expected_amount?: number | null
           actual_amount?: number | null
+          category_id?: string | null
+          created_at?: string
+          description?: string
+          entry_type?: string
+          expected_amount?: number | null
+          filled_at?: string | null
+          filled_by?: string | null
+          id?: string
           payer_id?: string
           payment_date?: string
-          status?: string
-          split_type?: string
-          filled_by?: string | null
-          filled_at?: string | null
-          created_at?: string
-          entry_type?: string
+          payment_id?: string | null
+          rule_id?: string | null
+          session_id?: string
           source_payment_id?: string | null
+          split_type?: string
+          status?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "settlement_entries_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "settlement_sessions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "settlement_entries_rule_id_fkey"
-            columns: ["rule_id"]
-            isOneToOne: false
-            referencedRelation: "recurring_rules"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "settlement_entries_payment_id_fkey"
-            columns: ["payment_id"]
-            isOneToOne: false
-            referencedRelation: "payments"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "settlement_entries_category_id_fkey"
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settlement_entries_filled_by_fkey"
+            columns: ["filled_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -566,10 +523,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "settlement_entries_filled_by_fkey"
-            columns: ["filled_by"]
+            foreignKeyName: "settlement_entries_payment_id_fkey"
+            columns: ["payment_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settlement_entries_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settlement_entries_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "settlement_sessions"
             referencedColumns: ["id"]
           },
           {
@@ -583,25 +554,25 @@ export type Database = {
       }
       settlement_entry_splits: {
         Row: {
-          id: string
-          entry_id: string
-          user_id: string
           amount: number
           created_at: string
+          entry_id: string
+          id: string
+          user_id: string
         }
         Insert: {
-          id?: string
-          entry_id: string
-          user_id: string
           amount: number
           created_at?: string
+          entry_id: string
+          id?: string
+          user_id: string
         }
         Update: {
-          id?: string
-          entry_id?: string
-          user_id?: string
           amount?: number
           created_at?: string
+          entry_id?: string
+          id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -620,52 +591,90 @@ export type Database = {
           },
         ]
       }
-      settlements: {
+      settlement_sessions: {
         Row: {
-          amount: number
+          confirmed_at: string | null
+          confirmed_by: string | null
           created_at: string
-          from_user: string
+          created_by: string
           group_id: string
           id: string
+          is_zero_settlement: boolean
+          net_transfers: Json | null
+          payment_reported_at: string | null
+          payment_reported_by: string | null
+          period_end: string
+          period_start: string
           settled_at: string | null
-          to_user: string
+          settled_by: string | null
+          status: string
         }
         Insert: {
-          amount: number
+          confirmed_at?: string | null
+          confirmed_by?: string | null
           created_at?: string
-          from_user: string
+          created_by: string
           group_id: string
           id?: string
+          is_zero_settlement?: boolean
+          net_transfers?: Json | null
+          payment_reported_at?: string | null
+          payment_reported_by?: string | null
+          period_end: string
+          period_start: string
           settled_at?: string | null
-          to_user: string
+          settled_by?: string | null
+          status?: string
         }
         Update: {
-          amount?: number
+          confirmed_at?: string | null
+          confirmed_by?: string | null
           created_at?: string
-          from_user?: string
+          created_by?: string
           group_id?: string
           id?: string
+          is_zero_settlement?: boolean
+          net_transfers?: Json | null
+          payment_reported_at?: string | null
+          payment_reported_by?: string | null
+          period_end?: string
+          period_start?: string
           settled_at?: string | null
-          to_user?: string
+          settled_by?: string | null
+          status?: string
         }
         Relationships: [
           {
-            foreignKeyName: "settlements_from_user_fkey"
-            columns: ["from_user"]
+            foreignKeyName: "settlement_sessions_confirmed_by_fkey"
+            columns: ["confirmed_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "settlements_group_id_fkey"
+            foreignKeyName: "settlement_sessions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settlement_sessions_group_id_fkey"
             columns: ["group_id"]
             isOneToOne: false
             referencedRelation: "groups"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "settlements_to_user_fkey"
-            columns: ["to_user"]
+            foreignKeyName: "settlement_sessions_payment_reported_by_fkey"
+            columns: ["payment_reported_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settlement_sessions_settled_by_fkey"
+            columns: ["settled_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -677,11 +686,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      calculate_user_balance: {
-        Args: { p_group_id: string; p_user_id: string }
+      confirm_settlement: {
+        Args: { p_session_id: string; p_user_id: string }
         Returns: number
       }
-      confirm_settlement: {
+      confirm_settlement_receipt: {
         Args: { p_session_id: string; p_user_id: string }
         Returns: number
       }
@@ -694,21 +703,21 @@ export type Database = {
         Returns: number
       }
       get_actual_day_of_month: {
-        Args: { p_day_of_month: number; p_year: number; p_month: number }
+        Args: { p_day_of_month: number; p_month: number; p_year: number }
         Returns: number
       }
       get_last_day_of_month: {
-        Args: { p_year: number; p_month: number }
+        Args: { p_month: number; p_year: number }
         Returns: number
       }
       get_payment_group_id: { Args: { _payment_id: string }; Returns: string }
       get_settlement_period_suggestion: {
         Args: { p_group_id: string; p_user_id: string }
         Returns: {
-          suggested_start: string
+          last_confirmed_end: string
+          oldest_unsettled_date: string
           suggested_end: string
-          oldest_unsettled_date: string | null
-          last_confirmed_end: string | null
+          suggested_start: string
           unsettled_count: number
         }[]
       }
@@ -729,17 +738,21 @@ export type Database = {
         Returns: number
       }
       replace_settlement_entry_splits: {
-        Args: { p_entry_id: string; p_user_id: string; p_splits: Json }
+        Args: { p_entry_id: string; p_splits: Json; p_user_id: string }
+        Returns: number
+      }
+      report_settlement_payment: {
+        Args: { p_session_id: string; p_user_id: string }
         Returns: number
       }
       update_settlement_entry: {
         Args: {
-          p_entry_id: string
-          p_user_id: string
           p_actual_amount: number
+          p_entry_id: string
           p_payer_id?: string
           p_payment_date?: string
           p_status?: string
+          p_user_id: string
         }
         Returns: number
       }
@@ -878,4 +891,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-

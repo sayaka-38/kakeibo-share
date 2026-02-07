@@ -6,7 +6,7 @@
 
 ## 最終更新日
 
-2026-02-05
+2026-02-07
 
 ---
 
@@ -28,9 +28,15 @@
 | 2026-02-04 | Edit Payment | 支払い編集機能: PUT API + RPC原子的置換 + 編集UI + E2E動作確認済み | マージ済み |
 | 2026-02-05 | Phase 7 | 清算エンジン完全実装: DB設計 + API + 固定費UI + 清算準備室 + 確定処理 + 履歴表示 + 相殺結果 + UI/UX仕上げ | ユーザーテスト中 |
 
-テスト: 742件パス / ビルド正常（2026-02-05 セッション最新）
+テスト: 782件パス / ビルド正常（2026-02-07 セッション最新）
 
-**Phase 7 ステータス**: UI/UX仕上げ完了、ユーザー手動テスト中（マージ前）
+**Phase 7 + 7.5 + 7.6 ステータス**: UI整理・キャッシュ改善・ソート修正・期間バグ修正完了。コード掃除→PRマージ待ち
+
+**Phase 7.5 仕上げ（2026-02-07 第3ラウンド）**:
+1. **全画面テーマ適用**: 30+ファイルでハードコード色をテーマ変数に置換（components/18, auth/layout/4, groups/7, dashboard/misc/5）。テスト5件もテーマクラスに更新
+2. **相殺統合ロジック**: confirm route に `consolidateTransfers()` 実装。複数 pending_payment セッションの net_transfers を合算→最適振込再計算→旧セッション settled 化。テスト9件追加
+3. **固定費ルール個人化**: Migration 022 で `generate_settlement_entries` RPC に `default_payer_id = p_user_id` フィルター追加。actualAmount バリデーションを `< 0` に緩和（0円許可）
+4. **日付・フロー検証**: period_end = today（yesterday override なし）確認。pending_payment 中の新規 draft 作成可能を確認
 
 ---
 
@@ -122,7 +128,7 @@ PostgREST（Supabase の REST API レイヤー）が DELETE 操作を実行す�
 
 ## 現在のブランチ
 
-- `feature/phase7-settlement-engine` — Phase 7 清算エンジン **100%完了**（UI/UX仕上げ含む、PRマージ待ち）
+- `feature/phase7-settlement-engine` — Phase 7+7.5+7.6 清算エンジン **100%完了**（UI整理・キャッシュ・ソート・期間修正含む、PRマージ待ち）
 - `feature/edit-payment` — main にマージ済み
 - `feature/delete-payment` — main にマージ済み（#29 削除機能 + #30 土台強化）
 - `feature/proxy-purchase` — main にマージ済み
@@ -134,6 +140,7 @@ PostgREST（Supabase の REST API レイヤー）が DELETE 操作を実行す�
 - `.env.local`: リモートDB（`byvtpkuocvjnwvihipvy.supabase.co`）に設定済み
 - ローカル Docker 環境: Codespaces で不安定（`supabase status` は running だが接続不可の場合あり）
 - Migration 015: リモート・ローカルともに適用済み
+- Migration 022-023: リモートDB push 済み（固定費個人化 + 期間開始日修正）
 
 ---
 
@@ -155,6 +162,54 @@ PostgREST（Supabase の REST API レイヤー）が DELETE 操作を実行す�
   - 清算履歴ページ（`/groups/[id]/settlement/history` + 詳細表示）追加
   - 0件ガード（全て清算済み / 対象なし のメッセージ表示）
 - [ ] ユーザーテスト後にマージ
+
+### Phase 7.5: 相殺ネットロジック + 支払い待ちフロー + 仕上げ（完了）
+
+**実装済み内容**:
+1. ESLint 11警告全修正（`argsIgnorePattern: "^_"` 追加、不要import削除）
+2. Happy Hues Palette 14 をCSS変数で適用（`globals.css` に `@theme inline`）
+3. DBマイグレーション 019/020/021（`pending_payment`/`settled` status + net_transfers JSONB + 新RPC 4本 + confirm_settlement 致命バグ修正）
+4. API Routes: `report-payment` + `confirm-receipt` 新規作成
+5. PendingPaymentView コンポーネント新規作成
+6. SettlementSessionManager: pending_payment フロー分岐 + 確定後に履歴詳細ページへリダイレクト + 古い期間の警告表示
+7. 期間計算ロジック再定義: 終了日=最新未清算日、開始日=前回清算翌日
+8. LINE通知スタブ: `sendLineNotification()` console.log のみ
+9. テスト: period-suggestion（12件）+ net-transfer-calculation（17件）
+10. テーマ色適用: Button/Layout/Navigation/Header/SettlementResultCard/SettlementEntryList 全てテーマ変数化
+11. 履歴詳細: カスタム分割内訳・バッジ表示追加
+
+**環境整備済み**:
+- リモートDB: マイグレーション 019/020/021 push 済み
+- `db:gen-types`: `--linked` でリモートDBから型再生成済み。手動オーバーライド削除済み
+- `package.json`: `db:gen-types` スクリプトを `--local` → `--linked` に変更
+- `payment_splits` 重複6件をクリーンアップ済み
+
+**仕上げ（2026-02-07 第3ラウンド）**:
+12. 全画面テーマ適用: 30+ファイル（components/auth/groups/dashboard/payments）のハードコード色排除
+13. 相殺統合: `consolidateTransfers()` — 複数 pending_payment の net_transfers を balance-map で合算、最適マッチング再計算
+14. 固定費個人化: Migration 022 — Part 1 で `default_payer_id = p_user_id` フィルター、0円バリデーション許可
+15. テスト: consolidate-transfers（9件）追加、テーマ変更に伴うテスト5件修正。全780件パス
+
+**Phase 7.6: UI整理・キャッシュ・ソート・期間修正（2026-02-07 第4ラウンド）**:
+16. UI情報渋滞解消: `consolidateTransfers` を `src/lib/settlement/consolidate.ts` に抽出（共有モジュール化）
+17. SettlementSessionManager 3シナリオ構造: pending-only / pending+draft / draft-only でレンダリング分岐
+18. PendingPaymentView 簡素化: 4カード→1カード、ボタンは全て secondary
+19. SettlementResultCard 統合プレビュー: `pendingTransfers` prop追加、`balancesToTransfers` + `consolidateTransfers` で相殺後の最終送金額表示
+20. SettlementEntryList: `pendingTransfers` パススルー、確定ボタン `size="lg"` + `shadow-lg`
+21. キャッシュ無効化: confirm/report-payment/confirm-receipt route に `revalidatePath` 追加 + クライアント側 `router.refresh()`
+22. ソート順修正: RecentPaymentList・清算エントリ・ダッシュボード・支払い一覧・履歴詳細で `created_at DESC` 副ソート追加
+23. 期間開始日バグ修正: フロントエンド（PeriodSelector）+ Migration 023（RPC）で `oldestUnsettledDate` ガード追加
+24. テスト: period-suggestion 2件追加（retroactive）+ RecentPaymentList mock修正。全782件パス
+25. Migration 023 リモートDB push 済み
+
+### 緊急バグ修正（2026-02-07）
+
+ユーザーテスト中に発覚した5件:
+1. **テーマ色未適用** → Button/Navigation/Header/SettlementResultCard/SettlementEntryList をテーマ変数に変更
+2. **日付ズレ** → 古いdraftセッションの期間が最新の支払いを含まない問題 → 警告バナー追加
+3. **送金指示未表示** → #4の確定エラーが原因でpending_payment状態に到達しなかった → #4修正で解消
+4. **確定エラー（致命的）** → Migration 020の`confirm_settlement`でINTEGER変数にTEXTを代入するバグ → Migration 021で修正
+5. **履歴の分割内訳なし** → 履歴詳細ページにsplits表示・カスタム分割バッジ追加
 
 ### Phase B: 構造改善
 

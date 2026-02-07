@@ -107,9 +107,9 @@ export default function RecurringRuleList({
 
       {/* Rule Cards */}
       {rules.length === 0 ? (
-        <div className="bg-gray-50 rounded-lg p-8 text-center">
-          <p className="text-gray-600 mb-2">{t("recurringRules.noRules")}</p>
-          <p className="text-sm text-gray-500">{t("recurringRules.noRulesHint")}</p>
+        <div className="bg-theme-bg rounded-lg p-8 text-center">
+          <p className="text-theme-muted mb-2">{t("recurringRules.noRules")}</p>
+          <p className="text-sm text-theme-muted">{t("recurringRules.noRulesHint")}</p>
         </div>
       ) : (
         <div className="space-y-3">

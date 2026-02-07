@@ -49,10 +49,10 @@ export default async function GroupsPage() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">{t("groups.title")}</h1>
+        <h1 className="text-2xl font-bold text-theme-headline">{t("groups.title")}</h1>
         <Link
           href="/groups/new"
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-theme-primary hover:bg-theme-primary/80"
         >
           {t("groups.createGroup")}
         </Link>
@@ -64,24 +64,24 @@ export default async function GroupsPage() {
             <Link
               key={group.id}
               href={`/groups/${group.id}`}
-              className="block bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow"
+              className="block bg-theme-card-bg rounded-lg shadow p-4 hover:shadow-md transition-shadow"
             >
               <div className="flex justify-between items-start">
                 <div>
-                  <h2 className="font-medium text-gray-900">{group.name}</h2>
+                  <h2 className="font-medium text-theme-headline">{group.name}</h2>
                   {group.description && (
-                    <p className="text-sm text-gray-700 mt-1">
+                    <p className="text-sm text-theme-text mt-1">
                       {group.description}
                     </p>
                   )}
                 </div>
                 {group.role === "owner" && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-theme-primary/15 text-theme-primary">
                     {t("common.owner")}
                   </span>
                 )}
               </div>
-              <div className="mt-4 flex items-center text-sm text-gray-700">
+              <div className="mt-4 flex items-center text-sm text-theme-text">
                 <svg
                   className="w-4 h-4 mr-1"
                   fill="none"
@@ -101,11 +101,11 @@ export default async function GroupsPage() {
           ))}
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow p-6 text-center">
-          <p className="text-gray-700 mb-4">{t("groups.noGroups")}</p>
+        <div className="bg-theme-card-bg rounded-lg shadow p-6 text-center">
+          <p className="text-theme-text mb-4">{t("groups.noGroups")}</p>
           <Link
             href="/groups/new"
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-theme-primary hover:bg-theme-primary/80"
           >
             {t("groups.createFirstGroup")}
           </Link>

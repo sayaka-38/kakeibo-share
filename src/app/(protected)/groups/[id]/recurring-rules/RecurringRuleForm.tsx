@@ -214,12 +214,12 @@ export default function RecurringRuleForm({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div
-        className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
+        className="bg-theme-card-bg rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b px-6 py-4 rounded-t-xl">
-          <h2 className="text-lg font-semibold text-gray-900">
+        <div className="sticky top-0 bg-theme-card-bg border-b px-6 py-4 rounded-t-xl">
+          <h2 className="text-lg font-semibold text-theme-headline">
             {isEditMode ? t("recurringRules.editRule") : t("recurringRules.addRule")}
           </h2>
         </div>
@@ -227,7 +227,7 @@ export default function RecurringRuleForm({
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {submitError && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+            <div className="bg-theme-accent/10 border border-theme-accent text-theme-accent px-4 py-3 rounded-lg text-sm">
               {submitError}
             </div>
           )}
@@ -236,7 +236,7 @@ export default function RecurringRuleForm({
           <div>
             <label
               htmlFor="rule-description"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-theme-text mb-1"
             >
               {t("recurringRules.form.description")}
             </label>
@@ -246,12 +246,12 @@ export default function RecurringRuleForm({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder={t("recurringRules.form.descriptionPlaceholder")}
-              className={`block w-full px-3 py-2 border rounded-lg shadow-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                errors.description ? "border-red-500" : "border-gray-300"
+              className={`block w-full px-3 py-2 border rounded-lg shadow-sm text-theme-headline placeholder:text-theme-muted/50 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary ${
+                errors.description ? "border-theme-accent" : "border-theme-card-border"
               }`}
             />
             {errors.description && (
-              <p className="mt-1 text-sm text-red-600">{errors.description}</p>
+              <p className="mt-1 text-sm text-theme-accent">{errors.description}</p>
             )}
           </div>
 
@@ -259,7 +259,7 @@ export default function RecurringRuleForm({
           <div>
             <label
               htmlFor="rule-category"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-theme-text mb-1"
             >
               {t("recurringRules.form.category")}
             </label>
@@ -267,7 +267,7 @@ export default function RecurringRuleForm({
               id="rule-category"
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="block w-full px-3 py-2 border border-theme-card-border rounded-lg shadow-sm text-theme-headline focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
             >
               <option value="">{t("recurringRules.form.selectCategory")}</option>
               {categories.map((cat) => (
@@ -280,7 +280,7 @@ export default function RecurringRuleForm({
 
           {/* Amount Type */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-theme-text mb-2">
               {t("recurringRules.isVariable")}
             </label>
             <div className="flex gap-4">
@@ -292,7 +292,7 @@ export default function RecurringRuleForm({
                   onChange={() => setIsVariable(false)}
                   className="mr-2"
                 />
-                <span className="text-sm text-gray-700">
+                <span className="text-sm text-theme-text">
                   {t("recurringRules.fixedAmount")}
                 </span>
               </label>
@@ -304,13 +304,13 @@ export default function RecurringRuleForm({
                   onChange={() => setIsVariable(true)}
                   className="mr-2"
                 />
-                <span className="text-sm text-gray-700">
+                <span className="text-sm text-theme-text">
                   {t("recurringRules.variableAmount")}
                 </span>
               </label>
             </div>
             {isVariable && (
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-theme-muted">
                 {t("recurringRules.variableAmountHint")}
               </p>
             )}
@@ -330,7 +330,7 @@ export default function RecurringRuleForm({
           <div>
             <label
               htmlFor="rule-day"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-theme-text mb-1"
             >
               {t("recurringRules.dayOfMonth")}
             </label>
@@ -338,8 +338,8 @@ export default function RecurringRuleForm({
               id="rule-day"
               value={dayOfMonth}
               onChange={(e) => setDayOfMonth(e.target.value)}
-              className={`block w-full px-3 py-2 border rounded-lg shadow-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                errors.dayOfMonth ? "border-red-500" : "border-gray-300"
+              className={`block w-full px-3 py-2 border rounded-lg shadow-sm text-theme-headline focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary ${
+                errors.dayOfMonth ? "border-theme-accent" : "border-theme-card-border"
               }`}
             >
               <option value="">{t("recurringRules.form.selectDay")}</option>
@@ -350,10 +350,10 @@ export default function RecurringRuleForm({
               ))}
             </select>
             {errors.dayOfMonth && (
-              <p className="mt-1 text-sm text-red-600">{errors.dayOfMonth}</p>
+              <p className="mt-1 text-sm text-theme-accent">{errors.dayOfMonth}</p>
             )}
             {dayOfMonth === "31" && (
-              <p className="mt-1 text-xs text-amber-600">
+              <p className="mt-1 text-xs text-theme-primary">
                 {t("recurringRules.dayOfMonthEndHint")}
               </p>
             )}
@@ -363,7 +363,7 @@ export default function RecurringRuleForm({
           <div>
             <label
               htmlFor="rule-payer"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-theme-text mb-1"
             >
               {t("recurringRules.defaultPayer")}
             </label>
@@ -371,8 +371,8 @@ export default function RecurringRuleForm({
               id="rule-payer"
               value={defaultPayerId}
               onChange={(e) => setDefaultPayerId(e.target.value)}
-              className={`block w-full px-3 py-2 border rounded-lg shadow-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                errors.defaultPayerId ? "border-red-500" : "border-gray-300"
+              className={`block w-full px-3 py-2 border rounded-lg shadow-sm text-theme-headline focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary ${
+                errors.defaultPayerId ? "border-theme-accent" : "border-theme-card-border"
               }`}
             >
               <option value="">{t("recurringRules.form.selectPayer")}</option>
@@ -383,13 +383,13 @@ export default function RecurringRuleForm({
               ))}
             </select>
             {errors.defaultPayerId && (
-              <p className="mt-1 text-sm text-red-600">{errors.defaultPayerId}</p>
+              <p className="mt-1 text-sm text-theme-accent">{errors.defaultPayerId}</p>
             )}
           </div>
 
           {/* Split Type */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-theme-text mb-2">
               {t("recurringRules.splitType")}
             </label>
             <div className="flex gap-4">
@@ -401,7 +401,7 @@ export default function RecurringRuleForm({
                   onChange={() => setSplitType("equal")}
                   className="mr-2"
                 />
-                <span className="text-sm text-gray-700">
+                <span className="text-sm text-theme-text">
                   {t("recurringRules.splitEqual")}
                 </span>
               </label>
@@ -413,7 +413,7 @@ export default function RecurringRuleForm({
                   onChange={() => setSplitType("custom")}
                   className="mr-2"
                 />
-                <span className="text-sm text-gray-700">
+                <span className="text-sm text-theme-text">
                   {t("recurringRules.splitCustom")}
                 </span>
               </label>
@@ -424,14 +424,14 @@ export default function RecurringRuleForm({
           {splitType === "custom" && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-theme-text">
                   {t("recurringRules.splitPercentage")}
                 </label>
                 <span
                   className={`text-xs font-medium ${
                     Math.abs(percentageTotal - 100) < 0.1
-                      ? "text-green-600"
-                      : "text-amber-600"
+                      ? "text-theme-text"
+                      : "text-theme-primary"
                   }`}
                 >
                   {t("recurringRules.percentageTotal", {
@@ -442,7 +442,7 @@ export default function RecurringRuleForm({
               </div>
               {members.map((member) => (
                 <div key={member.id} className="flex items-center gap-3">
-                  <span className="text-sm text-gray-600 w-32 truncate">
+                  <span className="text-sm text-theme-muted w-32 truncate">
                     {member.display_name || member.email}
                   </span>
                   <div className="flex-1 relative">
@@ -455,17 +455,17 @@ export default function RecurringRuleForm({
                       min="0"
                       max="100"
                       step="0.1"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border border-theme-card-border rounded-lg shadow-sm text-theme-headline placeholder:text-theme-muted/50 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
                       placeholder="0"
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted/70">
                       %
                     </span>
                   </div>
                 </div>
               ))}
               {errors.percentages && (
-                <p className="text-sm text-red-600">{errors.percentages}</p>
+                <p className="text-sm text-theme-accent">{errors.percentages}</p>
               )}
             </div>
           )}

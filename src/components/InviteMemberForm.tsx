@@ -72,16 +72,16 @@ export default function InviteMemberForm({ groupId }: InviteMemberFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <label className="block text-sm font-medium text-gray-700">
+      <label className="block text-sm font-medium text-theme-text">
         {t("groups.invite.addMember")}
       </label>
 
       {error && (
-        <p className="text-sm text-red-600">{error}</p>
+        <p className="text-sm text-theme-accent">{error}</p>
       )}
 
       {success && (
-        <p className="text-sm text-green-600">{t("groups.invite.success")}</p>
+        <p className="text-sm text-theme-text">{t("groups.invite.success")}</p>
       )}
 
       <div className="flex gap-2">
@@ -91,12 +91,12 @@ export default function InviteMemberForm({ groupId }: InviteMemberFormProps) {
           onChange={(e) => setEmail(e.target.value)}
           required
           placeholder={t("groups.invite.emailPlaceholder")}
-          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="flex-1 px-3 py-2 border border-theme-card-border rounded-lg shadow-sm text-sm text-theme-headline placeholder:text-theme-muted/70 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
         />
         <button
           type="submit"
           disabled={loading}
-          className="px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-theme-primary hover:bg-theme-primary/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? t("groups.invite.adding") : t("groups.invite.add")}
         </button>

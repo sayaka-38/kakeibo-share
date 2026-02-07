@@ -62,11 +62,11 @@ export default async function NewPaymentPage() {
 
   return (
     <div className="max-w-lg mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">
+      <h1 className="text-2xl font-bold text-theme-headline mb-6">
         {t("payments.addPayment")}
       </h1>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-theme-card-bg rounded-lg shadow p-6">
         <PaymentForm
           groups={groups}
           categories={categories || []}

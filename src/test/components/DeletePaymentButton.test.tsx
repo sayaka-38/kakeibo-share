@@ -57,8 +57,8 @@ describe("DeletePaymentForm", () => {
       render(<DeletePaymentForm paymentId="payment-1" />);
 
       const button = screen.getByRole("button", { name: /削除/i });
-      expect(button.className).toContain("text-gray-400");
-      expect(button.className).toContain("hover:text-red-600");
+      expect(button.className).toContain("text-theme-muted/70");
+      expect(button.className).toContain("hover:text-theme-accent");
     });
   });
 

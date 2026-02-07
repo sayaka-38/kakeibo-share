@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { t } from "@/lib/i18n";
 import { Button } from "@/components/ui/Button";
 import { AmountFieldWithKeypad } from "@/components/payment-form/fields/AmountFieldWithKeypad";
+import { formatCurrency } from "@/lib/format/currency";
 import type { Profile } from "@/types/database";
 import type { EntryData } from "./SettlementSessionManager";
 
@@ -93,31 +94,31 @@ export default function EntryEditModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div
-        className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+        className="bg-theme-card-bg rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b px-6 py-4 rounded-t-xl">
-          <h2 className="text-lg font-semibold text-gray-900">
+        <div className="sticky top-0 bg-theme-card-bg border-b border-theme-card-border px-6 py-4 rounded-t-xl">
+          <h2 className="text-lg font-semibold text-theme-headline">
             {entry.description}
           </h2>
-          <p className="text-sm text-gray-500">{entry.payment_date}</p>
+          <p className="text-sm text-theme-muted">{entry.payment_date}</p>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+            <div className="bg-theme-accent/10 border border-theme-accent/30 text-theme-accent px-4 py-3 rounded-lg text-sm">
               {error}
             </div>
           )}
 
           {/* Expected Amount Hint */}
           {entry.expected_amount && (
-            <div className="bg-gray-50 rounded-lg p-3 text-sm">
-              <span className="text-gray-600">予定金額: </span>
-              <span className="font-medium text-gray-900">
-                ¥{entry.expected_amount.toLocaleString()}
+            <div className="bg-theme-bg rounded-lg p-3 text-sm">
+              <span className="text-theme-muted">予定金額: </span>
+              <span className="font-medium text-theme-headline">
+                {formatCurrency(entry.expected_amount)}
               </span>
             </div>
           )}
@@ -133,7 +134,7 @@ export default function EntryEditModal({
           <div>
             <label
               htmlFor="entry-payer"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-theme-text mb-1"
             >
               支払者
             </label>
@@ -141,7 +142,7 @@ export default function EntryEditModal({
               id="entry-payer"
               value={payerId}
               onChange={(e) => setPayerId(e.target.value)}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="block w-full px-3 py-2 border border-theme-card-border rounded-lg shadow-sm text-theme-headline focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
             >
               {members.map((member) => (
                 <option key={member.id} value={member.id}>
@@ -155,7 +156,7 @@ export default function EntryEditModal({
           <div>
             <label
               htmlFor="entry-date"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-theme-text mb-1"
             >
               支払日
             </label>
@@ -164,12 +165,12 @@ export default function EntryEditModal({
               type="date"
               value={paymentDate}
               onChange={(e) => setPaymentDate(e.target.value)}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="block w-full px-3 py-2 border border-theme-card-border rounded-lg shadow-sm text-theme-headline focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
             />
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 pt-4 border-t">
+          <div className="flex gap-3 pt-4 border-t border-theme-card-border">
             <Button
               type="button"
               variant="secondary"

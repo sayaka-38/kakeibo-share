@@ -31,7 +31,6 @@ export type GroupMember = Omit<
 export type Category = Database["public"]["Tables"]["categories"]["Row"];
 export type Payment = Database["public"]["Tables"]["payments"]["Row"];
 export type PaymentSplit = Database["public"]["Tables"]["payment_splits"]["Row"];
-export type Settlement = Database["public"]["Tables"]["settlements"]["Row"];
 export type DemoSession = Database["public"]["Tables"]["demo_sessions"]["Row"];
 
 // ============================================
@@ -46,7 +45,6 @@ export type GroupMemberInsert = Omit<
 export type CategoryInsert = Database["public"]["Tables"]["categories"]["Insert"];
 export type PaymentInsert = Database["public"]["Tables"]["payments"]["Insert"];
 export type PaymentSplitInsert = Database["public"]["Tables"]["payment_splits"]["Insert"];
-export type SettlementInsert = Database["public"]["Tables"]["settlements"]["Insert"];
 export type DemoSessionInsert = Database["public"]["Tables"]["demo_sessions"]["Insert"];
 
 // ============================================
@@ -60,4 +58,46 @@ export type PaymentWithDetails = Payment & {
 
 export type GroupWithMembers = Group & {
   group_members: (GroupMember & { profiles: Profile })[];
+};
+
+// ============================================
+// Settlement session status literal type
+// (Migration 019 で追加)
+// ============================================
+export type SettlementSessionStatus =
+  | "draft"
+  | "confirmed"
+  | "pending_payment"
+  | "settled";
+
+// ============================================
+// Settlement session with new columns
+// (generated types は Migration 019 適用前のため手動補完)
+// db:gen-types 実行後は削除可能
+// ============================================
+export type SettlementSessionRow = {
+  id: string;
+  group_id: string;
+  period_start: string;
+  period_end: string;
+  status: SettlementSessionStatus;
+  created_by: string;
+  created_at: string;
+  confirmed_at: string | null;
+  confirmed_by: string | null;
+  net_transfers: NetTransfer[] | null;
+  is_zero_settlement: boolean;
+  payment_reported_at: string | null;
+  payment_reported_by: string | null;
+  settled_at: string | null;
+  settled_by: string | null;
+};
+
+/** net_transfers JSONB の各要素型 */
+export type NetTransfer = {
+  from_id: string;
+  from_name: string;
+  to_id: string;
+  to_name: string;
+  amount: number;
 };

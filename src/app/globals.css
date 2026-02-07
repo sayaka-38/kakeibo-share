@@ -1,13 +1,39 @@
 @import "tailwindcss";
 
+/* ============================================================
+ * Theme: Happy Hues Palette 14
+ * カラー切り替え（Phase 10予定）を見据え、CSS変数で管理
+ * ============================================================ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f2f7f5;
+  --foreground: #00473e;
+
+  /* Happy Hues Palette 14 — テーマカラー */
+  --theme-bg: #f2f7f5;
+  --theme-text: #00473e;
+  --theme-headline: #00332c;
+  --theme-primary: #faae2b;
+  --theme-secondary: #ffa3d1;
+  --theme-accent: #fa5246;
+
+  /* UI要素用のセマンティック変数 */
+  --theme-card-bg: #ffffff;
+  --theme-card-border: #e0ebe7;
+  --theme-muted: #5f8f85;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-theme-bg: var(--theme-bg);
+  --color-theme-text: var(--theme-text);
+  --color-theme-headline: var(--theme-headline);
+  --color-theme-primary: var(--theme-primary);
+  --color-theme-secondary: var(--theme-secondary);
+  --color-theme-accent: var(--theme-accent);
+  --color-theme-card-bg: var(--theme-card-bg);
+  --color-theme-card-border: var(--theme-card-border);
+  --color-theme-muted: var(--theme-muted);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }

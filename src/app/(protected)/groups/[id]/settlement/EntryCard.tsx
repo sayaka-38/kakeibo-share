@@ -34,9 +34,9 @@ export default function EntryCard({
 
   // ステータスに応じた背景色
   const statusBg = {
-    pending: "border-l-amber-500 bg-amber-50/50",
-    filled: "border-l-green-500",
-    skipped: "border-l-gray-400 bg-gray-50",
+    pending: "border-l-theme-primary bg-theme-primary/5",
+    filled: "border-l-theme-text",
+    skipped: "border-l-theme-muted bg-theme-bg",
   }[entry.status] || "";
 
   // 支払者名
@@ -91,20 +91,20 @@ export default function EntryCard({
 
   return (
     <div
-      className={`bg-white rounded-lg shadow border-l-4 p-4 ${statusBg}`}
+      className={`bg-theme-card-bg rounded-lg shadow border-l-4 p-4 ${statusBg}`}
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h4 className="font-medium text-gray-900 truncate">
+            <h4 className="font-medium text-theme-headline truncate">
               {entry.description}
             </h4>
-            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
+            <span className="text-xs bg-theme-bg text-theme-muted px-2 py-0.5 rounded">
               {entryTypeLabel}
             </span>
           </div>
-          <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
+          <div className="flex items-center gap-3 text-xs text-theme-muted mt-1">
             <span>{entry.payment_date}</span>
             <span>・</span>
             <span>{payerName}</span>
@@ -120,26 +120,26 @@ export default function EntryCard({
         <div className="text-right shrink-0">
           {entry.status === "filled" ? (
             <div>
-              <div className="text-lg font-semibold text-green-600">
+              <div className="text-lg font-semibold text-theme-text">
                 {formatCurrency(entry.actual_amount || 0)}
               </div>
               {filledByName && (
-                <div className="text-xs text-green-600 mt-0.5">
+                <div className="text-xs text-theme-text mt-0.5">
                   入力: {filledByName}
                 </div>
               )}
             </div>
           ) : entry.status === "skipped" ? (
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-theme-muted">
               {t("settlementSession.statusSkipped")}
             </div>
           ) : entry.expected_amount ? (
-            <div className="text-lg font-semibold text-gray-400">
+            <div className="text-lg font-semibold text-theme-muted/70">
               {formatCurrency(entry.expected_amount)}
               <span className="text-xs ml-1">予定</span>
             </div>
           ) : (
-            <div className="text-sm text-amber-600">
+            <div className="text-sm text-theme-primary">
               {t("settlementSession.fillAmount")}
             </div>
           )}
@@ -148,7 +148,7 @@ export default function EntryCard({
 
       {/* Error */}
       {error && (
-        <div className="mt-2 text-sm text-red-600">{error}</div>
+        <div className="mt-2 text-sm text-theme-accent">{error}</div>
       )}
 
       {/* Actions */}
@@ -160,7 +160,6 @@ export default function EntryCard({
               size="sm"
               onClick={handleSkip}
               loading={isSkipping}
-              className="text-gray-500 hover:text-gray-700"
             >
               {t("settlementSession.skipEntry")}
             </Button>

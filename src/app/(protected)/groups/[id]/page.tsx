@@ -100,24 +100,24 @@ export default async function GroupDetailPage({ params }: Props) {
       <div className="mb-6">
         <Link
           href="/groups"
-          className="text-sm text-blue-600 hover:text-blue-500"
+          className="text-sm text-theme-primary hover:text-theme-primary/80"
         >
           &larr; {t("groups.backToGroups")}
         </Link>
       </div>
 
-      <div className="bg-white rounded-lg shadow mb-6">
+      <div className="bg-theme-card-bg rounded-lg shadow mb-6">
         <div className="px-4 py-5 sm:p-6">
           <div className="flex justify-between items-start">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{group.name}</h1>
+              <h1 className="text-2xl font-bold text-theme-headline">{group.name}</h1>
               {group.description && (
-                <p className="mt-1 text-gray-700">{group.description}</p>
+                <p className="mt-1 text-theme-text">{group.description}</p>
               )}
             </div>
             {isOwner && (
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-theme-primary/15 text-theme-primary">
                   {t("common.owner")}
                 </span>
                 <DeleteGroupButton groupId={id} groupName={group.name} />
@@ -126,19 +126,19 @@ export default async function GroupDetailPage({ params }: Props) {
           </div>
 
           <div className="mt-6 grid grid-cols-2 gap-4">
-            <div className="bg-gray-50 rounded-lg p-4">
-              <p className="text-sm text-gray-700">
+            <div className="bg-theme-bg rounded-lg p-4">
+              <p className="text-sm text-theme-text">
                 {t("groups.detail.totalExpenses")}
               </p>
-              <p className="text-2xl font-semibold text-gray-900">
+              <p className="text-2xl font-semibold text-theme-headline">
                 {formatCurrency(totalExpenses)}
               </p>
             </div>
-            <div className="bg-gray-50 rounded-lg p-4">
-              <p className="text-sm text-gray-700">
+            <div className="bg-theme-bg rounded-lg p-4">
+              <p className="text-sm text-theme-text">
                 {t("groups.detail.members")}
               </p>
-              <p className="text-2xl font-semibold text-gray-900">
+              <p className="text-2xl font-semibold text-theme-headline">
                 {members?.length || 0}
               </p>
             </div>
@@ -146,8 +146,8 @@ export default async function GroupDetailPage({ params }: Props) {
 
           {/* Latest Settlement Info */}
           {latestSettlement && (
-            <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-3">
-              <p className="text-sm text-green-800">
+            <div className="mt-6 bg-theme-text/10 border border-theme-card-border rounded-lg p-3">
+              <p className="text-sm text-theme-text">
                 <span className="font-medium">最新の清算期間:</span>{" "}
                 {latestSettlement.period_start} 〜 {latestSettlement.period_end}
               </p>
@@ -158,13 +158,13 @@ export default async function GroupDetailPage({ params }: Props) {
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
               href={`/groups/${id}/settlement`}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-theme-primary rounded-lg hover:bg-theme-primary/80 transition-colors"
             >
               {t("settlementSession.title")}
             </Link>
             <Link
               href={`/groups/${id}/recurring-rules`}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+              className="inline-flex items-center px-4 py-2 text-sm font-medium text-theme-primary bg-theme-primary/10 rounded-lg hover:bg-theme-primary/15 transition-colors"
             >
               {t("recurringRules.title")}
             </Link>
@@ -173,9 +173,9 @@ export default async function GroupDetailPage({ params }: Props) {
       </div>
 
       {/* 支払い登録フォーム */}
-      <div className="bg-white rounded-lg shadow mb-6">
-        <div className="px-4 py-3 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">
+      <div className="bg-theme-card-bg rounded-lg shadow mb-6">
+        <div className="px-4 py-3 border-b border-theme-card-border">
+          <h2 className="text-lg font-medium text-theme-headline">
             {t("payments.addPayment")}
           </h2>
         </div>
@@ -192,29 +192,29 @@ export default async function GroupDetailPage({ params }: Props) {
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Members */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="px-4 py-3 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900">
+        <div className="bg-theme-card-bg rounded-lg shadow">
+          <div className="px-4 py-3 border-b border-theme-card-border">
+            <h2 className="text-lg font-medium text-theme-headline">
               {t("groups.detail.members")}
             </h2>
           </div>
-          <ul className="divide-y divide-gray-200">
+          <ul className="divide-y divide-theme-card-border">
             {members?.map((member) => (
               <li
                 key={member.profiles?.id}
                 className="px-4 py-3 flex justify-between items-center"
               >
                 <div>
-                  <p className="font-medium text-gray-900">
+                  <p className="font-medium text-theme-headline">
                     {member.profiles?.display_name || member.profiles?.email}
                   </p>
-                  <p className="text-sm text-gray-700">
+                  <p className="text-sm text-theme-text">
                     {t("groups.detail.joined")}{" "}
                     {member.created_at.split("T")[0].replace(/-/g, "/")}
                   </p>
                 </div>
                 {member.role === "owner" && (
-                  <span className="text-xs text-blue-600 font-medium">
+                  <span className="text-xs text-theme-primary font-medium">
                     {t("common.owner")}
                   </span>
                 )}
@@ -222,27 +222,27 @@ export default async function GroupDetailPage({ params }: Props) {
             ))}
           </ul>
           {/* 招待リンク（全メンバーが利用可能） */}
-          <div className="px-4 py-3 border-t border-gray-200">
+          <div className="px-4 py-3 border-t border-theme-card-border">
             <InviteLinkButton inviteCode={group.invite_code} />
           </div>
 
           {/* メールアドレスによる招待（オーナーのみ） */}
           {isOwner && (
-            <div className="px-4 py-3 border-t border-gray-200">
+            <div className="px-4 py-3 border-t border-theme-card-border">
               <InviteMemberForm groupId={id} />
             </div>
           )}
         </div>
 
         {/* Recent Payments */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="px-4 py-3 border-b border-gray-200 flex justify-between items-center">
-            <h2 className="text-lg font-medium text-gray-900">
+        <div className="bg-theme-card-bg rounded-lg shadow">
+          <div className="px-4 py-3 border-b border-theme-card-border flex justify-between items-center">
+            <h2 className="text-lg font-medium text-theme-headline">
               {t("groups.detail.recentPayments")}
             </h2>
             <Link
               href="/payments"
-              className="text-sm text-blue-600 hover:text-blue-500"
+              className="text-sm text-theme-primary hover:text-theme-primary/80"
             >
               {t("common.viewAll")}
             </Link>

@@ -34,9 +34,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     );
   }
 
-  if (actualAmount !== undefined && actualAmount <= 0) {
+  if (actualAmount !== undefined && actualAmount < 0) {
     return NextResponse.json(
-      { error: "actualAmount must be positive" },
+      { error: "actualAmount must be zero or positive" },
       { status: 400 }
     );
   }

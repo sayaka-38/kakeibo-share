@@ -91,14 +91,14 @@ export default async function RecurringRulesPage({ params }: PageProps) {
       <div className="mb-6">
         <Link
           href={`/groups/${groupId}`}
-          className="text-sm text-blue-600 hover:text-blue-800 mb-2 inline-block"
+          className="text-sm text-theme-primary hover:text-theme-primary/80 mb-2 inline-block"
         >
           &larr; {group.name}
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-2xl font-bold text-theme-headline">
           {t("recurringRules.title")}
         </h1>
-        <p className="text-sm text-gray-600 mt-1">
+        <p className="text-sm text-theme-muted mt-1">
           {t("recurringRules.subtitle")}
         </p>
       </div>

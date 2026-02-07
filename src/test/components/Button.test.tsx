@@ -35,15 +35,15 @@ describe("Button", () => {
     it("primaryバリアントのスタイルが適用される", () => {
       render(<Button variant="primary">Primary</Button>);
       const button = screen.getByRole("button");
-      expect(button).toHaveClass("bg-blue-600");
-      expect(button).toHaveClass("text-white");
+      expect(button).toHaveClass("bg-theme-primary");
+      expect(button).toHaveClass("text-theme-headline");
     });
 
     it("secondaryバリアントのスタイルが適用される", () => {
       render(<Button variant="secondary">Secondary</Button>);
       const button = screen.getByRole("button");
-      expect(button).toHaveClass("bg-white");
-      expect(button).toHaveClass("border-gray-300");
+      expect(button).toHaveClass("bg-theme-card-bg");
+      expect(button).toHaveClass("border-theme-card-border");
     });
 
     it("ghostバリアントのスタイルが適用される", () => {
@@ -55,7 +55,7 @@ describe("Button", () => {
     it("dangerバリアントのスタイルが適用される", () => {
       render(<Button variant="danger">Danger</Button>);
       const button = screen.getByRole("button");
-      expect(button).toHaveClass("bg-red-600");
+      expect(button).toHaveClass("bg-theme-accent");
       expect(button).toHaveClass("text-white");
     });
   });

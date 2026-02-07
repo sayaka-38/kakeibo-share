@@ -20,26 +20,19 @@ function getLocalDateString(date: Date = new Date()): string {
   return `${year}-${month}-${day}`;
 }
 
-// 昨日の日付を取得
-function getYesterdayString(): string {
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  return getLocalDateString(yesterday);
-}
-
 // デフォルト期間を計算
 function getDefaultPeriod(suggestion: SuggestionData | null): { start: string; end: string } {
   const today = getLocalDateString();
-  const yesterday = getYesterdayString();
 
-  // suggestion がある場合
+  // suggestion がある場合はそのまま使う（RPC が最新未清算日を返す）
   if (suggestion?.suggestedStart && suggestion?.suggestedEnd) {
     let start = suggestion.suggestedStart;
-    let end = suggestion.suggestedEnd;
+    const end = suggestion.suggestedEnd;
 
-    // 終了日が今日なら昨日に修正（今日を含まない）
-    if (end === today) {
-      end = yesterday;
+    // 未清算データの最古日が開始日より前なら、最古日を使う
+    // （前回清算後に過去日付の支払いが追加された場合の安全装置）
+    if (suggestion.oldestUnsettledDate && suggestion.oldestUnsettledDate < start) {
+      start = suggestion.oldestUnsettledDate;
     }
 
     // 開始日が終了日より後なら修正
@@ -50,14 +43,14 @@ function getDefaultPeriod(suggestion: SuggestionData | null): { start: string; e
     return { start, end };
   }
 
-  // suggestion がない場合: 今月1日〜昨日
+  // suggestion がない場合: 今月1日〜今日
   const firstOfMonth = new Date();
   firstOfMonth.setDate(1);
   const defaultStart = getLocalDateString(firstOfMonth);
 
   return {
-    start: defaultStart > yesterday ? yesterday : defaultStart,
-    end: yesterday,
+    start: defaultStart > today ? today : defaultStart,
+    end: today,
   };
 }
 
@@ -89,20 +82,20 @@ export default function PeriodSelector({
 
   if (isAllSettled) {
     return (
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-theme-card-bg rounded-lg shadow p-6">
         <div className="text-center py-8">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-16 h-16 bg-theme-text/15 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-theme-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-2">
+          <h2 className="text-lg font-semibold text-theme-headline mb-2">
             全て清算完了
           </h2>
-          <p className="text-gray-600">
+          <p className="text-theme-muted">
             現在のグループは全て清算完了しています。
           </p>
-          <p className="text-sm text-gray-500 mt-2">
+          <p className="text-sm text-theme-muted mt-2">
             新しい支払いを登録すると、次回の清算対象になります。
           </p>
         </div>
@@ -111,18 +104,18 @@ export default function PeriodSelector({
   }
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">
+    <div className="bg-theme-card-bg rounded-lg shadow p-6">
+      <h2 className="text-lg font-semibold text-theme-headline mb-4">
         {t("settlementSession.periodSelection")}
       </h2>
 
       {/* Smart Suggestion */}
       {suggestion && (suggestion.unsettledCount > 0 || suggestion.lastConfirmedEnd) && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <h3 className="text-sm font-medium text-blue-800 mb-2">
+        <div className="bg-theme-primary/10 border border-theme-primary/30 rounded-lg p-4 mb-6">
+          <h3 className="text-sm font-medium text-theme-headline mb-2">
             {t("settlementSession.smartSuggestion")}
           </h3>
-          <div className="space-y-1 text-sm text-blue-700">
+          <div className="space-y-1 text-sm text-theme-text">
             {suggestion.unsettledCount > 0 && (
               <p>
                 {t("settlementSession.unsettledPayments", {
@@ -138,7 +131,7 @@ export default function PeriodSelector({
               </p>
             )}
             {suggestion.oldestUnsettledDate && (
-              <p className="text-xs text-blue-600">
+              <p className="text-xs text-theme-primary">
                 最古の未清算: {suggestion.oldestUnsettledDate}
               </p>
             )}
@@ -155,7 +148,7 @@ export default function PeriodSelector({
       )}
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm mb-4">
+        <div className="bg-theme-accent/10 border border-theme-accent/30 text-theme-accent px-4 py-3 rounded-lg text-sm mb-4">
           {error}
         </div>
       )}
@@ -165,7 +158,7 @@ export default function PeriodSelector({
         <div>
           <label
             htmlFor="period-start"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-sm font-medium text-theme-text mb-1"
           >
             {t("settlementSession.periodStart")}
           </label>
@@ -176,7 +169,7 @@ export default function PeriodSelector({
             onChange={(e) => setPeriodStart(e.target.value)}
             max={periodEnd}
             required
-            className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="block w-full px-3 py-2 border border-theme-card-border rounded-lg shadow-sm text-theme-headline focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
           />
         </div>
 
@@ -184,7 +177,7 @@ export default function PeriodSelector({
         <div>
           <label
             htmlFor="period-end"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-sm font-medium text-theme-text mb-1"
           >
             {t("settlementSession.periodEnd")}
           </label>
@@ -196,7 +189,7 @@ export default function PeriodSelector({
             min={periodStart}
             max={today}
             required
-            className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="block w-full px-3 py-2 border border-theme-card-border rounded-lg shadow-sm text-theme-headline focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
           />
         </div>
 

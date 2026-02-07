@@ -68,7 +68,7 @@ export function SplitBadge() {
     <button
       type="button"
       onClick={toggle}
-      className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors cursor-pointer"
+      className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs font-medium bg-theme-primary/15 text-theme-primary hover:bg-theme-primary/25 transition-colors cursor-pointer"
       aria-expanded={isOpen}
     >
       {t("payments.display.customBadge")}
@@ -107,11 +107,11 @@ export function SplitContent({ splits }: { splits: SplitWithProfile[] }) {
       }`}
     >
       <div className="overflow-hidden">
-        <div className="mt-1.5 bg-gray-50 rounded-md px-3 py-2 space-y-1">
+        <div className="mt-1.5 bg-theme-bg rounded-md px-3 py-2 space-y-1">
           {splits.map((split, index) => (
             <div
               key={`${split.user_id}-${index}`}
-              className="flex justify-between text-xs text-gray-600"
+              className="flex justify-between text-xs text-theme-muted"
             >
               <span>{split.display_name || split.email}</span>
               <span className="font-medium">

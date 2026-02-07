@@ -4,6 +4,7 @@ import { t } from "@/lib/i18n";
 import Link from "next/link";
 import type { Profile, Category } from "@/types/database";
 import SettlementSessionManager from "./SettlementSessionManager";
+import type { SessionData } from "./SettlementSessionManager";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -65,12 +66,24 @@ export default async function SettlementPage({ params }: PageProps) {
     .or(`is_default.eq.true,group_id.eq.${groupId}`);
 
   // 既存のdraftセッションを確認
-  const { data: existingSession } = await supabase
+  const { data: existingDraft } = await supabase
     .from("settlement_sessions")
     .select("*")
     .eq("group_id", groupId)
     .eq("status", "draft")
-    .single();
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  // pending_paymentセッションを確認（送金待ち中の清算）
+  const { data: pendingSession } = await supabase
+    .from("settlement_sessions")
+    .select("*")
+    .eq("group_id", groupId)
+    .eq("status", "pending_payment")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
   // スマート提案を取得
   const { data: suggestion } = await supabase.rpc("get_settlement_period_suggestion", {
@@ -80,20 +93,33 @@ export default async function SettlementPage({ params }: PageProps) {
 
   const suggestionData = Array.isArray(suggestion) ? suggestion[0] : suggestion;
 
+  const mapSession = (s: typeof existingDraft): SessionData | null => {
+    if (!s) return null;
+    return {
+      ...s,
+      net_transfers: (s.net_transfers as SessionData["net_transfers"]) ?? null,
+      is_zero_settlement: s.is_zero_settlement ?? false,
+      payment_reported_at: s.payment_reported_at ?? null,
+      payment_reported_by: s.payment_reported_by ?? null,
+      settled_at: s.settled_at ?? null,
+      settled_by: s.settled_by ?? null,
+    };
+  };
+
   return (
     <div className="max-w-2xl mx-auto">
       {/* Header */}
       <div className="mb-6">
         <Link
           href={`/groups/${groupId}`}
-          className="text-sm text-blue-600 hover:text-blue-800 mb-2 inline-block"
+          className="text-sm text-theme-primary hover:text-theme-primary/80 mb-2 inline-block"
         >
           &larr; {group.name}
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-2xl font-bold text-theme-headline">
           {t("settlementSession.title")}
         </h1>
-        <p className="text-sm text-gray-600 mt-1">
+        <p className="text-sm text-theme-muted mt-1">
           {t("settlementSession.subtitle")}
         </p>
       </div>
@@ -104,7 +130,8 @@ export default async function SettlementPage({ params }: PageProps) {
         currentUserId={user.id}
         members={members}
         categories={(categories as Category[]) || []}
-        existingSession={existingSession}
+        existingSession={mapSession(existingDraft)}
+        pendingSession={mapSession(pendingSession)}
         suggestion={suggestionData ? {
           suggestedStart: suggestionData.suggested_start,
           suggestedEnd: suggestionData.suggested_end,
@@ -118,7 +145,7 @@ export default async function SettlementPage({ params }: PageProps) {
       <div className="mt-6 text-center">
         <Link
           href={`/groups/${groupId}/settlement/history`}
-          className="text-sm text-gray-500 hover:text-gray-700"
+          className="text-sm text-theme-muted hover:text-theme-text"
         >
           過去の清算履歴を見る &rarr;
         </Link>

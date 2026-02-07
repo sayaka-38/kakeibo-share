@@ -158,9 +158,6 @@ export async function POST(request: NextRequest) {
       p_user_id: user.id,
     });
 
-  console.log("[generate_settlement_entries] session_id:", session.id, "user_id:", user.id);
-  console.log("[generate_settlement_entries] result:", entryCount, "error:", rpcError);
-
   if (rpcError) {
     console.error("Failed to generate settlement entries:", rpcError);
     // セッションは作成済みなので続行（エラー情報をレスポンスに含める）

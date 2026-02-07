@@ -273,12 +273,25 @@
     "confirmWarning": "This will register all filled items as payments",
     "cannotConfirm": "Some items are not filled",
     "confirmed": "Settlement confirmed",
+    "pendingPayment": {
+      "title": "Pending Payment",
+      "transferInstructions": "Transfer Instructions",
+      "reportPayment": "Report Payment Sent",
+      "reporting": "Reporting...",
+      "confirmReceipt": "Confirm Receipt & Complete",
+      "confirming": "Confirming...",
+      "reported": "Payment has been reported as sent",
+      "reportedBy": "{name} reported payment sent",
+      "waitingForRecipient": "Waiting for recipient to confirm"
+    },
     "errors": {
       "fetchFailed": "Failed to fetch session",
       "createFailed": "Failed to create session",
       "updateFailed": "Failed to update entry",
       "confirmFailed": "Failed to confirm settlement",
-      "deleteFailed": "Failed to delete session"
+      "deleteFailed": "Failed to delete session",
+      "reportPaymentFailed": "Failed to report payment",
+      "confirmReceiptFailed": "Failed to confirm receipt"
     }
   },
   "recurringRules": {

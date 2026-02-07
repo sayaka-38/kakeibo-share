@@ -4,7 +4,7 @@ import { useState } from "react";
 import { t } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format/currency";
 import { Button } from "@/components/ui/Button";
-import type { Profile, Category } from "@/types/database";
+import type { Profile, NetTransfer } from "@/types/database";
 import type { SessionData, EntryData } from "./SettlementSessionManager";
 import EntryCard from "./EntryCard";
 import EntryEditModal from "./EntryEditModal";
@@ -23,10 +23,11 @@ type SettlementEntryListProps = {
   entries: EntryData[];
   stats: Stats;
   members: Profile[];
-  categories: Category[];
+  categories: { id: string; name: string; icon: string | null; color: string | null }[];
   currentUserId: string;
   isLoading: boolean;
   error: string | null;
+  pendingTransfers?: NetTransfer[];
   onEntryUpdated: (entry: EntryData) => void;
   onConfirm: () => Promise<void>;
   onDelete: () => Promise<void>;
@@ -37,10 +38,11 @@ export default function SettlementEntryList({
   entries,
   stats,
   members,
-  categories,
+  categories: _categories,
   currentUserId,
   isLoading,
   error,
+  pendingTransfers,
   onEntryUpdated,
   onConfirm,
   onDelete,
@@ -61,19 +63,19 @@ export default function SettlementEntryList({
   return (
     <div className="space-y-6">
       {/* Session Info */}
-      <div className="bg-white rounded-lg shadow p-4">
+      <div className="bg-theme-card-bg rounded-lg shadow p-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="font-medium text-gray-900">
+            <h2 className="font-medium text-theme-headline">
               {session.period_start} 〜 {session.period_end}
             </h2>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-theme-muted">
               {t("settlementSession.checklist")}
             </p>
           </div>
           {showDeleteConfirm ? (
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500">削除しますか？</span>
+              <span className="text-xs text-theme-muted">削除しますか？</span>
               <Button
                 variant="danger"
                 size="sm"
@@ -96,7 +98,7 @@ export default function SettlementEntryList({
               variant="ghost"
               size="sm"
               onClick={() => setShowDeleteConfirm(true)}
-              className="text-red-600 hover:text-red-700"
+              className="text-theme-accent hover:text-theme-accent/80"
             >
               {t("settlementSession.deleteDraft")}
             </Button>
@@ -106,19 +108,19 @@ export default function SettlementEntryList({
 
       {/* Empty State */}
       {isEmpty && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 text-center">
-          <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3">
-            <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="bg-theme-primary/10 border border-theme-primary/30 rounded-lg p-6 text-center">
+          <div className="w-12 h-12 bg-theme-primary/15 rounded-full flex items-center justify-center mx-auto mb-3">
+            <svg className="w-6 h-6 text-theme-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
-          <h3 className="font-medium text-amber-800 mb-1">
+          <h3 className="font-medium text-theme-headline mb-1">
             対象の支払いがありません
           </h3>
-          <p className="text-sm text-amber-700">
+          <p className="text-sm text-theme-text">
             選択した期間に未清算の支払いや固定費ルールがありません。
           </p>
-          <p className="text-xs text-amber-600 mt-2">
+          <p className="text-xs text-theme-muted mt-2">
             期間を変更するか、このセッションを削除してください。
           </p>
         </div>
@@ -126,42 +128,42 @@ export default function SettlementEntryList({
 
       {/* Stats Summary */}
       {!isEmpty && (
-      <div className="bg-white rounded-lg shadow p-4">
-        <h3 className="text-sm font-medium text-gray-700 mb-3">
+      <div className="bg-theme-card-bg rounded-lg shadow p-4">
+        <h3 className="text-sm font-medium text-theme-text mb-3">
           {t("settlementSession.summary")}
         </h3>
         <div className="grid grid-cols-3 gap-4 text-center">
-          <div className="bg-amber-50 rounded-lg p-3">
-            <p className="text-2xl font-semibold text-amber-600">
+          <div className="bg-theme-primary/10 rounded-lg p-3">
+            <p className="text-2xl font-semibold text-theme-primary">
               {stats.pending}
             </p>
-            <p className="text-xs text-amber-700">
+            <p className="text-xs text-theme-primary">
               {t("settlementSession.statusPending")}
             </p>
           </div>
-          <div className="bg-green-50 rounded-lg p-3">
-            <p className="text-2xl font-semibold text-green-600">
+          <div className="bg-theme-text/10 rounded-lg p-3">
+            <p className="text-2xl font-semibold text-theme-text">
               {stats.filled}
             </p>
-            <p className="text-xs text-green-700">
+            <p className="text-xs text-theme-text">
               {t("settlementSession.statusFilled")}
             </p>
           </div>
-          <div className="bg-gray-50 rounded-lg p-3">
-            <p className="text-2xl font-semibold text-gray-600">
+          <div className="bg-theme-bg rounded-lg p-3">
+            <p className="text-2xl font-semibold text-theme-muted">
               {stats.skipped}
             </p>
-            <p className="text-xs text-gray-700">
+            <p className="text-xs text-theme-muted">
               {t("settlementSession.statusSkipped")}
             </p>
           </div>
         </div>
         {stats.filled > 0 && (
-          <div className="mt-4 pt-4 border-t text-center">
-            <p className="text-sm text-gray-600">
+          <div className="mt-4 pt-4 border-t border-theme-card-border text-center">
+            <p className="text-sm text-theme-muted">
               {t("settlementSession.totalAmount")}
             </p>
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-2xl font-bold text-theme-headline">
               {formatCurrency(stats.totalAmount)}
             </p>
           </div>
@@ -170,7 +172,7 @@ export default function SettlementEntryList({
       )}
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+        <div className="bg-theme-accent/10 border border-theme-accent/30 text-theme-accent px-4 py-3 rounded-lg text-sm">
           {error}
         </div>
       )}
@@ -178,8 +180,8 @@ export default function SettlementEntryList({
       {/* Pending Entries */}
       {pendingEntries.length > 0 && (
         <div>
-          <h3 className="text-sm font-medium text-amber-700 mb-2 flex items-center gap-2">
-            <span className="w-2 h-2 bg-amber-500 rounded-full"></span>
+          <h3 className="text-sm font-medium text-theme-primary mb-2 flex items-center gap-2">
+            <span className="w-2 h-2 bg-theme-primary rounded-full"></span>
             {t("settlementSession.statusPending")} ({pendingEntries.length})
           </h3>
           <div className="space-y-2">
@@ -200,8 +202,8 @@ export default function SettlementEntryList({
       {/* Filled Entries */}
       {filledEntries.length > 0 && (
         <div>
-          <h3 className="text-sm font-medium text-green-700 mb-2 flex items-center gap-2">
-            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+          <h3 className="text-sm font-medium text-theme-text mb-2 flex items-center gap-2">
+            <span className="w-2 h-2 bg-theme-text rounded-full"></span>
             {t("settlementSession.statusFilled")} ({filledEntries.length})
           </h3>
           <div className="space-y-2">
@@ -222,8 +224,8 @@ export default function SettlementEntryList({
       {/* Skipped Entries */}
       {skippedEntries.length > 0 && (
         <div>
-          <h3 className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2">
-            <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
+          <h3 className="text-sm font-medium text-theme-muted mb-2 flex items-center gap-2">
+            <span className="w-2 h-2 bg-theme-muted rounded-full"></span>
             {t("settlementSession.statusSkipped")} ({skippedEntries.length})
           </h3>
           <div className="space-y-2 opacity-60">
@@ -247,23 +249,26 @@ export default function SettlementEntryList({
         entries={entries}
         members={members}
         currentUserId={currentUserId}
+        pendingTransfers={pendingTransfers}
       />
 
       {/* Confirm Button */}
-      <div className="bg-white rounded-lg shadow p-4">
+      <div className="bg-theme-card-bg rounded-lg shadow p-4">
         {!canConfirm && stats.pending > 0 && (
-          <p className="text-sm text-amber-600 mb-3 text-center">
+          <p className="text-sm text-theme-primary mb-3 text-center">
             {t("settlementSession.cannotConfirm")}
           </p>
         )}
-        <p className="text-xs text-gray-500 mb-3 text-center">
+        <p className="text-xs text-theme-muted mb-3 text-center">
           {t("settlementSession.confirmWarning")}
         </p>
         <Button
           onClick={onConfirm}
           fullWidth
+          size="lg"
           loading={isLoading}
           disabled={!canConfirm}
+          className="shadow-lg"
         >
           {isLoading
             ? t("settlementSession.confirming")

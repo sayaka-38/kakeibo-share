@@ -71,7 +71,7 @@ export function NumericKeypad({
   }, [value, onConfirm, disabled]);
 
   const keyButtonClasses =
-    "flex items-center justify-center min-h-11 text-xl font-medium bg-gray-100 rounded-lg transition-colors hover:bg-gray-200 active:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed";
+    "flex items-center justify-center min-h-11 text-xl font-medium bg-theme-bg rounded-lg transition-colors hover:bg-theme-card-border active:bg-theme-card-border disabled:opacity-50 disabled:cursor-not-allowed";
 
   return (
     <div
@@ -132,7 +132,7 @@ export function NumericKeypad({
       {/* 確定キー */}
       <button
         type="button"
-        className={`${keyButtonClasses} bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800`}
+        className={`${keyButtonClasses} bg-theme-primary text-white hover:bg-theme-primary/80 active:bg-theme-primary/70`}
         onClick={handleConfirm}
         disabled={disabled}
         aria-label={t("common.confirm")}
