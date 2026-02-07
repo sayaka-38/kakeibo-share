@@ -30,6 +30,7 @@ type RecentPaymentRow = {
   description: string;
   payment_date: string;
   payer_id: string;
+  settlement_id: string | null;
   profiles: { display_name: string | null; email: string } | null;
   payment_splits: PaymentSplitRow[];
 };
@@ -56,6 +57,7 @@ export async function RecentPaymentList({
       description,
       payment_date,
       payer_id,
+      settlement_id,
       profiles (
         display_name,
         email
@@ -72,18 +74,19 @@ export async function RecentPaymentList({
     )
     .eq("group_id", groupId)
     .order("payment_date", { ascending: false })
+    .order("created_at", { ascending: false })
     .limit(limit)) as { data: RecentPaymentRow[] | null };
 
   if (!payments || payments.length === 0) {
     return (
-      <p className="px-4 py-6 text-center text-gray-700">
+      <p className="px-4 py-6 text-center text-theme-text">
         {t("payments.noPayments")}
       </p>
     );
   }
 
   return (
-    <ul className="divide-y divide-gray-200">
+    <ul className="divide-y divide-theme-card-border">
       {payments.map((payment) => {
         const isProxy = isProxySplit(payment.payment_splits, payment.payer_id);
 
@@ -106,23 +109,28 @@ export async function RecentPaymentList({
             <div className="flex justify-between items-start">
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <p className="font-medium text-gray-900">
+                  <p className="font-medium text-theme-headline">
                     {payment.description}
                   </p>
+                  {payment.settlement_id && (
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-theme-primary/15 text-theme-primary">
+                      清算済
+                    </span>
+                  )}
                   {isProxy && (
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700">
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-theme-secondary/15 text-theme-secondary">
                       {t("payments.display.proxyBadge")}
                     </span>
                   )}
                   {custom && <SplitBadge />}
                 </div>
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-theme-text">
                   {payment.profiles?.display_name || payment.profiles?.email} -{" "}
                   {payment.payment_date}
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                <span className="font-medium text-gray-900">
+                <span className="font-medium text-theme-headline">
                   {formatCurrency(Number(payment.amount))}
                 </span>
                 {currentUserId && payment.payer_id === currentUserId && (

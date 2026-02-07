@@ -146,7 +146,7 @@ const categoriesRLSScenarios: RLSTestScenario[] = [
 ];
 
 describe("categories テーブル RLS (Migration 009)", () => {
-  let mockClient: MockSupabaseClient;
+  let _mockClient: MockSupabaseClient;
   let mockQueryBuilder: MockQueryBuilder;
 
   beforeEach(() => {
@@ -159,7 +159,7 @@ describe("categories テーブル RLS (Migration 009)", () => {
       single: vi.fn(),
     };
 
-    mockClient = {
+    _mockClient = {
       from: vi.fn().mockReturnValue(mockQueryBuilder),
       auth: {
         getUser: vi.fn(),

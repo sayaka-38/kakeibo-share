@@ -79,12 +79,12 @@ export const AmountFieldWithKeypad = memo(function AmountFieldWithKeypad({
     <div ref={containerRef}>
       <label
         htmlFor={id}
-        className="block text-sm font-medium text-gray-700 mb-1"
+        className="block text-sm font-medium text-theme-text mb-1"
       >
         {t("payments.form.amount")}
       </label>
       <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-700 pointer-events-none">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-text pointer-events-none">
           {t("common.currency")}
         </span>
         <input
@@ -97,15 +97,15 @@ export const AmountFieldWithKeypad = memo(function AmountFieldWithKeypad({
           onChange={handleInputChange}
           onFocus={handleFocus}
           placeholder={t("payments.form.amountPlaceholder")}
-          className={`block w-full pl-8 pr-3 py-3 border rounded-lg shadow-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-            error ? "border-red-500" : "border-gray-300"
+          className={`block w-full pl-8 pr-3 py-3 border rounded-lg shadow-sm text-theme-headline placeholder:text-theme-muted/70 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-colors ${
+            error ? "border-theme-accent" : "border-theme-card-border"
           }`}
           aria-invalid={!!error}
           aria-describedby={error ? errorId : undefined}
         />
       </div>
       {error && (
-        <p id={errorId} className="mt-1 text-sm text-red-600" role="alert">
+        <p id={errorId} className="mt-1 text-sm text-theme-accent" role="alert">
           {error}
         </p>
       )}

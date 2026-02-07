@@ -118,10 +118,10 @@ export default function JoinGroupPage({ params }: Props) {
   // ローディング中
   if (state.status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-theme-bg">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-700">{t("groups.invite.join.joining")}</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-theme-primary mx-auto mb-4"></div>
+          <p className="text-theme-text">{t("groups.invite.join.joining")}</p>
         </div>
       </div>
     );
@@ -130,12 +130,12 @@ export default function JoinGroupPage({ params }: Props) {
   // 成功
   if (state.status === "success") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-theme-bg">
         <div className="max-w-md w-full mx-4">
-          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="bg-theme-card-bg rounded-lg shadow-lg p-8 text-center">
+            <div className="w-16 h-16 bg-theme-text/15 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg
-                className="w-8 h-8 text-green-600"
+                className="w-8 h-8 text-theme-text"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -148,20 +148,20 @@ export default function JoinGroupPage({ params }: Props) {
                 />
               </svg>
             </div>
-            <h1 className="text-xl font-bold text-gray-900 mb-2">
+            <h1 className="text-xl font-bold text-theme-headline mb-2">
               {t("groups.invite.join.success")}
             </h1>
-            <p className="text-gray-700 mb-2">
+            <p className="text-theme-text mb-2">
               {t("groups.invite.join.welcomeMessage", {
                 groupName: state.groupName,
               })}
             </p>
-            <p className="text-sm text-gray-500 mb-6">
+            <p className="text-sm text-theme-muted mb-6">
               まもなくグループページへ移動します...
             </p>
             <Link
               href={`/groups/${state.groupId}`}
-              className="inline-flex items-center justify-center w-full px-4 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center justify-center w-full px-4 py-3 bg-theme-primary text-white font-medium rounded-lg hover:bg-theme-primary/80 transition-colors"
             >
               {t("groups.invite.join.goToGroup")}
             </Link>
@@ -173,12 +173,12 @@ export default function JoinGroupPage({ params }: Props) {
 
   // エラー
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center bg-theme-bg">
       <div className="max-w-md w-full mx-4">
-        <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="bg-theme-card-bg rounded-lg shadow-lg p-8 text-center">
+          <div className="w-16 h-16 bg-theme-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg
-              className="w-8 h-8 text-red-600"
+              className="w-8 h-8 text-theme-accent"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -191,22 +191,22 @@ export default function JoinGroupPage({ params }: Props) {
               />
             </svg>
           </div>
-          <h1 className="text-xl font-bold text-gray-900 mb-2">
+          <h1 className="text-xl font-bold text-theme-headline mb-2">
             {t("common.error")}
           </h1>
-          <p className="text-gray-700 mb-6">{state.message}</p>
+          <p className="text-theme-text mb-6">{state.message}</p>
 
           {state.needsLogin ? (
             <div className="space-y-3">
               <Link
                 href="/login"
-                className="inline-flex items-center justify-center w-full px-4 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center justify-center w-full px-4 py-3 bg-theme-primary text-white font-medium rounded-lg hover:bg-theme-primary/80 transition-colors"
               >
                 {t("auth.login.title")}
               </Link>
               <Link
                 href="/signup"
-                className="inline-flex items-center justify-center w-full px-4 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                className="inline-flex items-center justify-center w-full px-4 py-3 bg-theme-bg text-theme-text font-medium rounded-lg hover:bg-theme-card-border transition-colors"
               >
                 {t("auth.signup.title")}
               </Link>
@@ -214,7 +214,7 @@ export default function JoinGroupPage({ params }: Props) {
           ) : (
             <Link
               href="/groups"
-              className="inline-flex items-center justify-center w-full px-4 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors"
+              className="inline-flex items-center justify-center w-full px-4 py-3 bg-theme-bg text-theme-text font-medium rounded-lg hover:bg-theme-card-border transition-colors"
             >
               {t("groups.backToGroups")}
             </Link>

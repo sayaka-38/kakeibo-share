@@ -155,7 +155,7 @@ describe("AmountFieldWithKeypad", () => {
         />
       );
       const input = screen.getByLabelText(/金額/);
-      expect(input).toHaveClass("border-red-500");
+      expect(input).toHaveClass("border-theme-accent");
     });
   });
 

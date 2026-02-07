@@ -103,7 +103,7 @@ export function InlinePaymentForm({
       {/* 成功フィードバック */}
       {showSuccess && (
         <div
-          className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm animate-fade-in"
+          className="bg-theme-text/10 border border-theme-text text-theme-text px-4 py-3 rounded-lg text-sm animate-fade-in"
           role="status"
           aria-live="polite"
         >
@@ -136,7 +136,7 @@ export function InlinePaymentForm({
         <div>
           <label
             htmlFor="payment-category"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-sm font-medium text-theme-text mb-1"
           >
             {t("payments.form.category")}
           </label>
@@ -144,7 +144,7 @@ export function InlinePaymentForm({
             id="payment-category"
             value={form.categoryId}
             onChange={(e) => form.setCategoryId(e.target.value)}
-            className="block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            className="block w-full px-3 py-3 border border-theme-card-border rounded-lg shadow-sm text-theme-headline focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-colors"
           >
             <option value="">{t("payments.form.selectCategory")}</option>
             {categories.map((category) => (
@@ -175,9 +175,9 @@ export function InlinePaymentForm({
                   form.setProxyBeneficiaryId("");
                 }
               }}
-              className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+              className="rounded border-theme-card-border text-theme-secondary focus:ring-theme-primary"
             />
-            <span className="text-sm font-medium text-gray-700">
+            <span className="text-sm font-medium text-theme-text">
               {t("payments.form.splitProxy")}
             </span>
           </label>
@@ -185,14 +185,14 @@ export function InlinePaymentForm({
           {/* 受益者: 2人グループ → 確認メッセージ / 3人以上 → セレクト */}
           {form.splitType === "proxy" && (
             otherMembers.length === 1 ? (
-              <p className="text-sm text-purple-700 bg-purple-50 rounded-lg px-3 py-2">
+              <p className="text-sm text-theme-secondary bg-theme-secondary/10 rounded-lg px-3 py-2">
                 {t("payments.form.proxyAutoConfirm", { name: otherMembers[0].displayName })}
               </p>
             ) : (
               <div>
                 <label
                   htmlFor="proxy-beneficiary"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-medium text-theme-text mb-1"
                 >
                   {t("payments.form.proxyBeneficiary")}
                 </label>
@@ -200,10 +200,10 @@ export function InlinePaymentForm({
                   id="proxy-beneficiary"
                   value={form.proxyBeneficiaryId}
                   onChange={(e) => form.setProxyBeneficiaryId(e.target.value)}
-                  className={`block w-full px-3 py-3 border rounded-lg shadow-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors ${
+                  className={`block w-full px-3 py-3 border rounded-lg shadow-sm text-theme-headline focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-colors ${
                     form.errors.proxyBeneficiaryId
-                      ? "border-red-500"
-                      : "border-gray-300"
+                      ? "border-theme-accent"
+                      : "border-theme-card-border"
                   }`}
                   aria-invalid={!!form.errors.proxyBeneficiaryId}
                   aria-describedby={
@@ -224,7 +224,7 @@ export function InlinePaymentForm({
                 {form.errors.proxyBeneficiaryId && (
                   <p
                     id="proxy-beneficiary-error"
-                    className="mt-1 text-sm text-red-600"
+                    className="mt-1 text-sm text-theme-accent"
                     role="alert"
                   >
                     {form.errors.proxyBeneficiaryId}
@@ -272,7 +272,7 @@ const DescriptionFieldWithRef = memo(
         <div>
           <label
             htmlFor="payment-description"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-sm font-medium text-theme-text mb-1"
           >
             {t("payments.form.description")}
           </label>
@@ -283,14 +283,14 @@ const DescriptionFieldWithRef = memo(
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={t("payments.form.descriptionPlaceholder")}
-            className={`block w-full px-3 py-3 border rounded-lg shadow-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-              error ? "border-red-500" : "border-gray-300"
+            className={`block w-full px-3 py-3 border rounded-lg shadow-sm text-theme-headline placeholder:text-theme-muted/70 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-colors ${
+              error ? "border-theme-accent" : "border-theme-card-border"
             }`}
             aria-invalid={!!error}
             aria-describedby={error ? errorId : undefined}
           />
           {error && (
-            <p id={errorId} className="mt-1 text-sm text-red-600" role="alert">
+            <p id={errorId} className="mt-1 text-sm text-theme-accent" role="alert">
               {error}
             </p>
           )}
@@ -315,7 +315,7 @@ const DateFieldWithRef = memo(
         <div>
           <label
             htmlFor="payment-date"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-sm font-medium text-theme-text mb-1"
           >
             {t("payments.form.date")}
           </label>
@@ -325,14 +325,14 @@ const DateFieldWithRef = memo(
             type="date"
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            className={`block w-full px-3 py-3 border rounded-lg shadow-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-              error ? "border-red-500" : "border-gray-300"
+            className={`block w-full px-3 py-3 border rounded-lg shadow-sm text-theme-headline focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-colors ${
+              error ? "border-theme-accent" : "border-theme-card-border"
             }`}
             aria-invalid={!!error}
             aria-describedby={error ? errorId : undefined}
           />
           {error && (
-            <p id={errorId} className="mt-1 text-sm text-red-600" role="alert">
+            <p id={errorId} className="mt-1 text-sm text-theme-accent" role="alert">
               {error}
             </p>
           )}

@@ -14,7 +14,7 @@
     "db:start": "npx supabase start",
     "db:stop": "npx supabase stop",
     "db:reset": "npx supabase db reset",
-    "db:gen-types": "npx supabase gen types typescript --local 2>/dev/null > src/types/database.generated.ts",
+    "db:gen-types": "npx supabase gen types typescript --linked 2>/dev/null > src/types/database.generated.ts",
     "db:migration:new": "npx supabase migration new",
     "db:diff": "npx supabase db diff"
   },

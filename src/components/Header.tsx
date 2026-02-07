@@ -20,23 +20,23 @@ export default function Header({ user }: HeaderProps) {
   };
 
   return (
-    <header className="bg-white border-b border-gray-200">
+    <header className="bg-theme-card-bg border-b border-theme-card-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <h1 className="text-xl font-bold text-gray-900">
+            <h1 className="text-xl font-bold text-theme-headline">
               {t("common.appName")}
             </h1>
           </div>
 
           {user && (
             <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-theme-muted">
                 {user.display_name || user.email}
               </span>
               <button
                 onClick={handleLogout}
-                className="text-sm text-gray-700 hover:text-gray-900"
+                className="text-sm text-theme-text hover:text-theme-headline"
               >
                 {t("common.logout")}
               </button>

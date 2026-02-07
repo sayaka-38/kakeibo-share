@@ -35,25 +35,25 @@ export function DemoBanner({ isDemo, expiresAt }: DemoBannerProps) {
   return (
     <header
       role="banner"
-      className="bg-amber-50 border-b border-amber-200 px-4 py-3"
+      className="bg-theme-primary/10 border-b border-theme-card-border px-4 py-3"
     >
       <div className="max-w-4xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-theme-primary/15 text-theme-headline">
             {t("demo.banner")}
           </span>
-          <span className="text-sm text-amber-700">
+          <span className="text-sm text-theme-primary">
             {t("demo.expirationNotice")}
           </span>
           {expiresAt && (
-            <span className="text-xs text-amber-600">
+            <span className="text-xs text-theme-primary">
               ({formatRemainingTime(expiresAt)})
             </span>
           )}
         </div>
         <Link
           href="/signup"
-          className="text-sm font-medium text-amber-700 hover:text-amber-900 underline underline-offset-2"
+          className="text-sm font-medium text-theme-primary hover:text-theme-primary/80 underline underline-offset-2"
         >
           {t("demo.signUpPrompt")}
         </Link>

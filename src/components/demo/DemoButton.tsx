@@ -33,13 +33,13 @@ export function DemoButton() {
       <button
         onClick={handleStartDemo}
         disabled={loading}
-        className="inline-flex items-center justify-center px-6 py-3 border-2 border-dashed border-gray-300 text-base font-medium rounded-lg text-gray-600 bg-white hover:bg-gray-50 hover:border-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="inline-flex items-center justify-center px-6 py-3 border-2 border-dashed border-theme-card-border text-base font-medium rounded-lg text-theme-muted bg-theme-card-bg hover:bg-theme-bg hover:border-theme-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading ? t("landing.demo.starting") : t("landing.demo.button")}
       </button>
-      <p className="text-sm text-gray-700">{t("landing.demo.subtitle")}</p>
+      <p className="text-sm text-theme-text">{t("landing.demo.subtitle")}</p>
       {error && (
-        <p className="text-sm text-red-600 mt-2" role="alert">
+        <p className="text-sm text-theme-accent mt-2" role="alert">
           {error}
         </p>
       )}

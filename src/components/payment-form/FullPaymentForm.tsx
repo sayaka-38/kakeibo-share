@@ -295,7 +295,7 @@ export default function FullPaymentForm({
 
   if (groups.length === 0) {
     return (
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-yellow-700">
+      <div className="bg-theme-primary/10 border border-theme-card-border rounded-lg p-4 text-theme-primary">
         <p>{t("payments.errors.noGroup")}</p>
       </div>
     );
@@ -304,7 +304,7 @@ export default function FullPaymentForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+        <div className="bg-theme-accent/10 border border-theme-accent text-theme-accent px-4 py-3 rounded-lg text-sm">
           {error}
         </div>
       )}
@@ -313,7 +313,7 @@ export default function FullPaymentForm({
       <div>
         <label
           htmlFor="group"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-sm font-medium text-theme-text"
         >
           {t("payments.form.group")}
         </label>
@@ -323,8 +323,8 @@ export default function FullPaymentForm({
           onChange={(e) => setGroupId(e.target.value)}
           required
           disabled={isEditMode}
-          className={`mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-            isEditMode ? "bg-gray-100 cursor-not-allowed" : ""
+          className={`mt-1 block w-full px-3 py-2 border border-theme-card-border rounded-lg shadow-sm text-theme-headline focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary ${
+            isEditMode ? "bg-theme-bg cursor-not-allowed" : ""
           }`}
         >
           {groups.map((group) => (
@@ -334,7 +334,7 @@ export default function FullPaymentForm({
           ))}
         </select>
         {isEditMode && (
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-theme-muted">
             {t("payments.form.groupNotEditable")}
           </p>
         )}
@@ -360,7 +360,7 @@ export default function FullPaymentForm({
       <div>
         <label
           htmlFor="category"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-sm font-medium text-theme-text"
         >
           {t("payments.form.category")}
         </label>
@@ -368,7 +368,7 @@ export default function FullPaymentForm({
           id="category"
           value={categoryId}
           onChange={(e) => setCategoryId(e.target.value)}
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="mt-1 block w-full px-3 py-2 border border-theme-card-border rounded-lg shadow-sm text-theme-headline focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
         >
           <option value="">{t("payments.form.selectCategory")}</option>
           {categories.map((category) => (
@@ -389,7 +389,7 @@ export default function FullPaymentForm({
 
       {/* Split Type - 3択ラジオ */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-theme-text mb-2">
           {t("payments.form.split")}
         </label>
         <div className="flex flex-wrap gap-4">
@@ -405,7 +405,7 @@ export default function FullPaymentForm({
               }}
               className="mr-2"
             />
-            <span className="text-sm text-gray-700">
+            <span className="text-sm text-theme-text">
               {t("payments.form.splitEqually")}
             </span>
           </label>
@@ -421,7 +421,7 @@ export default function FullPaymentForm({
               }}
               className="mr-2"
             />
-            <span className="text-sm text-gray-700">
+            <span className="text-sm text-theme-text">
               {t("payments.form.customSplit")}
             </span>
           </label>
@@ -439,9 +439,9 @@ export default function FullPaymentForm({
                     form.setProxyBeneficiaryId(otherMembers[0].id);
                   }
                 }}
-                className="mr-2 accent-purple-600"
+                className="mr-2 accent-[var(--color-theme-secondary)]"
               />
-              <span className="text-sm text-gray-700">
+              <span className="text-sm text-theme-text">
                 {t("payments.form.splitProxy")}
               </span>
             </label>
@@ -453,17 +453,17 @@ export default function FullPaymentForm({
       {form.splitType === "custom" && currentMembers.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-theme-text">
               {t("payments.form.splitAmounts")}
             </label>
             {totalAmount > 0 && (
               <span
                 className={`text-xs font-medium ${
                   splitRemaining === 0
-                    ? "text-green-600"
+                    ? "text-theme-text"
                     : splitRemaining > 0
-                      ? "text-amber-600"
-                      : "text-red-600"
+                      ? "text-theme-primary"
+                      : "text-theme-accent"
                 }`}
               >
                 {t("payments.form.splitRemaining", {
@@ -477,7 +477,7 @@ export default function FullPaymentForm({
             const isAutoTarget = autoCompleteTargetId === member.id;
             return (
               <div key={member.id} className="flex items-center gap-3">
-                <span className="text-sm text-gray-600 w-32 truncate">
+                <span className="text-sm text-theme-muted w-32 truncate">
                   {member.display_name || member.email}
                 </span>
                 <div className="flex-1 relative">
@@ -490,15 +490,15 @@ export default function FullPaymentForm({
                     readOnly={isAutoTarget}
                     min="0"
                     step="1"
-                    className={`w-full px-3 py-2 border rounded-lg shadow-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    className={`w-full px-3 py-2 border rounded-lg shadow-sm text-theme-headline placeholder:text-theme-muted/70 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary ${
                       isAutoTarget
-                        ? "border-gray-200 bg-gray-50 text-gray-500"
-                        : "border-gray-300"
+                        ? "border-theme-card-border bg-theme-bg text-theme-muted"
+                        : "border-theme-card-border"
                     }`}
                     placeholder="0"
                   />
                   {isAutoTarget && (
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-theme-muted/70">
                       {t("payments.form.autoCalculated")}
                     </span>
                   )}
@@ -512,7 +512,7 @@ export default function FullPaymentForm({
       {/* Proxy Beneficiary Selection */}
       {form.splitType === "proxy" && (
         otherMembers.length === 1 ? (
-          <p className="text-sm text-purple-700 bg-purple-50 rounded-lg px-3 py-2">
+          <p className="text-sm text-theme-secondary bg-theme-secondary/10 rounded-lg px-3 py-2">
             {t("payments.form.proxyAutoConfirm", {
               name: otherMembers[0].display_name || otherMembers[0].email,
             })}
@@ -521,7 +521,7 @@ export default function FullPaymentForm({
           <div>
             <label
               htmlFor="full-proxy-beneficiary"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-theme-text mb-1"
             >
               {t("payments.form.proxyBeneficiary")}
             </label>
@@ -529,10 +529,10 @@ export default function FullPaymentForm({
               id="full-proxy-beneficiary"
               value={form.proxyBeneficiaryId}
               onChange={(e) => form.setProxyBeneficiaryId(e.target.value)}
-              className={`block w-full px-3 py-2 border rounded-lg shadow-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${
+              className={`block w-full px-3 py-2 border rounded-lg shadow-sm text-theme-headline focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary ${
                 form.errors.proxyBeneficiaryId
-                  ? "border-red-500"
-                  : "border-gray-300"
+                  ? "border-theme-accent"
+                  : "border-theme-card-border"
               }`}
               aria-invalid={!!form.errors.proxyBeneficiaryId}
               aria-describedby={
@@ -553,7 +553,7 @@ export default function FullPaymentForm({
             {form.errors.proxyBeneficiaryId && (
               <p
                 id="full-proxy-beneficiary-error"
-                className="mt-1 text-sm text-red-600"
+                className="mt-1 text-sm text-theme-accent"
                 role="alert"
               >
                 {form.errors.proxyBeneficiaryId}
@@ -567,7 +567,7 @@ export default function FullPaymentForm({
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-theme-primary hover:bg-theme-primary/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isSubmitting
           ? t(isEditMode ? "payments.form.updating" : "payments.form.submitting")

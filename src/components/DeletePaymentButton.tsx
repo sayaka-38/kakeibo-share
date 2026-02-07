@@ -50,7 +50,7 @@ export function DeletePaymentForm({ paymentId }: DeletePaymentFormProps) {
       type="button"
       onClick={handleDelete}
       disabled={isDeleting}
-      className="text-gray-400 hover:text-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      className="text-theme-muted/70 hover:text-theme-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       aria-label={t("payments.delete")}
     >
       {isDeleting ? (

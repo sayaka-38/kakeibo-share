@@ -114,7 +114,8 @@ export default async function SettlementPage() {
       `
       )
       .eq("group_id", group.id)
-      .order("payment_date", { ascending: false })) as {
+      .order("payment_date", { ascending: false })
+      .order("created_at", { ascending: false })) as {
       data: PaymentWithDetails[] | null;
     };
 
@@ -165,13 +166,13 @@ export default async function SettlementPage() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">
+      <h1 className="text-2xl font-bold text-theme-headline mb-6">
         {t("settlement.title")}
       </h1>
 
       {groupSettlements.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-6 text-center">
-          <p className="text-gray-700">{t("settlement.noGroups")}</p>
+        <div className="bg-theme-card-bg rounded-lg shadow p-6 text-center">
+          <p className="text-theme-text">{t("settlement.noGroups")}</p>
         </div>
       ) : (
         <div className="space-y-8">
@@ -188,47 +189,47 @@ export default async function SettlementPage() {
               hasSplits,
               memberProfiles,
             }) => (
-              <div key={group.id} className="bg-white rounded-lg shadow">
-                <div className="px-4 py-3 border-b border-gray-200">
-                  <h2 className="text-lg font-medium text-gray-900">
+              <div key={group.id} className="bg-theme-card-bg rounded-lg shadow">
+                <div className="px-4 py-3 border-b border-theme-card-border">
+                  <h2 className="text-lg font-medium text-theme-headline">
                     {group.name}
                   </h2>
                 </div>
 
                 <div className="p-4 space-y-6">
                   {/* 計算プロセス（Calculation Breakdown） */}
-                  <div className="bg-blue-50 rounded-lg p-4">
-                    <h3 className="text-sm font-medium text-blue-800 mb-3">
+                  <div className="bg-theme-primary/10 rounded-lg p-4">
+                    <h3 className="text-sm font-medium text-theme-primary mb-3">
                       {t("settlement.calculationBreakdown")}
                     </h3>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-blue-700">
+                        <span className="text-theme-primary">
                           {t("settlement.totalExpenses")}
                         </span>
-                        <span className="font-medium text-blue-900">
+                        <span className="font-medium text-theme-primary">
                           {formatCurrency(totalExpenses)}
                         </span>
                       </div>
                       {hasSplits ? (
-                        <div className="border-t border-blue-200 pt-2">
-                          <p className="text-xs text-blue-600">
+                        <div className="border-t border-theme-primary/30 pt-2">
+                          <p className="text-xs text-theme-primary">
                             {t("settlement.splitsBasedNote")}
                           </p>
                         </div>
                       ) : (
                         <>
                           <div className="flex justify-between">
-                            <span className="text-blue-700">
+                            <span className="text-theme-primary">
                               {t("settlement.memberCount", { count: memberCount })}
                             </span>
-                            <span className="text-blue-600">÷ {memberCount}</span>
+                            <span className="text-theme-primary">÷ {memberCount}</span>
                           </div>
-                          <div className="border-t border-blue-200 pt-2 flex justify-between">
-                            <span className="text-blue-700">
+                          <div className="border-t border-theme-primary/30 pt-2 flex justify-between">
+                            <span className="text-theme-primary">
                               {t("settlement.perPerson")}
                             </span>
-                            <span className="font-bold text-blue-900">
+                            <span className="font-bold text-theme-primary">
                               {formatCurrency(perPersonAmount)}
                             </span>
                           </div>
@@ -236,10 +237,10 @@ export default async function SettlementPage() {
                       )}
                       {unsettledRemainder > 0 && (
                         <div className="flex justify-between text-xs">
-                          <span className="text-blue-600">
+                          <span className="text-theme-primary">
                             {t("settlement.unsettledRemainder")}
                           </span>
-                          <span className="text-blue-600">
+                          <span className="text-theme-primary">
                             {formatCurrency(unsettledRemainder)}
                           </span>
                         </div>
@@ -249,7 +250,7 @@ export default async function SettlementPage() {
 
                   {/* Balance Summary */}
                   <div>
-                    <h3 className="text-sm font-medium text-gray-700 mb-3">
+                    <h3 className="text-sm font-medium text-theme-text mb-3">
                       {t("settlement.balanceSummary")}
                     </h3>
                     <div className="space-y-2">
@@ -258,21 +259,21 @@ export default async function SettlementPage() {
                           key={balance.memberId}
                           className="flex justify-between items-center text-sm"
                         >
-                          <span className="text-gray-600">
+                          <span className="text-theme-muted">
                             {balance.displayName}
                           </span>
                           <div className="text-right">
-                            <span className="text-gray-700 mr-4">
+                            <span className="text-theme-text mr-4">
                               {t("settlement.paid")}: {formatCurrency(balance.totalPaid)}
                             </span>
-                            <span className="text-gray-500 mr-4">
+                            <span className="text-theme-muted mr-4">
                               {t("settlement.owed")}: {formatCurrency(balance.totalOwed)}
                             </span>
                             <span
                               className={
                                 balance.balance >= 0
-                                  ? "text-blue-600 font-medium"
-                                  : "text-amber-600 font-medium"
+                                  ? "text-theme-primary font-medium"
+                                  : "text-theme-accent font-medium"
                               }
                             >
                               {formatCurrency(balance.balance, { showSign: true })}
@@ -285,7 +286,7 @@ export default async function SettlementPage() {
 
                   {/* Settlements */}
                   <div>
-                    <h3 className="text-sm font-medium text-gray-700 mb-3">
+                    <h3 className="text-sm font-medium text-theme-text mb-3">
                       {t("settlement.requiredSettlements")}
                     </h3>
                     {settlements.length > 0 ? (
@@ -293,14 +294,14 @@ export default async function SettlementPage() {
                         {settlements.map((settlement, index) => (
                           <div
                             key={index}
-                            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                            className="flex items-center justify-between p-3 bg-theme-bg rounded-lg"
                           >
                             <div className="flex items-center gap-2">
-                              <span className="font-medium text-gray-900">
+                              <span className="font-medium text-theme-headline">
                                 {settlement.fromName}
                               </span>
                               <svg
-                                className="w-4 h-4 text-gray-600"
+                                className="w-4 h-4 text-theme-muted"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -312,18 +313,18 @@ export default async function SettlementPage() {
                                   d="M14 5l7 7m0 0l-7 7m7-7H3"
                                 />
                               </svg>
-                              <span className="font-medium text-gray-900">
+                              <span className="font-medium text-theme-headline">
                                 {settlement.toName}
                               </span>
                             </div>
-                            <span className="text-lg font-semibold text-blue-600">
+                            <span className="text-lg font-semibold text-theme-primary">
                               {formatCurrency(settlement.amount)}
                             </span>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-gray-700 text-sm">
+                      <p className="text-theme-text text-sm">
                         {t("settlement.allSettled")}
                       </p>
                     )}
@@ -331,24 +332,24 @@ export default async function SettlementPage() {
 
                   {/* Payment History（時系列リスト） */}
                   <div>
-                    <h3 className="text-sm font-medium text-gray-700 mb-3">
+                    <h3 className="text-sm font-medium text-theme-text mb-3">
                       {t("settlement.paymentHistory")}
                     </h3>
                     {payments.length > 0 ? (
                       <div className="overflow-x-auto">
                         <table className="min-w-full text-sm">
                           <thead>
-                            <tr className="border-b border-gray-200">
-                              <th className="text-left py-2 px-2 font-medium text-gray-600">
+                            <tr className="border-b border-theme-card-border">
+                              <th className="text-left py-2 px-2 font-medium text-theme-muted">
                                 {t("settlement.date")}
                               </th>
-                              <th className="text-left py-2 px-2 font-medium text-gray-600">
+                              <th className="text-left py-2 px-2 font-medium text-theme-muted">
                                 {t("settlement.description")}
                               </th>
-                              <th className="text-left py-2 px-2 font-medium text-gray-600">
+                              <th className="text-left py-2 px-2 font-medium text-theme-muted">
                                 {t("settlement.paidBy")}
                               </th>
-                              <th className="text-right py-2 px-2 font-medium text-gray-600">
+                              <th className="text-right py-2 px-2 font-medium text-theme-muted">
                                 {t("settlement.amount")}
                               </th>
                             </tr>
@@ -366,34 +367,34 @@ export default async function SettlementPage() {
                               return (
                                 <tr
                                   key={payment.id}
-                                  className="border-b border-gray-100 hover:bg-gray-50"
+                                  className="border-b border-theme-card-border hover:bg-theme-bg"
                                 >
-                                  <td className="py-2 px-2 text-gray-600">
+                                  <td className="py-2 px-2 text-theme-muted">
                                     {new Date(
                                       payment.payment_date
                                     ).toLocaleDateString("ja-JP")}
                                   </td>
-                                  <td className="py-2 px-2 text-gray-900">
+                                  <td className="py-2 px-2 text-theme-headline">
                                     <span>{payment.description}</span>
                                     {isProxy && (
                                       <>
-                                        <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700">
+                                        <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-theme-secondary/15 text-theme-secondary">
                                           {t("payments.display.proxyBadge")}
                                         </span>
                                         {beneficiaryName && (
-                                          <span className="ml-1 text-xs text-purple-500">
+                                          <span className="ml-1 text-xs text-theme-secondary">
                                             ({t("payments.display.proxyFor", { name: beneficiaryName })})
                                           </span>
                                         )}
                                       </>
                                     )}
                                   </td>
-                                  <td className="py-2 px-2 text-gray-600">
+                                  <td className="py-2 px-2 text-theme-muted">
                                     {payment.payer?.display_name ||
                                       payment.payer?.email ||
                                       "-"}
                                   </td>
-                                  <td className="py-2 px-2 text-right text-gray-900 font-medium">
+                                  <td className="py-2 px-2 text-right text-theme-headline font-medium">
                                     {formatCurrency(Number(payment.amount))}
                                   </td>
                                 </tr>
@@ -402,13 +403,13 @@ export default async function SettlementPage() {
                           </tbody>
                         </table>
                         {payments.length > 10 && (
-                          <p className="text-xs text-gray-500 mt-2 text-center">
+                          <p className="text-xs text-theme-muted mt-2 text-center">
                             他 {payments.length - 10} 件の支払い
                           </p>
                         )}
                       </div>
                     ) : (
-                      <p className="text-gray-500 text-sm">
+                      <p className="text-theme-muted text-sm">
                         {t("dashboard.noPayments")}
                       </p>
                     )}

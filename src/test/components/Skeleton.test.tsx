@@ -26,7 +26,7 @@ describe("Skeleton", () => {
     it("背景色のクラスが適用されている", () => {
       render(<Skeleton data-testid="skeleton" />);
       const skeleton = screen.getByTestId("skeleton");
-      expect(skeleton).toHaveClass("bg-gray-200");
+      expect(skeleton).toHaveClass("bg-theme-card-border");
     });
 
     it("角丸のクラスが適用されている", () => {
@@ -143,7 +143,7 @@ describe("SkeletonCard", () => {
     it("カード形式でレンダリングされる", () => {
       render(<SkeletonCard data-testid="skeleton-card" />);
       const card = screen.getByTestId("skeleton-card");
-      expect(card).toHaveClass("bg-white");
+      expect(card).toHaveClass("bg-theme-card-bg");
       expect(card).toHaveClass("rounded-lg");
       expect(card).toHaveClass("shadow");
     });

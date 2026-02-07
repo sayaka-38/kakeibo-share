@@ -63,11 +63,11 @@ export function InviteLinkButton({ inviteCode }: Props) {
   }, [inviteUrl, handleCopy]);
 
   return (
-    <div className="bg-blue-50 rounded-lg p-4">
-      <h3 className="text-sm font-medium text-blue-900 mb-2">
+    <div className="bg-theme-primary/10 rounded-lg p-4">
+      <h3 className="text-sm font-medium text-theme-headline mb-2">
         {t("groups.invite.link.title")}
       </h3>
-      <p className="text-xs text-blue-700 mb-3">
+      <p className="text-xs text-theme-primary mb-3">
         {t("groups.invite.link.description")}
       </p>
 
@@ -77,8 +77,8 @@ export function InviteLinkButton({ inviteCode }: Props) {
           onClick={handleCopy}
           className={`flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${
             copied
-              ? "bg-green-600 text-white"
-              : "bg-blue-600 text-white hover:bg-blue-700 active:scale-95"
+              ? "bg-theme-text text-white"
+              : "bg-theme-primary text-white hover:bg-theme-primary/80 active:scale-95"
           }`}
         >
           {copied ? (
@@ -122,7 +122,7 @@ export function InviteLinkButton({ inviteCode }: Props) {
         {canShare && (
           <button
             onClick={handleShare}
-            className="inline-flex items-center justify-center px-4 py-2.5 bg-white border border-blue-200 text-blue-700 rounded-lg font-medium text-sm hover:bg-blue-50 active:scale-95 transition-all"
+            className="inline-flex items-center justify-center px-4 py-2.5 bg-theme-card-bg border border-theme-primary text-theme-primary rounded-lg font-medium text-sm hover:bg-theme-primary/10 active:scale-95 transition-all"
             aria-label={t("groups.invite.link.share")}
           >
             <svg

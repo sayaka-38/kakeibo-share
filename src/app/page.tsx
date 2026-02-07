@@ -17,14 +17,14 @@ export default async function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-theme-primary/10 to-theme-card-bg">
       <div className="max-w-4xl mx-auto px-4 py-16 sm:py-24">
         {/* Header */}
         <header className="text-center mb-16">
-          <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+          <h1 className="text-4xl sm:text-5xl font-bold text-theme-headline mb-4">
             {t("common.appName")}
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-xl text-theme-muted max-w-2xl mx-auto">
             {t("landing.tagline")}
           </p>
         </header>
@@ -33,13 +33,13 @@ export default async function Home() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
           <Link
             href="/signup"
-            className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-theme-primary hover:bg-theme-primary/80 transition-colors"
           >
             {t("landing.getStarted")}
           </Link>
           <Link
             href="/login"
-            className="inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-base font-medium rounded-lg shadow-sm text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+            className="inline-flex items-center justify-center px-6 py-3 border border-theme-card-border text-base font-medium rounded-lg shadow-sm text-theme-text bg-theme-card-bg hover:bg-theme-bg transition-colors"
           >
             {t("landing.signIn")}
           </Link>
@@ -52,10 +52,10 @@ export default async function Home() {
 
         {/* Features */}
         <div className="grid md:grid-cols-3 gap-8">
-          <div className="bg-white rounded-xl shadow-sm p-6 text-center">
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="bg-theme-card-bg rounded-xl shadow-sm p-6 text-center">
+            <div className="w-12 h-12 bg-theme-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg
-                className="w-6 h-6 text-blue-600"
+                className="w-6 h-6 text-theme-primary"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -68,18 +68,18 @@ export default async function Home() {
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <h3 className="text-lg font-semibold text-theme-headline mb-2">
               {t("landing.features.easyRecording.title")}
             </h3>
-            <p className="text-gray-600">
+            <p className="text-theme-muted">
               {t("landing.features.easyRecording.description")}
             </p>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm p-6 text-center">
-            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="bg-theme-card-bg rounded-xl shadow-sm p-6 text-center">
+            <div className="w-12 h-12 bg-theme-text/15 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg
-                className="w-6 h-6 text-green-600"
+                className="w-6 h-6 text-theme-text"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -92,18 +92,18 @@ export default async function Home() {
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <h3 className="text-lg font-semibold text-theme-headline mb-2">
               {t("landing.features.autoSettlement.title")}
             </h3>
-            <p className="text-gray-600">
+            <p className="text-theme-muted">
               {t("landing.features.autoSettlement.description")}
             </p>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm p-6 text-center">
-            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="bg-theme-card-bg rounded-xl shadow-sm p-6 text-center">
+            <div className="w-12 h-12 bg-theme-secondary/15 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg
-                className="w-6 h-6 text-purple-600"
+                className="w-6 h-6 text-theme-secondary"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -116,10 +116,10 @@ export default async function Home() {
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <h3 className="text-lg font-semibold text-theme-headline mb-2">
               {t("landing.features.groupSharing.title")}
             </h3>
-            <p className="text-gray-600">
+            <p className="text-theme-muted">
               {t("landing.features.groupSharing.description")}
             </p>
           </div>
