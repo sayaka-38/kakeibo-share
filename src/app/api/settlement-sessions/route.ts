@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   const groupId = request.nextUrl.searchParams.get("groupId");
   if (!groupId) {
     return NextResponse.json(
-      { error: "groupId is required" },
+      { error: "グループIDが必要です" },
       { status: 400 }
     );
   }
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 
   if (!membership) {
     return NextResponse.json(
-      { error: "You are not a member of this group" },
+      { error: "このグループのメンバーではありません" },
       { status: 403 }
     );
   }
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
   if (error) {
     console.error("Failed to fetch settlement sessions:", error);
     return NextResponse.json(
-      { error: "Failed to fetch settlement sessions" },
+      { error: "セッションの取得に失敗しました" },
       { status: 500 }
     );
   }
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { error: "Invalid JSON body" },
+      { error: "リクエストボディが不正です" },
       { status: 400 }
     );
   }
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
   // バリデーション
   if (!groupId || !periodStart || !periodEnd) {
     return NextResponse.json(
-      { error: "groupId, periodStart, and periodEnd are required" },
+      { error: "グループID・開始日・終了日は必須です" },
       { status: 400 }
     );
   }
@@ -89,13 +89,13 @@ export async function POST(request: NextRequest) {
   const end = new Date(periodEnd);
   if (isNaN(start.getTime()) || isNaN(end.getTime())) {
     return NextResponse.json(
-      { error: "Invalid date format" },
+      { error: "日付の形式が不正です" },
       { status: 400 }
     );
   }
   if (start > end) {
     return NextResponse.json(
-      { error: "periodStart must be before or equal to periodEnd" },
+      { error: "開始日は終了日以前に指定してください" },
       { status: 400 }
     );
   }
@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
 
   if (!membership) {
     return NextResponse.json(
-      { error: "You are not a member of this group" },
+      { error: "このグループのメンバーではありません" },
       { status: 403 }
     );
   }
@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
 
   if (existingDraft) {
     return NextResponse.json(
-      { error: "A draft session already exists for this group", existingSessionId: existingDraft.id },
+      { error: "このグループには作成中のセッションが既にあります", existingSessionId: existingDraft.id },
       { status: 409 }
     );
   }
@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
   if (error) {
     console.error("Failed to create settlement session:", error);
     return NextResponse.json(
-      { error: "Failed to create settlement session" },
+      { error: "セッションの作成に失敗しました" },
       { status: 500 }
     );
   }
@@ -174,9 +174,9 @@ export async function POST(request: NextRequest) {
   // RPCの戻り値が負の場合はエラーコード
   if (typeof entryCount === "number" && entryCount < 0) {
     const errorMessages: Record<number, string> = {
-      [-1]: "Session not found",
-      [-2]: "Permission denied",
-      [-3]: "Session is not in draft status",
+      [-1]: "セッションが見つかりません",
+      [-2]: "権限がありません",
+      [-3]: "セッションはドラフト状態ではありません",
     };
     console.error("RPC returned error code:", entryCount, errorMessages[entryCount]);
     return NextResponse.json(

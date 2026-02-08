@@ -14,6 +14,6 @@ export async function GET(request: Request) {
     }
   }
 
-  // Return to login page with error
-  return NextResponse.redirect(`${origin}/login?error=Could not authenticate`);
+  // Return to login page with error key (login page resolves via i18n)
+  return NextResponse.redirect(`${origin}/login?error=auth_failed`);
 }

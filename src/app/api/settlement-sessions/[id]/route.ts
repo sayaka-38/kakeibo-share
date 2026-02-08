@@ -27,7 +27,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
   if (error || !session) {
     return NextResponse.json(
-      { error: "Settlement session not found" },
+      { error: "セッションが見つかりません" },
       { status: 404 }
     );
   }
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
   if (!membership) {
     return NextResponse.json(
-      { error: "You are not a member of this group" },
+      { error: "このグループのメンバーではありません" },
       { status: 403 }
     );
   }
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   if (entriesError) {
     console.error("Failed to fetch settlement entries:", entriesError);
     return NextResponse.json(
-      { error: "Failed to fetch settlement entries" },
+      { error: "エントリの取得に失敗しました" },
       { status: 500 }
     );
   }
@@ -108,7 +108,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
   if (fetchError || !session) {
     return NextResponse.json(
-      { error: "Settlement session not found" },
+      { error: "セッションが見つかりません" },
       { status: 404 }
     );
   }
@@ -116,7 +116,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   // 作成者確認
   if (session.created_by !== user.id) {
     return NextResponse.json(
-      { error: "Only the creator can delete this session" },
+      { error: "セッションを削除できるのは作成者のみです" },
       { status: 403 }
     );
   }
@@ -124,7 +124,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   // draft状態確認
   if (session.status !== "draft") {
     return NextResponse.json(
-      { error: "Only draft sessions can be deleted" },
+      { error: "削除できるのはドラフト状態のセッションのみです" },
       { status: 400 }
     );
   }
@@ -138,7 +138,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   if (error) {
     console.error("Failed to delete settlement session:", error);
     return NextResponse.json(
-      { error: "Failed to delete settlement session" },
+      { error: "セッションの削除に失敗しました" },
       { status: 500 }
     );
   }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { formatCurrency } from "@/lib/format/currency";
 import {
   balancesToTransfers,
@@ -26,103 +27,85 @@ export default function SettlementResultCard({
   pendingTransfers,
 }: SettlementResultCardProps) {
   // filled 状態のエントリのみ対象
-  const filledEntries = entries.filter((e) => e.status === "filled");
-
-  if (filledEntries.length === 0) {
-    return null;
-  }
-
-  // 各メンバーの支払い・負担を計算
-  const balances: MemberBalance[] = members.map((member) => {
-    // 支払った金額（payer_id が自分のエントリの actual_amount 合計）
-    const paid = filledEntries
-      .filter((e) => e.payer_id === member.id)
-      .reduce((sum, e) => sum + (e.actual_amount || 0), 0);
-
-    // 負担すべき金額（splits から計算、なければ均等割り）
-    let owed = 0;
-    filledEntries.forEach((entry) => {
-      const splits = entry.splits || [];
-      const mySplit = splits.find((s) => s.user_id === member.id);
-
-      if (mySplit) {
-        // カスタム分割
-        owed += mySplit.amount;
-      } else if (splits.length === 0) {
-        // 均等割り（splits がない場合）
-        const amount = entry.actual_amount || 0;
-        const share = Math.floor(amount / members.length);
-        owed += share;
-        // 端数は payer が負担
-        if (entry.payer_id === member.id) {
-          owed += amount - share * members.length;
-        }
-      }
-    });
-
-    return {
-      id: member.id,
-      name: member.display_name || member.email || "Unknown",
-      paid,
-      owed,
-      balance: paid - owed,
-    };
-  });
-
-  // 自分のバランス
-  const myBalance = balances.find((b) => b.id === currentUserId);
-
-  // 総支出
-  const totalExpense = filledEntries.reduce(
-    (sum, e) => sum + (e.actual_amount || 0),
-    0
+  const filledEntries = useMemo(
+    () => entries.filter((e) => e.status === "filled"),
+    [entries]
   );
 
-  // 確定済みかどうか（pending_payment, settled, confirmed を含む）
-  const isConfirmed = session.status !== "draft";
+  // 各メンバーの支払い・負担を計算
+  const balances: MemberBalance[] = useMemo(() => {
+    return members.map((member) => {
+      const paid = filledEntries
+        .filter((e) => e.payer_id === member.id)
+        .reduce((sum, e) => sum + (e.actual_amount || 0), 0);
 
-  // net_transfers がセッションに保存されている場合はそれを使用
+      let owed = 0;
+      filledEntries.forEach((entry) => {
+        const splits = entry.splits || [];
+        const mySplit = splits.find((s) => s.user_id === member.id);
+
+        if (mySplit) {
+          owed += mySplit.amount;
+        } else if (splits.length === 0) {
+          const amount = entry.actual_amount || 0;
+          const share = Math.floor(amount / members.length);
+          owed += share;
+          if (entry.payer_id === member.id) {
+            owed += amount - share * members.length;
+          }
+        }
+      });
+
+      return {
+        id: member.id,
+        name: member.display_name || member.email || "Unknown",
+        paid,
+        owed,
+        balance: paid - owed,
+      };
+    });
+  }, [filledEntries, members]);
+
+  const myBalance = balances.find((b) => b.id === currentUserId);
+  const totalExpense = filledEntries.reduce((sum, e) => sum + (e.actual_amount || 0), 0);
+
+  const isConfirmed = session.status !== "draft";
   const netTransfers = session.net_transfers || [];
 
-  // 確定済み + net_transfers がある場合、送金指示ベースの自分のバランスを計算
   const myTransferBalance: number | null =
     isConfirmed && netTransfers.length > 0
       ? calculateMyTransferBalance(netTransfers, currentUserId)
       : null;
 
-  // エントリベースと送金指示ベースの差（統合による調整額）
   const entryBalance = myBalance?.balance ?? 0;
   const consolidationDiff = myTransferBalance !== null ? myTransferBalance - entryBalance : 0;
   const hasConsolidationDiff = Math.abs(consolidationDiff) > 0;
-
-  // 確定済みで送金指示がある場合はそちらをメイン表示額にする
   const mainDisplayBalance = myTransferBalance !== null ? myTransferBalance : entryBalance;
 
   // 統合プレビュー: draft + pendingTransfers がある場合
   const hasPendingConsolidation =
     !isConfirmed && pendingTransfers && pendingTransfers.length > 0;
-  let consolidatedTransfers: NetTransfer[] | null = null;
-  let myConsolidatedBalance: number | null = null;
 
-  if (hasPendingConsolidation) {
+  const { consolidatedTransfers, myConsolidatedBalance } = useMemo(() => {
+    if (!hasPendingConsolidation || !pendingTransfers) {
+      return { consolidatedTransfers: null, myConsolidatedBalance: null };
+    }
     const draftTransfers = balancesToTransfers(balances);
     const memberNames = new Map<string, string>();
-    for (const b of balances) {
-      memberNames.set(b.id, b.name);
-    }
+    for (const b of balances) memberNames.set(b.id, b.name);
     for (const t of pendingTransfers) {
       memberNames.set(t.from_id, t.from_name);
       memberNames.set(t.to_id, t.to_name);
     }
+    const consolidated = consolidateTransfers([draftTransfers, pendingTransfers], memberNames);
+    return {
+      consolidatedTransfers: consolidated.transfers,
+      myConsolidatedBalance: calculateMyTransferBalance(consolidated.transfers, currentUserId),
+    };
+  }, [hasPendingConsolidation, pendingTransfers, balances, currentUserId]);
 
-    const consolidated = consolidateTransfers(
-      [draftTransfers, pendingTransfers],
-      memberNames
-    );
-    consolidatedTransfers = consolidated.transfers;
-
-    // 統合後の自分のバランスを計算
-    myConsolidatedBalance = calculateMyTransferBalance(consolidatedTransfers, currentUserId);
+  if (filledEntries.length === 0) {
+    return null;
   }
 
   return (

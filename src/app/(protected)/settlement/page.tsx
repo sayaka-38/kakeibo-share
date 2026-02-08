@@ -22,7 +22,7 @@ type PaymentWithDetails = {
   amount: number;
   description: string;
   payment_date: string;
-  payer: { display_name: string | null; email: string } | null;
+  payer: { display_name: string | null; email: string | null } | null;
   payment_splits: PaymentSplitRow[];
 };
 
@@ -63,7 +63,7 @@ export default async function SettlementPage() {
     perPersonAmount: number;
     payments: PaymentWithDetails[];
     hasSplits: boolean;
-    memberProfiles: { id: string; display_name: string | null; email: string }[];
+    memberProfiles: { id: string; display_name: string | null; email: string | null }[];
   }[] = [];
 
   for (const group of groups) {
@@ -90,7 +90,7 @@ export default async function SettlementPage() {
     // Member を新ロジックの型に変換
     const memberList: Member[] = memberProfiles.map((p) => ({
       id: p.id,
-      displayName: p.display_name || p.email,
+      displayName: p.display_name || p.email || "Unknown",
     }));
 
     // Get all payments for this group with payer info + splits

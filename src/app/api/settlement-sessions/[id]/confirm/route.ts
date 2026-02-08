@@ -27,7 +27,7 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
 
   if (!sessionBefore) {
     return NextResponse.json(
-      { error: "Settlement session not found" },
+      { error: "セッションが見つかりません" },
       { status: 404 }
     );
   }
@@ -41,7 +41,7 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
   if (error) {
     console.error("Failed to confirm settlement:", error);
     return NextResponse.json(
-      { error: "Failed to confirm settlement" },
+      { error: "清算の確定に失敗しました" },
       { status: 500 }
     );
   }
@@ -49,25 +49,25 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
   // エラーコードをチェック
   if (result === -1) {
     return NextResponse.json(
-      { error: "Settlement session not found" },
+      { error: "セッションが見つかりません" },
       { status: 404 }
     );
   }
   if (result === -2) {
     return NextResponse.json(
-      { error: "You are not a member of this group" },
+      { error: "このグループのメンバーではありません" },
       { status: 403 }
     );
   }
   if (result === -3) {
     return NextResponse.json(
-      { error: "Session is not in draft status" },
+      { error: "セッションはドラフト状態ではありません" },
       { status: 400 }
     );
   }
   if (result === -4) {
     return NextResponse.json(
-      { error: "No filled entries to confirm" },
+      { error: "確定する入力済みエントリがありません" },
       { status: 400 }
     );
   }

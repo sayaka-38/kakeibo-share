@@ -36,7 +36,7 @@ const CONFIRM_ROUTE_PATH = path.join(
 
 const SETTLEMENT_MANAGER_PATH = path.join(
   process.cwd(),
-  "src/app/(protected)/groups/[id]/settlement/SettlementSessionManager.tsx"
+  "src/app/(protected)/groups/[id]/settlement/useSettlementSession.ts"
 );
 
 const HISTORY_DETAIL_PATH = path.join(

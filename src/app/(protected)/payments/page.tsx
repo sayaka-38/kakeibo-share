@@ -30,7 +30,7 @@ export default async function PaymentsPage() {
   type PaymentSplitRow = {
     user_id: string;
     amount: number;
-    profiles: { display_name: string | null; email: string } | null;
+    profiles: { display_name: string | null; email: string | null } | null;
   };
 
   type PaymentWithRelations = {
@@ -44,7 +44,7 @@ export default async function PaymentsPage() {
     created_at: string;
     updated_at: string;
     settlement_id: string | null;
-    profiles: { display_name: string | null; email: string } | null;
+    profiles: { display_name: string | null; email: string | null } | null;
     categories: { name: string; icon: string | null } | null;
     groups: { name: string } | null;
     payment_splits: PaymentSplitRow[];
@@ -193,6 +193,15 @@ export default async function PaymentsPage() {
                             <span className="font-medium text-theme-headline">
                               {formatCurrency(Number(payment.amount))}
                             </span>
+                            <Link
+                              href={`/payments/new?copyFrom=${payment.id}`}
+                              className="text-theme-muted/70 hover:text-theme-primary transition-colors"
+                              aria-label={t("payments.duplicate")}
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                              </svg>
+                            </Link>
                             {payment.payer_id === user?.id && !payment.settlement_id && (
                               <Link
                                 href={`/payments/${payment.id}/edit`}

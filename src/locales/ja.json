@@ -78,7 +78,8 @@
       "passwordHint": "6文字以上"
     },
     "errors": {
-      "loginRequired": "ログインが必要です"
+      "loginRequired": "ログインが必要です",
+      "authenticationFailed": "認証に失敗しました。もう一度お試しください。"
     }
   },
   "dashboard": {
@@ -165,6 +166,7 @@
     "deleteConfirm": "この支払いを削除しますか？",
     "edit": "編集",
     "editPayment": "支払いを編集",
+    "duplicate": "複製",
     "form": {
       "group": "グループ",
       "amount": "金額",

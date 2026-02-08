@@ -30,12 +30,15 @@ export type EditPaymentData = {
   customSplits: { [userId: string]: string };
 };
 
+export type DuplicatePaymentData = Omit<EditPaymentData, "paymentId">;
+
 type FullPaymentFormProps = {
   groups: Group[];
   categories: Category[];
   members: { [groupId: string]: Profile[] };
   currentUserId: string;
   editData?: EditPaymentData;
+  duplicateData?: DuplicatePaymentData;
 };
 
 /**
@@ -50,18 +53,21 @@ export default function FullPaymentForm({
   members,
   currentUserId,
   editData,
+  duplicateData,
 }: FullPaymentFormProps) {
   const router = useRouter();
   const isEditMode = !!editData;
 
-  const initialData: PaymentFormInitialData | undefined = editData
+  // editData or duplicateData for pre-fill (duplicateData uses today's date)
+  const prefill = editData || duplicateData;
+  const initialData: PaymentFormInitialData | undefined = prefill
     ? {
-        amount: String(editData.amount),
-        description: editData.description,
-        paymentDate: editData.paymentDate,
-        categoryId: editData.categoryId ?? "",
-        splitType: editData.splitType,
-        proxyBeneficiaryId: editData.proxyBeneficiaryId ?? "",
+        amount: String(prefill.amount),
+        description: prefill.description,
+        paymentDate: duplicateData ? new Date().toISOString().split("T")[0] : prefill.paymentDate,
+        categoryId: prefill.categoryId ?? "",
+        splitType: prefill.splitType,
+        proxyBeneficiaryId: prefill.proxyBeneficiaryId ?? "",
       }
     : undefined;
 
@@ -70,10 +76,10 @@ export default function FullPaymentForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // フル版専用の状態
-  const [groupId, setGroupId] = useState(editData?.groupId || groups[0]?.id || "");
-  const [categoryId, setCategoryId] = useState(editData?.categoryId ?? "");
+  const [groupId, setGroupId] = useState(prefill?.groupId || groups[0]?.id || "");
+  const [categoryId, setCategoryId] = useState(prefill?.categoryId ?? "");
   const [customSplits, setCustomSplits] = useState<{ [userId: string]: string }>(
-    editData?.customSplits ?? {}
+    prefill?.customSplits ?? {}
   );
 
   const currentMembers = groupId ? members[groupId] || [] : [];
@@ -514,7 +520,7 @@ export default function FullPaymentForm({
         otherMembers.length === 1 ? (
           <p className="text-sm text-theme-secondary bg-theme-secondary/10 rounded-lg px-3 py-2">
             {t("payments.form.proxyAutoConfirm", {
-              name: otherMembers[0].display_name || otherMembers[0].email,
+              name: otherMembers[0].display_name || otherMembers[0].email || "Unknown",
             })}
           </p>
         ) : (

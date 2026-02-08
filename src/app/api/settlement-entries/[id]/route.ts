@@ -19,7 +19,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { error: "Invalid JSON body" },
+      { error: "リクエストボディが不正です" },
       { status: 400 }
     );
   }
@@ -29,14 +29,14 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   // バリデーション
   if (status === "filled" && (actualAmount === undefined || actualAmount === null)) {
     return NextResponse.json(
-      { error: "actualAmount is required when status is filled" },
+      { error: "入力済みステータスには金額が必要です" },
       { status: 400 }
     );
   }
 
   if (actualAmount !== undefined && actualAmount < 0) {
     return NextResponse.json(
-      { error: "actualAmount must be zero or positive" },
+      { error: "金額は0以上で入力してください" },
       { status: 400 }
     );
   }
@@ -54,7 +54,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   if (error) {
     console.error("Failed to update settlement entry:", error);
     return NextResponse.json(
-      { error: "Failed to update settlement entry" },
+      { error: "エントリの更新に失敗しました" },
       { status: 500 }
     );
   }
@@ -62,19 +62,19 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   // エラーコードをチェック
   if (result === -1) {
     return NextResponse.json(
-      { error: "Settlement entry not found" },
+      { error: "エントリが見つかりません" },
       { status: 404 }
     );
   }
   if (result === -2) {
     return NextResponse.json(
-      { error: "You are not a member of this group" },
+      { error: "このグループのメンバーではありません" },
       { status: 403 }
     );
   }
   if (result === -3) {
     return NextResponse.json(
-      { error: "Session is not in draft status" },
+      { error: "セッションはドラフト状態ではありません" },
       { status: 400 }
     );
   }
@@ -131,7 +131,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
   if (fetchError || !entry) {
     return NextResponse.json(
-      { error: "Settlement entry not found" },
+      { error: "エントリが見つかりません" },
       { status: 404 }
     );
   }
@@ -149,7 +149,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     if (!membership) {
       return NextResponse.json(
-        { error: "You are not a member of this group" },
+        { error: "このグループのメンバーではありません" },
         { status: 403 }
       );
     }
@@ -157,7 +157,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     // draft状態確認
     if (session.status !== "draft") {
       return NextResponse.json(
-        { error: "Cannot delete entries from confirmed sessions" },
+        { error: "確定済みセッションのエントリは削除できません" },
         { status: 400 }
       );
     }
@@ -166,7 +166,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   // 手動追加エントリのみ削除可能
   if (entry.entry_type !== "manual") {
     return NextResponse.json(
-      { error: "Only manually added entries can be deleted" },
+      { error: "削除できるのは手動追加エントリのみです" },
       { status: 400 }
     );
   }
@@ -180,7 +180,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   if (error) {
     console.error("Failed to delete settlement entry:", error);
     return NextResponse.json(
-      { error: "Failed to delete settlement entry" },
+      { error: "エントリの削除に失敗しました" },
       { status: 500 }
     );
   }
