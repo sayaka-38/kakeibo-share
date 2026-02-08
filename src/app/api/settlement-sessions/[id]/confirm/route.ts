@@ -144,16 +144,12 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
       }
 
       // 旧 pending_payment セッションを settled に変更（統合済み）
-      for (const pending of pendingSessions) {
-        await supabase
-          .from("settlement_sessions")
-          .update({
-            status: "settled",
-            settled_at: new Date().toISOString(),
-            settled_by: user.id,
-          })
-          .eq("id", pending.id);
-      }
+      // SECURITY DEFINER RPC で RLS をバイパスして確実に更新
+      const sessionIds = pendingSessions.map((p) => p.id);
+      await supabase.rpc("settle_consolidated_sessions", {
+        p_session_ids: sessionIds,
+        p_user_id: user.id,
+      });
     }
   }
 

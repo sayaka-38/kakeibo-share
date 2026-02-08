@@ -46,7 +46,7 @@ export async function DELETE(
     // 3. 支払い情報を取得（groups を結合して owner_id も取得）
     const { data: payment, error: fetchError } = await supabase
       .from("payments")
-      .select("id, payer_id, group_id, groups (owner_id)")
+      .select("id, payer_id, group_id, settlement_id, groups (owner_id)")
       .eq("id", id)
       .single();
 
@@ -65,7 +65,15 @@ export async function DELETE(
       );
     }
 
-    // 4. 認可チェック: 支払者本人 OR グループオーナー
+    // 4. 清算済み支払いの削除を禁止
+    if (payment.settlement_id) {
+      return NextResponse.json(
+        { error: "清算済みの支払いは削除できません" },
+        { status: 403 }
+      );
+    }
+
+    // 5. 認可チェック: 支払者本人 OR グループオーナー
     const payerMatch = payment.payer_id === user.id;
     const ownerMatch =
       (payment.groups as unknown as { owner_id: string })?.owner_id ===
@@ -220,7 +228,7 @@ export async function PUT(
     // 7. 支払い情報を取得（認可チェック用）
     const { data: payment, error: fetchError } = await supabase
       .from("payments")
-      .select("id, payer_id, group_id")
+      .select("id, payer_id, group_id, settlement_id")
       .eq("id", id)
       .single();
 
@@ -239,7 +247,15 @@ export async function PUT(
       );
     }
 
-    // 8. 認可チェック: 支払者本人のみ
+    // 8. 清算済み支払いの編集を禁止
+    if (payment.settlement_id) {
+      return NextResponse.json(
+        { error: "清算済みの支払いは編集できません" },
+        { status: 403 }
+      );
+    }
+
+    // 9. 認可チェック: 支払者本人のみ
     if (payment.payer_id !== user.id) {
       return NextResponse.json(
         { error: "この支払いを編集する権限がありません" },

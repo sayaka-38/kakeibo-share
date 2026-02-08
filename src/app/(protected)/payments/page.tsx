@@ -43,6 +43,7 @@ export default async function PaymentsPage() {
     payment_date: string;
     created_at: string;
     updated_at: string;
+    settlement_id: string | null;
     profiles: { display_name: string | null; email: string } | null;
     categories: { name: string; icon: string | null } | null;
     groups: { name: string } | null;
@@ -164,6 +165,14 @@ export default async function PaymentsPage() {
                                   {payment.categories.name}
                                 </span>
                               )}
+                              {payment.settlement_id && (
+                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs font-medium bg-theme-text/15 text-theme-text">
+                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                  清算済
+                                </span>
+                              )}
                               {isProxy && (
                                 <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-theme-secondary/15 text-theme-secondary">
                                   {t("payments.display.proxyBadge")}
@@ -184,7 +193,7 @@ export default async function PaymentsPage() {
                             <span className="font-medium text-theme-headline">
                               {formatCurrency(Number(payment.amount))}
                             </span>
-                            {payment.payer_id === user?.id && (
+                            {payment.payer_id === user?.id && !payment.settlement_id && (
                               <Link
                                 href={`/payments/${payment.id}/edit`}
                                 className="text-theme-muted/70 hover:text-theme-primary transition-colors"
@@ -205,7 +214,7 @@ export default async function PaymentsPage() {
                                 </svg>
                               </Link>
                             )}
-                            {payment.payer_id === user?.id && (
+                            {payment.payer_id === user?.id && !payment.settlement_id && (
                               <DeletePaymentForm
                                 paymentId={payment.id}
                               />

@@ -324,8 +324,10 @@ export default function SettlementSessionManager({
         return;
       }
 
-      // 清算完了 → pending をクリア、ページリフレッシュ
+      // 清算完了 → 履歴詳細ページへリダイレクト
+      const completedSessionId = pendingSessionState.id;
       setPendingSessionState(null);
+      router.push(`/groups/${groupId}/settlement/history/${completedSessionId}`);
       router.refresh();
     } catch {
       setPendingError(t("settlementSession.errors.confirmReceiptFailed"));
@@ -447,59 +449,81 @@ export default function SettlementSessionManager({
           Scenario 2: pending + draft → 最下部に控えめな送金操作ボタン
           ================================================================ */}
       {pendingSessionState && session && (
-        <div className="mt-4 bg-theme-card-bg rounded-lg shadow p-4">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-theme-muted">
-              前回の清算（{pendingSessionState.period_start} 〜 {pendingSessionState.period_end}）
-            </p>
-            <div className="flex gap-2">
-              {(() => {
-                const transfers = pendingSessionState.net_transfers || [];
-                const isPayer = transfers.some((tr) => tr.from_id === currentUserId);
-                const isRecipient = transfers.some((tr) => tr.to_id === currentUserId);
-                const hasReported = !!pendingSessionState.payment_reported_at;
-
-                return (
-                  <>
-                    {isPayer && !hasReported && (
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={handleReportPayment}
-                        loading={pendingIsLoading}
-                      >
-                        {t("settlementSession.pendingPayment.reportPayment")}
-                      </Button>
-                    )}
-                    {isRecipient && (
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={handleConfirmReceipt}
-                        loading={pendingIsLoading}
-                        disabled={!hasReported}
-                      >
-                        {t("settlementSession.pendingPayment.confirmReceipt")}
-                      </Button>
-                    )}
-                    {isPayer && hasReported && !isRecipient && (
-                      <span className="text-xs text-theme-muted py-2">
-                        {t("settlementSession.pendingPayment.waitingForRecipient")}
-                      </span>
-                    )}
-                  </>
-                );
-              })()}
-            </div>
-          </div>
-          {pendingError && (
-            <div className="mt-2 bg-theme-accent/10 border border-theme-accent/30 text-theme-accent px-3 py-2 rounded text-xs">
-              {pendingError}
-            </div>
-          )}
-        </div>
+        <PendingSessionControls
+          pendingSession={pendingSessionState}
+          currentUserId={currentUserId}
+          isLoading={pendingIsLoading}
+          error={pendingError}
+          onReportPayment={handleReportPayment}
+          onConfirmReceipt={handleConfirmReceipt}
+        />
       )}
     </>
+  );
+}
+
+/** Scenario 2 の最下部: pending セッションの送金操作ボタン */
+function PendingSessionControls({
+  pendingSession,
+  currentUserId,
+  isLoading,
+  error,
+  onReportPayment,
+  onConfirmReceipt,
+}: {
+  pendingSession: SessionData;
+  currentUserId: string;
+  isLoading: boolean;
+  error: string | null;
+  onReportPayment: () => void;
+  onConfirmReceipt: () => void;
+}) {
+  const transfers = pendingSession.net_transfers || [];
+  const isPayer = transfers.some((tr) => tr.from_id === currentUserId);
+  const isRecipient = transfers.some((tr) => tr.to_id === currentUserId);
+  const hasReported = !!pendingSession.payment_reported_at;
+
+  return (
+    <div className="mt-4 bg-theme-card-bg rounded-lg shadow p-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-theme-muted">
+          前回の清算（{pendingSession.period_start} 〜 {pendingSession.period_end}）
+        </p>
+        <div className="flex gap-2">
+          {isPayer && !hasReported && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={onReportPayment}
+              loading={isLoading}
+            >
+              {t("settlementSession.pendingPayment.reportPayment")}
+            </Button>
+          )}
+          {isRecipient && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={onConfirmReceipt}
+              loading={isLoading}
+              disabled={!hasReported}
+            >
+              {t("settlementSession.pendingPayment.confirmReceipt")}
+            </Button>
+          )}
+          {isPayer && hasReported && !isRecipient && (
+            <span className="text-xs text-theme-muted py-2">
+              {t("settlementSession.pendingPayment.waitingForRecipient")}
+            </span>
+          )}
+        </div>
+      </div>
+      {error && (
+        <div className="mt-2 bg-theme-accent/10 border border-theme-accent/30 text-theme-accent px-3 py-2 rounded text-xs">
+          {error}
+        </div>
+      )}
+    </div>
   );
 }
 

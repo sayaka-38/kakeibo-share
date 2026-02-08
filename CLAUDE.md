@@ -130,6 +130,42 @@ src/
 - 削除+挿入がセットになる処理や、複数テーブルにまたがる更新は PostgreSQL 関数（RPC）として実装する
 - RPC を作成・修正した際は `npm run db:gen-types` を実行して TypeScript の型を同期すること
 
+### 清算エンジンの設計規約
+
+#### 清算フロー（ステータス遷移）
+
+`draft` → `confirmed` → `pending_payment` → `settled`
+
+- `confirm_settlement` RPC: draft → confirmed（エントリを payments/payment_splits に変換）
+- `report-payment` API: confirmed → pending_payment（送金報告）
+- `confirm_settlement_receipt` RPC: pending_payment → settled（受取確認、同グループの全 pending_payment を一括更新）
+
+#### RPC 一覧
+
+| RPC | 用途 | SECURITY |
+|-----|------|----------|
+| `generate_settlement_entries` | 期間内のエントリ自動生成 | DEFINER |
+| `confirm_settlement` | draft → confirmed（payments 変換） | DEFINER |
+| `confirm_settlement_receipt` | pending_payment → settled（一括） | DEFINER |
+| `settle_consolidated_sessions` | 統合済み旧セッション一括 settled 化 | DEFINER |
+| `replace_payment_splits` | splits の原子的置換 | DEFINER |
+| `get_settlement_period_suggestion` | スマート期間提案 | INVOKER |
+
+#### 相殺統合ロジック
+
+- **共通ユーティリティ**: `src/lib/settlement/consolidate.ts`
+  - `consolidateTransfers()`: 複数セッションの net_transfers を合算→グリーディマッチングで最適振込指示を生成
+  - `balancesToTransfers()`: MemberBalance 配列から NetTransfer 配列を導出
+  - `calculateMyTransferBalance()`: 特定ユーザーの送金/受取残高を net_transfers から計算
+- 新しい相殺計算を追加する場合は、必ずこのモジュールに集約すること
+
+#### 型定義ルール
+
+- `SettlementSessionRow`: `src/types/database.ts` で定義。`net_transfers` JSONB を `NetTransfer[] | null` として型付け
+- `NetTransfer`: 送金指示の1要素（from_id, from_name, to_id, to_name, amount）
+- `SettlementSessionStatus`: `"draft" | "confirmed" | "pending_payment" | "settled"` のリテラル型
+- `database.ts` の RPC オーバーライド: `db:gen-types` で生成されない新規 RPC は `Database` 型をオーバーライドして追加
+
 ### 開発環境の優先順位
 
 - リモートDB（Supabase）を優先して開発する
@@ -152,6 +188,11 @@ src/
 | `payment_splits` | id, payment_id, user_id, amount, is_paid, created_at |
 | `categories` | id, name, icon, color, is_default, group_id, created_at |
 | `demo_sessions` | id, user_id, group_id, expires_at, created_at |
+| `recurring_rules` | id, group_id, description, amount, category_id, day_of_month, default_payer_id, created_at, updated_at |
+| `recurring_rule_splits` | id, rule_id, user_id, amount, created_at |
+| `settlement_sessions` | id, group_id, period_start, period_end, status, created_by, confirmed_at, confirmed_by, net_transfers, is_zero_settlement, payment_reported_at/by, settled_at/by, created_at |
+| `settlement_entries` | id, session_id, recurring_rule_id, entry_type, description, expected_amount, actual_amount, payer_id, category_id, status, filled_by, filled_at, created_at, updated_at |
+| `settlement_entry_splits` | id, entry_id, user_id, amount, created_at |
 
 ### 型定義ファイル構成
 
