@@ -91,7 +91,7 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
-          supabase gen types typescript --project-id byvtpkuocvjnwvihipvy 2>/dev/null > /tmp/database.generated.ts
+          supabase gen types typescript --project-id byvtpkuocvjnwvihipvy --schema public 2>/dev/null > /tmp/database.generated.ts
           if ! diff -q src/types/database.generated.ts /tmp/database.generated.ts > /dev/null 2>&1; then
             echo "::error::database.generated.ts is out of date. Run 'npm run db:gen-types' and commit."
             diff src/types/database.generated.ts /tmp/database.generated.ts || true
