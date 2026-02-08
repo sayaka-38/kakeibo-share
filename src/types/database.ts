@@ -7,10 +7,26 @@
  */
 
 export type { Json } from "./database.generated";
-export type { Database } from "./database.generated";
 
 // Re-import for local use
-import type { Database } from "./database.generated";
+import type { Database as GeneratedDatabase } from "./database.generated";
+
+// ============================================
+// Database type with new RPC overrides
+// (db:gen-types 実行後は不要になるが、マイグレーション適用前の型安全を担保)
+// ============================================
+type GeneratedFunctions = GeneratedDatabase["public"]["Functions"];
+
+export type Database = Omit<GeneratedDatabase, "public"> & {
+  public: Omit<GeneratedDatabase["public"], "Functions"> & {
+    Functions: GeneratedFunctions & {
+      settle_consolidated_sessions: {
+        Args: { p_session_ids: string[]; p_user_id: string };
+        Returns: number;
+      };
+    };
+  };
+};
 
 // ============================================
 // Role literal type override

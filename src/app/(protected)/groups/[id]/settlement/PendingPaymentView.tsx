@@ -39,6 +39,11 @@ export default function PendingPaymentView({
   const isPayer = !!myTransferOut;
   const isRecipient = !!myTransferIn;
 
+  // 送金報告日時のフォーマット（suppressHydrationWarning で S/C 差異を許容）
+  const reportedTimeStr = session.payment_reported_at
+    ? new Date(session.payment_reported_at).toLocaleString("ja-JP")
+    : "";
+
   return (
     <div className="bg-theme-card-bg rounded-lg shadow p-4 space-y-4">
       {/* ヘッダー: ステータス + 期間 (コンパクト) */}
@@ -93,9 +98,9 @@ export default function PendingPaymentView({
               ? t("settlementSession.pendingPayment.reportedBy", { name: reporterName })
               : t("settlementSession.pendingPayment.reported")}
           </p>
-          {session.payment_reported_at && (
-            <p className="text-xs text-theme-muted mt-1">
-              {new Date(session.payment_reported_at).toLocaleString("ja-JP")}
+          {reportedTimeStr && (
+            <p className="text-xs text-theme-muted mt-1" suppressHydrationWarning>
+              {reportedTimeStr}
             </p>
           )}
         </div>

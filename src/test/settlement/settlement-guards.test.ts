@@ -19,6 +19,16 @@ const PAYMENT_LIST_PATH = path.join(
   "src/components/payment-list/RecentPaymentList.tsx"
 );
 
+const PAYMENTS_PAGE_PATH = path.join(
+  process.cwd(),
+  "src/app/(protected)/payments/page.tsx"
+);
+
+const EDIT_PAGE_PATH = path.join(
+  process.cwd(),
+  "src/app/(protected)/payments/[id]/edit/page.tsx"
+);
+
 const CONFIRM_ROUTE_PATH = path.join(
   process.cwd(),
   "src/app/api/settlement-sessions/[id]/confirm/route.ts"
@@ -37,6 +47,11 @@ const HISTORY_DETAIL_PATH = path.join(
 const HISTORY_LIST_PATH = path.join(
   process.cwd(),
   "src/app/(protected)/groups/[id]/settlement/history/page.tsx"
+);
+
+const ZOMBIE_FIX_MIGRATION_PATH = path.join(
+  process.cwd(),
+  "supabase/migrations/20260101000024_fix_zombie_settlement_sessions.sql"
 );
 
 // =============================================================================
@@ -98,6 +113,53 @@ describe("フロントエンド清算済みガード", () => {
       expect(content).toContain("bg-theme-text/15 text-theme-text");
     });
   });
+
+  describe("支払い一覧ページ (/payments) — 清算済みガード", () => {
+    it("settlement_id を型定義に含んでいる", () => {
+      const content = fs.readFileSync(PAYMENTS_PAGE_PATH, "utf-8");
+      expect(content).toContain("settlement_id: string | null");
+    });
+
+    it("清算済みの支払いに清算済ラベルを表示する", () => {
+      const content = fs.readFileSync(PAYMENTS_PAGE_PATH, "utf-8");
+      expect(content).toContain("payment.settlement_id");
+      expect(content).toContain("清算済");
+    });
+
+    it("清算済みの支払いで編集ボタンを非表示にする", () => {
+      const content = fs.readFileSync(PAYMENTS_PAGE_PATH, "utf-8");
+      // 編集リンクの条件に !payment.settlement_id が含まれる
+      expect(content).toContain("!payment.settlement_id");
+      // edit リンクとの近接関係を確認
+      const editLinkIdx = content.indexOf("/payments/${payment.id}/edit");
+      const guardIdx = content.lastIndexOf("!payment.settlement_id", editLinkIdx);
+      expect(guardIdx).toBeGreaterThan(-1);
+    });
+
+    it("清算済みの支払いで削除ボタンを非表示にする", () => {
+      const content = fs.readFileSync(PAYMENTS_PAGE_PATH, "utf-8");
+      // DeletePaymentForm の使用箇所（import ではなく JSX）の条件に !payment.settlement_id が含まれる
+      const importEnd = content.indexOf("DeletePaymentForm") + "DeletePaymentForm".length;
+      const usageIdx = content.indexOf("DeletePaymentForm", importEnd);
+      expect(usageIdx).toBeGreaterThan(-1);
+      const guardIdx = content.lastIndexOf("!payment.settlement_id", usageIdx);
+      expect(guardIdx).toBeGreaterThan(-1);
+    });
+  });
+
+  describe("支払い編集ページ — settlement_id ガード", () => {
+    it("settlement_id をSELECTで取得している", () => {
+      const content = fs.readFileSync(EDIT_PAGE_PATH, "utf-8");
+      expect(content).toContain("settlement_id");
+    });
+
+    it("settlement_id がある場合にリダイレクトする", () => {
+      const content = fs.readFileSync(EDIT_PAGE_PATH, "utf-8");
+      // settlement_id チェックがリダイレクト条件に含まれる
+      expect(content).toContain("payment.settlement_id");
+      expect(content).toContain('redirect("/payments")');
+    });
+  });
 });
 
 // =============================================================================
@@ -115,18 +177,67 @@ describe("confirm-receipt 完了フィードバック", () => {
 });
 
 // =============================================================================
+// ゾンビ現象修正テスト
+// =============================================================================
+
+describe("ゾンビ清算セッション修正", () => {
+  describe("confirm_settlement_receipt RPC — 同グループ一括 settled", () => {
+    it("マイグレーションファイルが存在する", () => {
+      expect(fs.existsSync(ZOMBIE_FIX_MIGRATION_PATH)).toBe(true);
+    });
+
+    it("同グループの他の pending_payment セッションも settled に更新する", () => {
+      const content = fs.readFileSync(ZOMBIE_FIX_MIGRATION_PATH, "utf-8");
+      // 同グループの他の pending_payment を一括更新する処理
+      expect(content).toContain("AND id != p_session_id");
+      expect(content).toContain("AND status = 'pending_payment'");
+      expect(content).toContain("group_id = v_session.group_id");
+    });
+
+    it("SECURITY DEFINER で RLS をバイパスする", () => {
+      const content = fs.readFileSync(ZOMBIE_FIX_MIGRATION_PATH, "utf-8");
+      expect(content).toContain("SECURITY DEFINER");
+    });
+  });
+
+  describe("settle_consolidated_sessions RPC", () => {
+    it("バッチ処理用 RPC が定義されている", () => {
+      const content = fs.readFileSync(ZOMBIE_FIX_MIGRATION_PATH, "utf-8");
+      expect(content).toContain("settle_consolidated_sessions");
+      expect(content).toContain("p_session_ids UUID[]");
+    });
+
+    it("net_transfers を空配列にクリアする", () => {
+      const content = fs.readFileSync(ZOMBIE_FIX_MIGRATION_PATH, "utf-8");
+      // settle_consolidated_sessions で net_transfers = '[]' を設定
+      expect(content).toContain("'[]'::JSONB");
+    });
+  });
+
+  describe("confirm route — RPC 経由で統合済みセッション更新", () => {
+    it("settle_consolidated_sessions RPC を呼び出す", () => {
+      const content = fs.readFileSync(CONFIRM_ROUTE_PATH, "utf-8");
+      expect(content).toContain("settle_consolidated_sessions");
+    });
+
+    it("PostgREST の直接 update を使用しない", () => {
+      const content = fs.readFileSync(CONFIRM_ROUTE_PATH, "utf-8");
+      // 旧セッションの更新で .from("settlement_sessions").update を使わない
+      // （新セッション自身の update は OK なので、統合処理部分のみ確認）
+      const consolidationSection = content.substring(
+        content.indexOf("旧 pending_payment セッションを")
+      );
+      expect(consolidationSection).not.toContain(".from(\"settlement_sessions\")");
+      expect(consolidationSection).toContain("supabase.rpc");
+    });
+  });
+});
+
+// =============================================================================
 // 合算（相殺統合）整合性テスト
 // =============================================================================
 
 describe("合算時の履歴整合性", () => {
-  describe("confirm route — 旧セッション net_transfers クリア", () => {
-    it("統合済み旧セッションの net_transfers を空配列にする", () => {
-      const content = fs.readFileSync(CONFIRM_ROUTE_PATH, "utf-8");
-      // 旧セッション更新時に net_transfers: [] が含まれる
-      expect(content).toContain("net_transfers: []");
-    });
-  });
-
   describe("履歴詳細ページ — 統合済みバナー", () => {
     it("統合済みセッションに対してバナーメッセージを表示する", () => {
       const content = fs.readFileSync(HISTORY_DETAIL_PATH, "utf-8");
@@ -142,7 +253,38 @@ describe("合算時の履歴整合性", () => {
     it("settled_at の日時が表示される", () => {
       const content = fs.readFileSync(HISTORY_DETAIL_PATH, "utf-8");
       expect(content).toContain("settled_at");
-      expect(content).toContain("完了");
+      expect(content).toContain("受取完了日");
+    });
+  });
+
+  describe("履歴詳細ページ — 日付ラベル改善", () => {
+    it("「清算開始日」ラベルが表示される", () => {
+      const content = fs.readFileSync(HISTORY_DETAIL_PATH, "utf-8");
+      expect(content).toContain("清算開始日");
+    });
+
+    it("「受取完了日」ラベルが表示される", () => {
+      const content = fs.readFileSync(HISTORY_DETAIL_PATH, "utf-8");
+      expect(content).toContain("受取完了日");
+    });
+  });
+
+  describe("履歴詳細ページ — 統合セッション内訳表示", () => {
+    it("統合された清算の支払いセクションがある", () => {
+      const content = fs.readFileSync(HISTORY_DETAIL_PATH, "utf-8");
+      expect(content).toContain("統合された清算の支払い");
+    });
+
+    it("統合されたセッションの件数を表示する", () => {
+      const content = fs.readFileSync(HISTORY_DETAIL_PATH, "utf-8");
+      expect(content).toContain("件の清算を統合");
+    });
+
+    it("統合セッションのエントリを取得するクエリがある", () => {
+      const content = fs.readFileSync(HISTORY_DETAIL_PATH, "utf-8");
+      // settlement_entries から統合セッションのエントリを取得
+      expect(content).toContain("consolidatedEntries");
+      expect(content).toContain("mergedIds");
     });
   });
 

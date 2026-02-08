@@ -39,6 +39,7 @@ export default async function EditPaymentPage({ params }: PageProps) {
       description,
       category_id,
       payment_date,
+      settlement_id,
       payment_splits (
         user_id,
         amount
@@ -48,8 +49,8 @@ export default async function EditPaymentPage({ params }: PageProps) {
     .eq("id", id)
     .single();
 
-  // 支払いが存在しない or 本人でない場合はリダイレクト
-  if (!payment || payment.payer_id !== user.id) {
+  // 支払いが存在しない or 本人でない or 清算済みの場合はリダイレクト
+  if (!payment || payment.payer_id !== user.id || payment.settlement_id) {
     redirect("/payments");
   }
 

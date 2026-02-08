@@ -6,7 +6,7 @@
 
 ## 最終更新日
 
-2026-02-07
+2026-02-08
 
 ---
 
@@ -28,9 +28,17 @@
 | 2026-02-04 | Edit Payment | 支払い編集機能: PUT API + RPC原子的置換 + 編集UI + E2E動作確認済み | マージ済み |
 | 2026-02-05 | Phase 7 | 清算エンジン完全実装: DB設計 + API + 固定費UI + 清算準備室 + 確定処理 + 履歴表示 + 相殺結果 + UI/UX仕上げ | ユーザーテスト中 |
 
-テスト: 782件パス / ビルド正常（2026-02-07 セッション最新）
+テスト: 812件パス / ビルド正常（2026-02-08 セッション最新）
 
 **Phase 7 + 7.5 + 7.6 ステータス**: UI整理・キャッシュ改善・ソート修正・期間バグ修正完了。コード掃除→PRマージ待ち
+
+**Phase 7.7b 追加修正（2026-02-08）**:
+- `/payments` 一覧ページの清算済みガード: `settlement_id` 取得 + 清算済ラベル + 編集/削除ボタン非表示
+- `/payments/[id]/edit` ページの清算済みガード: `settlement_id` チェックでリダイレクト
+- ゾンビ現象修正: Migration 024 で `confirm_settlement_receipt` RPC を修正 — 同グループの全 pending_payment を一括 settled に更新
+- `settle_consolidated_sessions` 新RPC: SECURITY DEFINER で RLS バイパスして統合済みセッション一括更新
+- confirm ルートの統合処理: PostgREST → RPC に変更（サイレント失敗回避）
+- 履歴詳細ページ UX: 日付ラベル（清算開始日/受取完了日）+ 統合セッションの内訳リスト表示
 
 **Phase 7.5 仕上げ（2026-02-07 第3ラウンド）**:
 1. **全画面テーマ適用**: 30+ファイルでハードコード色をテーマ変数に置換（components/18, auth/layout/4, groups/7, dashboard/misc/5）。テスト5件もテーマクラスに更新
@@ -209,23 +217,18 @@ PostgREST（Supabase の REST API レイヤー）が DELETE 操作を実行す�
 4. **確定エラー（致命的）** → Migration 020の`confirm_settlement`でINTEGER変数にTEXTを代入するバグ → Migration 021で修正
 5. **履歴の分割内訳なし** → 履歴詳細ページにsplits表示・カスタム分割バッジ追加
 
-### Phase 7.7: 清算プロセス整合性修正（2026-02-08 計画済み・未着手）
+### Phase 7.7: 清算プロセス整合性修正（完了 — PR #36）
 
-**3つの UX 課題 + 1つの追加要望**:
+**Phase 7.7a（初回コミット）** — confirm-receipt リダイレクト、API ガード、統合バッジ
+**Phase 7.7b（追加修正）** — ゾンビ現象解消、/payments 一覧ガード、履歴詳細 UX、Phase 8 布石
 
-1. **confirm-receipt 後の完了フィードバック** — `handleConfirmReceipt` で `setPendingSessionState(null)` するだけで完了表示がない → 履歴詳細ページへリダイレクト + ステータスバッジ追加
-2. **清算済み支払いの編集・削除ガード** — `/api/payments/[id]` PUT/DELETE に `settlement_id` チェック追加 + フロントエンド削除ボタン非表示
-3. **合算時の履歴整合性** — 統合済み旧セッションの `net_transfers` をクリア + 「統合済み」バッジ
-4. **「清算済」ラベル復活** — `RecentPaymentList` のバッジをPalette 14デザインに改善（チェックアイコン + 深緑色）
-
-**修正対象ファイル（7ファイル + テスト1ファイル）**:
-- `SettlementSessionManager.tsx` — confirm-receipt リダイレクト
-- `/api/payments/[id]/route.ts` — settlement_id ガード
-- `RecentPaymentList.tsx` — 削除ボタンガード + ラベルデザイン
-- `/api/settlement-sessions/[id]/confirm/route.ts` — 統合時 net_transfers クリア
-- `settlement/history/page.tsx` — 統合済みバッジ
-- `settlement/history/[sessionId]/page.tsx` — ステータスバッジ + 統合メッセージ
-- `src/test/settlement/settlement-guards.test.ts` — ガードテスト新規
+- [x] confirm-receipt 後の完了フィードバック — 履歴詳細ページへリダイレクト
+- [x] 清算済み支払いの編集・削除ガード — API(PUT/DELETE) + フロントエンド(/payments, /payments/[id]/edit, RecentPaymentList)
+- [x] 合算時の履歴整合性 — 統合済み旧セッション `net_transfers` クリア + 「統合済み」バッジ
+- [x] 「清算済」ラベル — チェックアイコン + 深緑色で全画面統一
+- [x] ゾンビ現象修正 — Migration 024: `confirm_settlement_receipt` が同グループ全 pending_payment を一括 settled に更新
+- [x] RPC `settle_consolidated_sessions` — confirm ルートの PostgREST → RPC 変更（RLS サイレント失敗回避）
+- [x] 履歴詳細 UX — 「清算開始日/受取完了日」ラベル + 統合セッションの内訳リスト表示
 
 ### CI 修正（2026-02-08）
 

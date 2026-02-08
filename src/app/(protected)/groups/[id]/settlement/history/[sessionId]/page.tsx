@@ -146,6 +146,84 @@ export default async function SettlementHistoryDetailPage({ params }: PageProps)
     && !session.is_zero_settlement
     && (!netTransfers || netTransfers.length === 0);
 
+  // このセッションに統合された旧セッション一覧を取得
+  // 条件: 同グループ・このセッションより前に作成・非0円清算・net_transfers が空
+  // status は settled または pending_payment（ゾンビとして残っている場合も含む）
+  type ConsolidatedSessionInfo = {
+    id: string;
+    period_start: string;
+    period_end: string;
+    confirmed_at: string | null;
+  };
+  let consolidatedIntoThis: ConsolidatedSessionInfo[] = [];
+
+  if (!isConsolidated && (session.status === "settled" || session.status === "pending_payment")) {
+    const { data: mergedSessions } = await supabase
+      .from("settlement_sessions")
+      .select("id, period_start, period_end, confirmed_at, net_transfers, is_zero_settlement, status")
+      .eq("group_id", groupId)
+      .in("status", ["settled", "pending_payment"])
+      .neq("id", sessionId)
+      .lt("created_at", session.created_at)
+      .order("created_at", { ascending: false });
+
+    consolidatedIntoThis = (mergedSessions || [])
+      .filter((s) => {
+        const nt = s.net_transfers as unknown[] | null;
+        // 統合済み = 非0円清算 かつ (net_transfers が空 または ゾンビ pending_payment)
+        return !s.is_zero_settlement && (
+          (!nt || nt.length === 0) ||
+          s.status === "pending_payment"
+        );
+      })
+      .map((s) => ({
+        id: s.id,
+        period_start: s.period_start,
+        period_end: s.period_end,
+        confirmed_at: s.confirmed_at,
+      }));
+  }
+
+  // 統合先セッションのエントリも取得（内訳表示用）
+  type ConsolidatedEntryInfo = {
+    session_id: string;
+    description: string;
+    actual_amount: number | null;
+    payer_id: string;
+    payment_date: string;
+    status: string;
+    payer_display_name: string | null;
+  };
+  let consolidatedEntries: ConsolidatedEntryInfo[] = [];
+
+  if (consolidatedIntoThis.length > 0) {
+    const mergedIds = consolidatedIntoThis.map((s) => s.id);
+    const { data: mergedEntries } = await supabase
+      .from("settlement_entries")
+      .select(`
+        session_id,
+        description,
+        actual_amount,
+        payer_id,
+        payment_date,
+        status,
+        payer:profiles!payer_id (display_name)
+      `)
+      .in("session_id", mergedIds)
+      .eq("status", "filled")
+      .order("payment_date", { ascending: false });
+
+    consolidatedEntries = (mergedEntries || []).map((e) => ({
+      session_id: e.session_id,
+      description: e.description,
+      actual_amount: e.actual_amount,
+      payer_id: e.payer_id,
+      payment_date: e.payment_date,
+      status: e.status,
+      payer_display_name: (e.payer as { display_name: string | null } | null)?.display_name ?? null,
+    }));
+  }
+
   return (
     <div className="max-w-2xl mx-auto">
       {/* Header */}
@@ -174,19 +252,25 @@ export default async function SettlementHistoryDetailPage({ params }: PageProps)
             </span>
           )}
         </div>
-        <p className="text-sm text-theme-muted mt-1">
-          {session.confirmed_at && new Date(session.confirmed_at).toLocaleDateString("ja-JP")} 確定
-          {confirmer && (
-            <span className="text-theme-muted">
-              （{confirmer.display_name || confirmer.email}）
-            </span>
+        <div className="mt-2 space-y-1 text-sm text-theme-muted">
+          {session.confirmed_at && (
+            <p>
+              <span className="text-theme-muted/70">清算開始日:</span>{" "}
+              {new Date(session.confirmed_at).toLocaleDateString("ja-JP")}
+              {confirmer && (
+                <span className="text-theme-muted">
+                  （{confirmer.display_name || confirmer.email}）
+                </span>
+              )}
+            </p>
           )}
           {session.status === "settled" && session.settled_at && (
-            <span className="text-theme-muted">
-              {" "}・ {new Date(session.settled_at).toLocaleDateString("ja-JP")} 完了
-            </span>
+            <p>
+              <span className="text-theme-muted/70">受取完了日:</span>{" "}
+              {new Date(session.settled_at).toLocaleDateString("ja-JP")}
+            </p>
           )}
-        </p>
+        </div>
       </div>
 
       {/* 統合済みバナー */}
@@ -282,6 +366,65 @@ export default async function SettlementHistoryDetailPage({ params }: PageProps)
           })}
         </ul>
       </div>
+
+      {/* 統合済みセッションの内訳 */}
+      {consolidatedIntoThis.length > 0 && (
+        <div className="bg-theme-card-bg rounded-lg shadow mt-6">
+          <h3 className="px-4 py-3 font-medium text-theme-headline border-b border-theme-card-border">
+            統合された清算の支払い
+            <span className="ml-2 text-xs font-normal text-theme-muted">
+              {consolidatedIntoThis.length}件の清算を統合
+            </span>
+          </h3>
+          {consolidatedIntoThis.map((mergedSession) => {
+            const sessionEntries = consolidatedEntries.filter(
+              (e) => e.session_id === mergedSession.id
+            );
+            const sessionTotal = sessionEntries.reduce(
+              (sum, e) => sum + (e.actual_amount || 0),
+              0
+            );
+
+            return (
+              <div key={mergedSession.id}>
+                <div className="px-4 py-2 bg-theme-bg/50 border-b border-theme-card-border flex justify-between items-center">
+                  <span className="text-xs font-medium text-theme-muted">
+                    {mergedSession.period_start} 〜 {mergedSession.period_end}
+                  </span>
+                  <span className="text-xs text-theme-muted">
+                    {formatCurrency(sessionTotal)}（{sessionEntries.length}件）
+                  </span>
+                </div>
+                <ul className="divide-y divide-theme-card-border">
+                  {sessionEntries.map((entry, idx) => {
+                    const payerName =
+                      entry.payer_display_name ||
+                      members.find((m) => m.id === entry.payer_id)?.display_name ||
+                      members.find((m) => m.id === entry.payer_id)?.email ||
+                      "Unknown";
+
+                    return (
+                      <li key={`${entry.session_id}-${idx}`} className="px-4 py-2">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="text-sm text-theme-headline">{entry.description}</p>
+                            <p className="text-xs text-theme-muted">
+                              {payerName} ・ {entry.payment_date}
+                            </p>
+                          </div>
+                          <span className="text-sm text-theme-headline">
+                            {formatCurrency(entry.actual_amount || 0)}
+                          </span>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Back Links */}
       <div className="mt-8 flex justify-center gap-4 text-sm">
