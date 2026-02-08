@@ -1,7 +1,12 @@
 "use client";
 
 import { formatCurrency } from "@/lib/format/currency";
-import { consolidateTransfers } from "@/lib/settlement/consolidate";
+import {
+  balancesToTransfers,
+  calculateMyTransferBalance,
+  consolidateTransfers,
+} from "@/lib/settlement/consolidate";
+import type { MemberBalance } from "@/lib/settlement/consolidate";
 import type { Profile, NetTransfer } from "@/types/database";
 import type { EntryData, SessionData } from "./SettlementSessionManager";
 
@@ -12,54 +17,6 @@ type SettlementResultCardProps = {
   currentUserId: string;
   pendingTransfers?: NetTransfer[];
 };
-
-type MemberBalance = {
-  id: string;
-  name: string;
-  paid: number; // 支払った金額
-  owed: number; // 負担すべき金額
-  balance: number; // paid - owed（プラスならもらう、マイナスなら支払う）
-};
-
-/**
- * balances からグリーディマッチングで transfers を導出
- */
-function balancesToTransfers(
-  balances: MemberBalance[]
-): NetTransfer[] {
-  const debtors = balances
-    .filter((b) => b.balance < 0)
-    .map((b) => ({ id: b.id, name: b.name, amount: -b.balance }));
-  const creditors = balances
-    .filter((b) => b.balance > 0)
-    .map((b) => ({ id: b.id, name: b.name, amount: b.balance }));
-
-  const result: NetTransfer[] = [];
-  let dIdx = 0;
-  let cIdx = 0;
-
-  while (dIdx < debtors.length && cIdx < creditors.length) {
-    const settleAmount = Math.min(debtors[dIdx].amount, creditors[cIdx].amount);
-
-    if (settleAmount > 0) {
-      result.push({
-        from_id: debtors[dIdx].id,
-        from_name: debtors[dIdx].name,
-        to_id: creditors[cIdx].id,
-        to_name: creditors[cIdx].name,
-        amount: settleAmount,
-      });
-    }
-
-    debtors[dIdx].amount -= settleAmount;
-    creditors[cIdx].amount -= settleAmount;
-
-    if (debtors[dIdx].amount <= 0) dIdx++;
-    if (creditors[cIdx].amount <= 0) cIdx++;
-  }
-
-  return result;
-}
 
 export default function SettlementResultCard({
   session,
@@ -128,15 +85,10 @@ export default function SettlementResultCard({
   const netTransfers = session.net_transfers || [];
 
   // 確定済み + net_transfers がある場合、送金指示ベースの自分のバランスを計算
-  let myTransferBalance: number | null = null;
-  if (isConfirmed && netTransfers.length > 0) {
-    let bal = 0;
-    for (const tr of netTransfers) {
-      if (tr.to_id === currentUserId) bal += tr.amount;
-      if (tr.from_id === currentUserId) bal -= tr.amount;
-    }
-    myTransferBalance = bal;
-  }
+  const myTransferBalance: number | null =
+    isConfirmed && netTransfers.length > 0
+      ? calculateMyTransferBalance(netTransfers, currentUserId)
+      : null;
 
   // エントリベースと送金指示ベースの差（統合による調整額）
   const entryBalance = myBalance?.balance ?? 0;
@@ -170,12 +122,7 @@ export default function SettlementResultCard({
     consolidatedTransfers = consolidated.transfers;
 
     // 統合後の自分のバランスを計算
-    let balance = 0;
-    for (const t of consolidatedTransfers) {
-      if (t.from_id === currentUserId) balance -= t.amount;
-      if (t.to_id === currentUserId) balance += t.amount;
-    }
-    myConsolidatedBalance = balance;
+    myConsolidatedBalance = calculateMyTransferBalance(consolidatedTransfers, currentUserId);
   }
 
   return (
@@ -312,11 +259,7 @@ export default function SettlementResultCard({
               </span>
             </div>
             {pendingTransfers && (() => {
-              let pendingBalance = 0;
-              for (const t of pendingTransfers) {
-                if (t.from_id === currentUserId) pendingBalance -= t.amount;
-                if (t.to_id === currentUserId) pendingBalance += t.amount;
-              }
+              const pendingBalance = calculateMyTransferBalance(pendingTransfers, currentUserId);
               return (
                 <div className="flex justify-between">
                   <span className="text-theme-muted">前回の送金残高</span>

@@ -26,25 +26,12 @@
 | 2026-02-02 | Delete Payment | 支払い削除機能: RESTful DELETE API + RLS拡張 + ゴミ箱アイコンUI（100%完了・動作確認済み） | #29 |
 | 2026-02-03 | 土台強化 | 認証ガード（ホワイトリスト方式）・isProxySplit共通化・バッジ整理・CI permissions | #30 |
 | 2026-02-04 | Edit Payment | 支払い編集機能: PUT API + RPC原子的置換 + 編集UI + E2E動作確認済み | マージ済み |
-| 2026-02-05 | Phase 7 | 清算エンジン完全実装: DB設計 + API + 固定費UI + 清算準備室 + 確定処理 + 履歴表示 + 相殺結果 + UI/UX仕上げ | ユーザーテスト中 |
+| 2026-02-05 | Phase 7 | 清算エンジン完全実装: DB設計 + API + 固定費UI + 清算準備室 + 確定処理 + 履歴表示 + 相殺結果 + UI/UX仕上げ | #34 |
+| 2026-02-08 | Phase 7.5–7.7 | 相殺統合・テーマ適用・ゾンビ修正・清算済みガード・送金指示UI改善・リファクタリング | #36 |
 
-テスト: 812件パス / ビルド正常（2026-02-08 セッション最新）
+テスト: 812件パス / ビルド正常（2026-02-08 最新）
 
-**Phase 7 + 7.5 + 7.6 ステータス**: UI整理・キャッシュ改善・ソート修正・期間バグ修正完了。コード掃除→PRマージ待ち
-
-**Phase 7.7b 追加修正（2026-02-08）**:
-- `/payments` 一覧ページの清算済みガード: `settlement_id` 取得 + 清算済ラベル + 編集/削除ボタン非表示
-- `/payments/[id]/edit` ページの清算済みガード: `settlement_id` チェックでリダイレクト
-- ゾンビ現象修正: Migration 024 で `confirm_settlement_receipt` RPC を修正 — 同グループの全 pending_payment を一括 settled に更新
-- `settle_consolidated_sessions` 新RPC: SECURITY DEFINER で RLS バイパスして統合済みセッション一括更新
-- confirm ルートの統合処理: PostgREST → RPC に変更（サイレント失敗回避）
-- 履歴詳細ページ UX: 日付ラベル（清算開始日/受取完了日）+ 統合セッションの内訳リスト表示
-
-**Phase 7.5 仕上げ（2026-02-07 第3ラウンド）**:
-1. **全画面テーマ適用**: 30+ファイルでハードコード色をテーマ変数に置換（components/18, auth/layout/4, groups/7, dashboard/misc/5）。テスト5件もテーマクラスに更新
-2. **相殺統合ロジック**: confirm route に `consolidateTransfers()` 実装。複数 pending_payment セッションの net_transfers を合算→最適振込再計算→旧セッション settled 化。テスト9件追加
-3. **固定費ルール個人化**: Migration 022 で `generate_settlement_entries` RPC に `default_payer_id = p_user_id` フィルター追加。actualAmount バリデーションを `< 0` に緩和（0円許可）
-4. **日付・フロー検証**: period_end = today（yesterday override なし）確認。pending_payment 中の新規 draft 作成可能を確認
+**Phase 7 完了**: 清算エンジン全機能実装・ユーザーテスト・バグ修正・リファクタリング完了
 
 ---
 
@@ -136,132 +123,43 @@ PostgREST（Supabase の REST API レイヤー）が DELETE 操作を実行す�
 
 ## 現在のブランチ
 
-- `main` — Phase 7 マージ済み（PR #34）
-- `fix/ci-gen-types-linked` — CI 型チェック修正（PR #35、CI結果待ち）
+- `main` — Phase 7 + 7.5–7.7 マージ予定
+- `fix/settlement-flow-integrity` — リファクタリング中 → squash マージ予定
 
 ---
 
 ## 環境情報
 
 - `.env.local`: リモートDB（`byvtpkuocvjnwvihipvy.supabase.co`）に設定済み
-- ローカル Docker 環境: Codespaces で不安定（`supabase status` は running だが接続不可の場合あり）
-- Migration 015: リモート・ローカルともに適用済み
-- Migration 022-023: リモートDB push 済み（固定費個人化 + 期間開始日修正）
+- ローカル Docker 環境: Codespaces で不安定（リモート設定のまま開発を継続）
+- Migration 024 まで push 済み（全RPC・テーブル・ポリシー反映完了）
 
 ---
 
 ## 次のタスク
 
-### Phase 7: 清算準備室 & 固定費エンジン（100% 完了 → ユーザーテスト中）
+### Phase 8: 構造改善（中掃除）
 
-- [x] Step 1: DB設計 — テーブル5個 + RPC7個 + API8本
-- [x] Step 2: 固定費ルール設定UI — `/groups/[id]/recurring-rules` ページ
-- [x] Step 3: 清算準備室UI — `/groups/[id]/settlement` ページ
-- [x] Step 4: チェックリスト入力UI — 金額入力・ステータス変更
-- [x] Step 5: 確定処理 & 清算済み表示（バッジ + 最新期間表示）
-- [x] UX修正: Navigation 清算リンク動的化 + PaymentSplitAccordion duplicate key 修正
-- [x] BUG FIX: RPC `generate_settlement_entries` — group_id 重複 / filled_fields 制約 / entry_splits 重複 全解消
-- [x] Step 6: UI/UX 仕上げ
-  - 入力者表示（EntryCard に「入力: 〇〇」を追加）
-  - 期間選択バグ修正（開始日 > 終了日 問題 + 今日を含まない）
-  - 相殺結果カード（SettlementResultCard）追加
-  - 清算履歴ページ（`/groups/[id]/settlement/history` + 詳細表示）追加
-  - 0件ガード（全て清算済み / 対象なし のメッセージ表示）
-- [ ] ユーザーテスト後にマージ
+- [ ] N+1 クエリ解消 — グループ一覧のメンバー数を1クエリに統合
+- [ ] 共通コンポーネント化 — 重複UI部品の抽出
+- [ ] archived_payments 退避
+- [ ] デモ削除ロジック共通化 — `POST /api/payments/delete` の整理含む
+- [ ] インライン型定義の集約 — `query-results.ts` に集約
+- [ ] 削除ダイアログの表現修正 — 柔らかい文言 + i18n対応
 
-### Phase 7.5: 相殺ネットロジック + 支払い待ちフロー + 仕上げ（完了）
+### Phase 9: 機能・UX 拡張
 
-**実装済み内容**:
-1. ESLint 11警告全修正（`argsIgnorePattern: "^_"` 追加、不要import削除）
-2. Happy Hues Palette 14 をCSS変数で適用（`globals.css` に `@theme inline`）
-3. DBマイグレーション 019/020/021（`pending_payment`/`settled` status + net_transfers JSONB + 新RPC 4本 + confirm_settlement 致命バグ修正）
-4. API Routes: `report-payment` + `confirm-receipt` 新規作成
-5. PendingPaymentView コンポーネント新規作成
-6. SettlementSessionManager: pending_payment フロー分岐 + 確定後に履歴詳細ページへリダイレクト + 古い期間の警告表示
-7. 期間計算ロジック再定義: 終了日=最新未清算日、開始日=前回清算翌日
-8. LINE通知スタブ: `sendLineNotification()` console.log のみ
-9. テスト: period-suggestion（12件）+ net-transfer-calculation（17件）
-10. テーマ色適用: Button/Layout/Navigation/Header/SettlementResultCard/SettlementEntryList 全てテーマ変数化
-11. 履歴詳細: カスタム分割内訳・バッジ表示追加
+- [ ] 清算準備室「個別調整」UI
+- [ ] UIカラー切り替え
 
-**環境整備済み**:
-- リモートDB: マイグレーション 019/020/021 push 済み
-- `db:gen-types`: `--linked` でリモートDBから型再生成済み。手動オーバーライド削除済み
-- `package.json`: `db:gen-types` スクリプトを `--local` → `--linked` に変更
-- `payment_splits` 重複6件をクリーンアップ済み
+### Phase 10: ユーザー設定・セキュリティ
 
-**仕上げ（2026-02-07 第3ラウンド）**:
-12. 全画面テーマ適用: 30+ファイル（components/auth/groups/dashboard/payments）のハードコード色排除
-13. 相殺統合: `consolidateTransfers()` — 複数 pending_payment の net_transfers を balance-map で合算、最適マッチング再計算
-14. 固定費個人化: Migration 022 — Part 1 で `default_payer_id = p_user_id` フィルター、0円バリデーション許可
-15. テスト: consolidate-transfers（9件）追加、テーマ変更に伴うテスト5件修正。全780件パス
+### Phase 11: アーキテクチャ改善（大掃除）
 
-**Phase 7.6: UI整理・キャッシュ・ソート・期間修正（2026-02-07 第4ラウンド）**:
-16. UI情報渋滞解消: `consolidateTransfers` を `src/lib/settlement/consolidate.ts` に抽出（共有モジュール化）
-17. SettlementSessionManager 3シナリオ構造: pending-only / pending+draft / draft-only でレンダリング分岐
-18. PendingPaymentView 簡素化: 4カード→1カード、ボタンは全て secondary
-19. SettlementResultCard 統合プレビュー: `pendingTransfers` prop追加、`balancesToTransfers` + `consolidateTransfers` で相殺後の最終送金額表示
-20. SettlementEntryList: `pendingTransfers` パススルー、確定ボタン `size="lg"` + `shadow-lg`
-21. キャッシュ無効化: confirm/report-payment/confirm-receipt route に `revalidatePath` 追加 + クライアント側 `router.refresh()`
-22. ソート順修正: RecentPaymentList・清算エントリ・ダッシュボード・支払い一覧・履歴詳細で `created_at DESC` 副ソート追加
-23. 期間開始日バグ修正: フロントエンド（PeriodSelector）+ Migration 023（RPC）で `oldestUnsettledDate` ガード追加
-24. テスト: period-suggestion 2件追加（retroactive）+ RecentPaymentList mock修正。全782件パス
-25. Migration 023 リモートDB push 済み
-
-### 緊急バグ修正（2026-02-07）
-
-ユーザーテスト中に発覚した5件:
-1. **テーマ色未適用** → Button/Navigation/Header/SettlementResultCard/SettlementEntryList をテーマ変数に変更
-2. **日付ズレ** → 古いdraftセッションの期間が最新の支払いを含まない問題 → 警告バナー追加
-3. **送金指示未表示** → #4の確定エラーが原因でpending_payment状態に到達しなかった → #4修正で解消
-4. **確定エラー（致命的）** → Migration 020の`confirm_settlement`でINTEGER変数にTEXTを代入するバグ → Migration 021で修正
-5. **履歴の分割内訳なし** → 履歴詳細ページにsplits表示・カスタム分割バッジ追加
-
-### Phase 7.7: 清算プロセス整合性修正（完了 — PR #36）
-
-**Phase 7.7a（初回コミット）** — confirm-receipt リダイレクト、API ガード、統合バッジ
-**Phase 7.7b（追加修正）** — ゾンビ現象解消、/payments 一覧ガード、履歴詳細 UX、Phase 8 布石
-
-- [x] confirm-receipt 後の完了フィードバック — 履歴詳細ページへリダイレクト
-- [x] 清算済み支払いの編集・削除ガード — API(PUT/DELETE) + フロントエンド(/payments, /payments/[id]/edit, RecentPaymentList)
-- [x] 合算時の履歴整合性 — 統合済み旧セッション `net_transfers` クリア + 「統合済み」バッジ
-- [x] 「清算済」ラベル — チェックアイコン + 深緑色で全画面統一
-- [x] ゾンビ現象修正 — Migration 024: `confirm_settlement_receipt` が同グループ全 pending_payment を一括 settled に更新
-- [x] RPC `settle_consolidated_sessions` — confirm ルートの PostgREST → RPC 変更（RLS サイレント失敗回避）
-- [x] 履歴詳細 UX — 「清算開始日/受取完了日」ラベル + 統合セッションの内訳リスト表示
-
-### CI 修正（2026-02-08）
-
-- **PR #35**: CI の `supabase gen types` を `--local` → `--project-id`（リモートDB）に変更
-- **原因**: ローカルマイグレーションとリモートDBのスキーマ乖離（カラム名・FK名・テーブル差異）
-- **前提**: GitHub Secrets に `SUPABASE_ACCESS_TOKEN` を追加済み
-- `supabase start/stop` 削除で CI 高速化
-
-### Phase 8 以降のロードマップ
-
-**Phase 8: 構造改善（中掃除）**
-- N+1 クエリ解消、共通コンポーネント化、archived_payments 退避
-
-**Phase 9: 機能・UX 拡張**
-- 清算準備室「個別調整」UI、UIカラー切り替え
-
-**Phase 10: ユーザー設定・セキュリティ**
-
-**Phase 11: アーキテクチャ改善（大掃除）**
-
-### Phase B: 構造改善
-
-- [ ] B-1: N+1クエリ解消 — グループ一覧のメンバー数を1クエリに統合
-- [ ] B-2: デモ削除ロジック共通化 — 重複関数の抽出・統合（`POST /api/payments/delete` の整理含む）
-- [ ] B-3: インライン型定義の集約 — `query-results.ts` に集約
-- [ ] B-4: 削除ダイアログの表現修正 — 柔らかい文言 + i18n対応
-
-### Phase C: アーキテクチャ改善
-
-- [ ] C-1: Suspense境界追加 — 清算・グループ詳細でストリーミングSSR
-- [ ] C-2: クエリ並列化 — `Promise.all()` で直列fetch解消
-- [ ] C-3: Supabaseクエリ型安全ラッパー — `as` キャストを型推論で置き換え
-- [ ] C-4: `<FieldError>` コンポーネント — エラー表示UIの共通化
+- [ ] Suspense境界追加 — 清算・グループ詳細でストリーミングSSR
+- [ ] クエリ並列化 — `Promise.all()` で直列fetch解消
+- [ ] Supabaseクエリ型安全ラッパー — `as` キャストを型推論で置き換え
+- [ ] `<FieldError>` コンポーネント — エラー表示UIの共通化
 
 ### 将来の機能要件
 

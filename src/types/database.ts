@@ -87,9 +87,8 @@ export type SettlementSessionStatus =
   | "settled";
 
 // ============================================
-// Settlement session with new columns
-// (generated types は Migration 019 適用前のため手動補完)
-// db:gen-types 実行後は削除可能
+// Settlement session with typed columns
+// (generated types の status は string, net_transfers は Json なのでリテラル型で補強)
 // ============================================
 export type SettlementSessionRow = {
   id: string;
