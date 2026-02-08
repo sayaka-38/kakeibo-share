@@ -16,6 +16,7 @@ type ConfirmedSession = {
   confirmer?: { display_name: string | null; email: string } | null;
   total_amount: number;
   entry_count: number;
+  is_consolidated: boolean;
 };
 
 export default async function SettlementHistoryPage({ params }: PageProps) {
@@ -63,6 +64,8 @@ export default async function SettlementHistoryPage({ params }: PageProps) {
       period_end,
       confirmed_at,
       confirmed_by,
+      net_transfers,
+      is_zero_settlement,
       profiles:profiles!confirmed_by (display_name, email)
     `)
     .eq("group_id", groupId)
@@ -83,6 +86,12 @@ export default async function SettlementHistoryPage({ params }: PageProps) {
         0
       );
 
+      // 統合済み判定: settled + 非0円清算 + net_transfers が空
+      const netTransfers = session.net_transfers as unknown[] | null;
+      const isConsolidated = session.status === "settled"
+        && !session.is_zero_settlement
+        && (!netTransfers || netTransfers.length === 0);
+
       return {
         id: session.id,
         period_start: session.period_start,
@@ -93,6 +102,7 @@ export default async function SettlementHistoryPage({ params }: PageProps) {
         confirmer: session.profiles as { display_name: string | null; email: string } | null,
         total_amount: totalAmount,
         entry_count: (entries || []).length,
+        is_consolidated: isConsolidated,
       };
     })
   );
@@ -143,9 +153,17 @@ export default async function SettlementHistoryPage({ params }: PageProps) {
                         支払い待ち
                       </span>
                     )}
-                    {session.status === "settled" && (
-                      <span className="text-xs bg-theme-text/15 text-theme-text px-1.5 py-0.5 rounded">
+                    {session.status === "settled" && !session.is_consolidated && (
+                      <span className="inline-flex items-center gap-1 text-xs bg-theme-text/15 text-theme-text px-1.5 py-0.5 rounded">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                        </svg>
                         完了
+                      </span>
+                    )}
+                    {session.is_consolidated && (
+                      <span className="text-xs bg-theme-muted/15 text-theme-muted px-1.5 py-0.5 rounded">
+                        統合済み
                       </span>
                     )}
                   </div>

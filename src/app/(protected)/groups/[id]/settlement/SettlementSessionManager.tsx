@@ -324,8 +324,10 @@ export default function SettlementSessionManager({
         return;
       }
 
-      // 清算完了 → pending をクリア、ページリフレッシュ
+      // 清算完了 → 履歴詳細ページへリダイレクト
+      const completedSessionId = pendingSessionState.id;
       setPendingSessionState(null);
+      router.push(`/groups/${groupId}/settlement/history/${completedSessionId}`);
       router.refresh();
     } catch {
       setPendingError(t("settlementSession.errors.confirmReceiptFailed"));

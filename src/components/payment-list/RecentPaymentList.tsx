@@ -113,7 +113,10 @@ export async function RecentPaymentList({
                     {payment.description}
                   </p>
                   {payment.settlement_id && (
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-theme-primary/15 text-theme-primary">
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-theme-text/15 text-theme-text">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                      </svg>
                       清算済
                     </span>
                   )}
@@ -133,7 +136,7 @@ export async function RecentPaymentList({
                 <span className="font-medium text-theme-headline">
                   {formatCurrency(Number(payment.amount))}
                 </span>
-                {currentUserId && payment.payer_id === currentUserId && (
+                {currentUserId && payment.payer_id === currentUserId && !payment.settlement_id && (
                   <DeletePaymentForm paymentId={payment.id} />
                 )}
               </div>

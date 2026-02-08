@@ -128,10 +128,8 @@ PostgREST（Supabase の REST API レイヤー）が DELETE 操作を実行す�
 
 ## 現在のブランチ
 
-- `feature/phase7-settlement-engine` — Phase 7+7.5+7.6 清算エンジン **100%完了**（UI整理・キャッシュ・ソート・期間修正含む、PRマージ待ち）
-- `feature/edit-payment` — main にマージ済み
-- `feature/delete-payment` — main にマージ済み（#29 削除機能 + #30 土台強化）
-- `feature/proxy-purchase` — main にマージ済み
+- `main` — Phase 7 マージ済み（PR #34）
+- `fix/ci-gen-types-linked` — CI 型チェック修正（PR #35、CI結果待ち）
 
 ---
 
@@ -210,6 +208,43 @@ PostgREST（Supabase の REST API レイヤー）が DELETE 操作を実行す�
 3. **送金指示未表示** → #4の確定エラーが原因でpending_payment状態に到達しなかった → #4修正で解消
 4. **確定エラー（致命的）** → Migration 020の`confirm_settlement`でINTEGER変数にTEXTを代入するバグ → Migration 021で修正
 5. **履歴の分割内訳なし** → 履歴詳細ページにsplits表示・カスタム分割バッジ追加
+
+### Phase 7.7: 清算プロセス整合性修正（2026-02-08 計画済み・未着手）
+
+**3つの UX 課題 + 1つの追加要望**:
+
+1. **confirm-receipt 後の完了フィードバック** — `handleConfirmReceipt` で `setPendingSessionState(null)` するだけで完了表示がない → 履歴詳細ページへリダイレクト + ステータスバッジ追加
+2. **清算済み支払いの編集・削除ガード** — `/api/payments/[id]` PUT/DELETE に `settlement_id` チェック追加 + フロントエンド削除ボタン非表示
+3. **合算時の履歴整合性** — 統合済み旧セッションの `net_transfers` をクリア + 「統合済み」バッジ
+4. **「清算済」ラベル復活** — `RecentPaymentList` のバッジをPalette 14デザインに改善（チェックアイコン + 深緑色）
+
+**修正対象ファイル（7ファイル + テスト1ファイル）**:
+- `SettlementSessionManager.tsx` — confirm-receipt リダイレクト
+- `/api/payments/[id]/route.ts` — settlement_id ガード
+- `RecentPaymentList.tsx` — 削除ボタンガード + ラベルデザイン
+- `/api/settlement-sessions/[id]/confirm/route.ts` — 統合時 net_transfers クリア
+- `settlement/history/page.tsx` — 統合済みバッジ
+- `settlement/history/[sessionId]/page.tsx` — ステータスバッジ + 統合メッセージ
+- `src/test/settlement/settlement-guards.test.ts` — ガードテスト新規
+
+### CI 修正（2026-02-08）
+
+- **PR #35**: CI の `supabase gen types` を `--local` → `--project-id`（リモートDB）に変更
+- **原因**: ローカルマイグレーションとリモートDBのスキーマ乖離（カラム名・FK名・テーブル差異）
+- **前提**: GitHub Secrets に `SUPABASE_ACCESS_TOKEN` を追加済み
+- `supabase start/stop` 削除で CI 高速化
+
+### Phase 8 以降のロードマップ
+
+**Phase 8: 構造改善（中掃除）**
+- N+1 クエリ解消、共通コンポーネント化、archived_payments 退避
+
+**Phase 9: 機能・UX 拡張**
+- 清算準備室「個別調整」UI、UIカラー切り替え
+
+**Phase 10: ユーザー設定・セキュリティ**
+
+**Phase 11: アーキテクチャ改善（大掃除）**
 
 ### Phase B: 構造改善
 

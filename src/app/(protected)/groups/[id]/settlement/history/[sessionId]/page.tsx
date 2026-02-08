@@ -140,6 +140,12 @@ export default async function SettlementHistoryDetailPage({ params }: PageProps)
   const totalAmount = filledEntries.reduce((sum, e) => sum + (e.actual_amount || 0), 0);
   const confirmer = session.confirmer as { display_name: string | null; email: string } | null;
 
+  // 統合済み判定: settled + 非0円清算 + net_transfers が空
+  const netTransfers = session.net_transfers as unknown[] | null;
+  const isConsolidated = session.status === "settled"
+    && !session.is_zero_settlement
+    && (!netTransfers || netTransfers.length === 0);
+
   return (
     <div className="max-w-2xl mx-auto">
       {/* Header */}
@@ -150,9 +156,24 @@ export default async function SettlementHistoryDetailPage({ params }: PageProps)
         >
           &larr; 清算履歴
         </Link>
-        <h1 className="text-2xl font-bold text-theme-headline">
-          {session.period_start} 〜 {session.period_end}
-        </h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-theme-headline">
+            {session.period_start} 〜 {session.period_end}
+          </h1>
+          {session.status === "settled" && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-theme-text/15 text-theme-text">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
+              清算完了
+            </span>
+          )}
+          {session.status === "pending_payment" && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-theme-primary/15 text-theme-primary">
+              支払い待ち
+            </span>
+          )}
+        </div>
         <p className="text-sm text-theme-muted mt-1">
           {session.confirmed_at && new Date(session.confirmed_at).toLocaleDateString("ja-JP")} 確定
           {confirmer && (
@@ -160,8 +181,22 @@ export default async function SettlementHistoryDetailPage({ params }: PageProps)
               （{confirmer.display_name || confirmer.email}）
             </span>
           )}
+          {session.status === "settled" && session.settled_at && (
+            <span className="text-theme-muted">
+              {" "}・ {new Date(session.settled_at).toLocaleDateString("ja-JP")} 完了
+            </span>
+          )}
         </p>
       </div>
+
+      {/* 統合済みバナー */}
+      {isConsolidated && (
+        <div className="bg-theme-muted/10 border border-theme-muted/20 rounded-lg p-4 mb-6">
+          <p className="text-sm text-theme-text">
+            この清算は後続の清算に統合されました。送金額は統合先の清算に含まれています。
+          </p>
+        </div>
+      )}
 
       {/* Settlement Result */}
       <div className="mb-6">
