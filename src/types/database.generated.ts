@@ -720,6 +720,10 @@ export type Database = {
         Args: { p_session_id: string; p_user_id: string }
         Returns: number
       }
+      settle_consolidated_sessions: {
+        Args: { p_session_ids: string[]; p_user_id: string }
+        Returns: number
+      }
       update_settlement_entry: {
         Args: {
           p_actual_amount: number
