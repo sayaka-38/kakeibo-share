@@ -127,6 +127,25 @@ export default function SettlementResultCard({
   // net_transfers がセッションに保存されている場合はそれを使用
   const netTransfers = session.net_transfers || [];
 
+  // 確定済み + net_transfers がある場合、送金指示ベースの自分のバランスを計算
+  let myTransferBalance: number | null = null;
+  if (isConfirmed && netTransfers.length > 0) {
+    let bal = 0;
+    for (const tr of netTransfers) {
+      if (tr.to_id === currentUserId) bal += tr.amount;
+      if (tr.from_id === currentUserId) bal -= tr.amount;
+    }
+    myTransferBalance = bal;
+  }
+
+  // エントリベースと送金指示ベースの差（統合による調整額）
+  const entryBalance = myBalance?.balance ?? 0;
+  const consolidationDiff = myTransferBalance !== null ? myTransferBalance - entryBalance : 0;
+  const hasConsolidationDiff = Math.abs(consolidationDiff) > 0;
+
+  // 確定済みで送金指示がある場合はそちらをメイン表示額にする
+  const mainDisplayBalance = myTransferBalance !== null ? myTransferBalance : entryBalance;
+
   // 統合プレビュー: draft + pendingTransfers がある場合
   const hasPendingConsolidation =
     !isConfirmed && pendingTransfers && pendingTransfers.length > 0;
@@ -196,14 +215,14 @@ export default function SettlementResultCard({
           )}
         </div>
       ) : (
-        /* 通常表示: 既存のバランス表示 */
+        /* 通常表示: 確定済みで送金指示がある場合は送金額をメインに表示 */
         myBalance && (
           <div className="text-center mb-6">
-            {myBalance.balance > 0 ? (
+            {mainDisplayBalance > 0 ? (
               <div>
                 <p className="text-sm text-theme-muted">あなたは</p>
                 <p className="text-3xl font-bold text-theme-text">
-                  {formatCurrency(myBalance.balance)}
+                  {formatCurrency(mainDisplayBalance)}
                 </p>
                 <p className="text-sm text-theme-muted">
                   {balances.find((b) => b.id !== currentUserId)
@@ -212,11 +231,11 @@ export default function SettlementResultCard({
                   もらう
                 </p>
               </div>
-            ) : myBalance.balance < 0 ? (
+            ) : mainDisplayBalance < 0 ? (
               <div>
                 <p className="text-sm text-theme-muted">あなたは</p>
                 <p className="text-3xl font-bold text-theme-accent">
-                  {formatCurrency(Math.abs(myBalance.balance))}
+                  {formatCurrency(Math.abs(mainDisplayBalance))}
                 </p>
                 <p className="text-sm text-theme-muted">
                   {balances.find((b) => b.id !== currentUserId)
@@ -228,71 +247,50 @@ export default function SettlementResultCard({
             ) : (
               <div>
                 <p className="text-2xl font-bold text-theme-muted">精算なし</p>
-                <p className="text-sm text-theme-muted">お互い公平です</p>
+                <p className="text-sm text-theme-muted">
+                  {isConfirmed && hasConsolidationDiff ? "相殺で送金不要です" : "お互い公平です"}
+                </p>
+              </div>
+            )}
+            {/* 統合による差額がある場合の内訳注釈 */}
+            {isConfirmed && hasConsolidationDiff && mainDisplayBalance !== 0 && (
+              <div className="mt-2 text-xs text-theme-muted space-y-0.5">
+                <p>（今回の清算額: {formatCurrency(entryBalance, { showSign: true })} / 過去の調整: {formatCurrency(consolidationDiff, { showSign: true })}）</p>
               </div>
             )}
           </div>
         )
       )}
 
-      {/* net_transfers 相殺指示（確定済みの場合） */}
-      {isConfirmed && netTransfers.length > 0 && (() => {
-        // 送金指示ベースの自分のバランスを計算
-        let myTransferBalance = 0;
-        for (const tr of netTransfers) {
-          if (tr.to_id === currentUserId) myTransferBalance += tr.amount;
-          if (tr.from_id === currentUserId) myTransferBalance -= tr.amount;
-        }
-        // エントリベースの差額との乖離を計算
-        const entryBalance = myBalance?.balance ?? 0;
-        const consolidationDiff = myTransferBalance - entryBalance;
-        const hasConsolidationDiff = Math.abs(consolidationDiff) > 0;
-
-        return (
-          <div className="bg-theme-card-bg/80 rounded-lg p-4 mb-4">
-            <h4 className="text-sm font-medium text-theme-text mb-2 text-center">
-              送金指示
-            </h4>
-            <div className="space-y-2">
-              {netTransfers.map((transfer, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between text-sm"
-                >
-                  <div className="flex items-center gap-1">
-                    <span className={transfer.from_id === currentUserId ? "font-bold text-theme-accent" : "text-theme-text"}>
-                      {transfer.from_name}
-                    </span>
-                    <span className="text-theme-muted mx-1">&rarr;</span>
-                    <span className={transfer.to_id === currentUserId ? "font-bold text-theme-text" : "text-theme-text"}>
-                      {transfer.to_name}
-                    </span>
-                  </div>
-                  <span className="font-semibold text-theme-headline">
-                    {formatCurrency(transfer.amount)}
+      {/* net_transfers 送金指示（確定済みの場合） */}
+      {isConfirmed && netTransfers.length > 0 && (
+        <div className="bg-theme-card-bg/80 rounded-lg p-4 mb-4">
+          <h4 className="text-sm font-medium text-theme-text mb-2 text-center">
+            送金指示
+          </h4>
+          <div className="space-y-2">
+            {netTransfers.map((transfer, idx) => (
+              <div
+                key={idx}
+                className="flex items-center justify-between text-sm"
+              >
+                <div className="flex items-center gap-1">
+                  <span className={transfer.from_id === currentUserId ? "font-bold text-theme-accent" : "text-theme-text"}>
+                    {transfer.from_name}
+                  </span>
+                  <span className="text-theme-muted mx-1">&rarr;</span>
+                  <span className={transfer.to_id === currentUserId ? "font-bold text-theme-text" : "text-theme-text"}>
+                    {transfer.to_name}
                   </span>
                 </div>
-              ))}
-            </div>
-            {/* 統合による差額の注釈 */}
-            {hasConsolidationDiff && (
-              <div className="mt-3 pt-3 border-t border-theme-card-border space-y-1">
-                <div className="flex justify-between text-xs text-theme-muted">
-                  <span>今回の清算差額</span>
-                  <span>{formatCurrency(entryBalance, { showSign: true })}</span>
-                </div>
-                <div className="flex justify-between text-xs text-theme-muted">
-                  <span>過去の未精算分</span>
-                  <span>{formatCurrency(consolidationDiff, { showSign: true })}</span>
-                </div>
-                <p className="text-xs text-theme-muted mt-1">
-                  ※ 送金額は過去の清算を統合した最終額です
-                </p>
+                <span className="font-semibold text-theme-headline">
+                  {formatCurrency(transfer.amount)}
+                </span>
               </div>
-            )}
+            ))}
           </div>
-        );
-      })()}
+        </div>
+      )}
 
       {/* 統合プレビュー: 計算の内訳 */}
       {hasPendingConsolidation && myBalance && (
