@@ -184,7 +184,7 @@ export default async function GroupDetailPage({ params }: Props) {
             groupId={id}
             currentUserId={user?.id || ""}
             memberIds={members?.map((m) => m.profiles?.id).filter((id): id is string => !!id) || []}
-            members={members?.map((m) => m.profiles).filter((p): p is NonNullable<typeof p> => p !== null).map((p) => ({ id: p.id, displayName: p.display_name || p.email })) || []}
+            members={members?.map((m) => m.profiles).filter((p): p is NonNullable<typeof p> => p !== null).map((p) => ({ id: p.id, displayName: p.display_name || p.email || "Unknown" })) || []}
             categories={categories || []}
           />
         </div>

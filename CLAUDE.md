@@ -164,7 +164,7 @@ src/
 - `SettlementSessionRow`: `src/types/database.ts` で定義。`net_transfers` JSONB を `NetTransfer[] | null` として型付け
 - `NetTransfer`: 送金指示の1要素（from_id, from_name, to_id, to_name, amount）
 - `SettlementSessionStatus`: `"draft" | "confirmed" | "pending_payment" | "settled"` のリテラル型
-- `database.ts` の RPC オーバーライド: `db:gen-types` で生成されない新規 RPC は `Database` 型をオーバーライドして追加
+- `database.ts` の RPC オーバーライド: 全 RPC が generated types に反映済み。新規追加時のみ一時的にオーバーライド
 
 ### 開発環境の優先順位
 
@@ -181,7 +181,7 @@ src/
 
 | テーブル | カラム |
 |---------|--------|
-| `profiles` | id, display_name, email, avatar_url, is_demo, created_at, updated_at |
+| `profiles` | id, display_name, email (nullable), avatar_url, is_demo, created_at, updated_at |
 | `groups` | id, name, description, owner_id, invite_code, created_at, updated_at |
 | `group_members` | id, group_id, user_id, role, created_at |
 | `payments` | id, group_id, payer_id, category_id, amount, description, payment_date, created_at, updated_at |
@@ -201,37 +201,15 @@ src/
 | `src/types/database.generated.ts` | Supabase CLI 自動生成 | **手動編集禁止** |
 | `src/types/database.ts` | ヘルパー型・リテラル型オーバーライド | 手動編集可 |
 
-### マイグレーション対応表
-
-| 旧ファイル名 | 新ファイル名（タイムスタンプ形式） |
-|-------------|-------------------------------|
-| `001_initial_schema.sql` | `20260101000001_initial_schema.sql` |
-| `002_add_invite_code.sql` | `20260101000002_add_invite_code.sql` |
-| `003_rename_columns_for_consistency.sql` | `20260101000003_rename_columns_for_consistency.sql` |
-| `004_profiles_rls.sql` | `20260101000004_profiles_rls.sql` |
-| `005_demo_sessions_rls.sql` | `20260101000005_demo_sessions_rls.sql` |
-| `006_groups_rls.sql` | `20260101000006_groups_rls.sql` |
-| `007_fix_rls_auth_flow.sql` | `20260101000007_fix_rls_auth_flow.sql` |
-| `008_payments_rls.sql` | `20260101000008_payments_rls.sql` |
-| `009_security_hardening.sql` | `20260101000009_security_hardening.sql` |
-
----
-
-## Demo Mode Policy
-
-- デモデータは `demo_sessions` テーブルで管理し、本番データと論理分離
-- 削除ロジックは `demo_sessions` に紐づくデータのみ対象。`is_demo` フラグチェック必須
-- デモデータは 24 時間後に自動削除（将来実装予定）
-
 ---
 
 ## 設計ドキュメント
 
-| ドキュメント | パス | 内容 |
-|-------------|------|------|
-| 設計書 | `docs/design.md` | 機能仕様、DB制約、バリデーション定義、清算アルゴリズム、RLSポリシー |
-| UI ガイドライン | `docs/ui-guidelines.md` | スペーシング、カラー、Tailwind規約 |
-| 開発記憶 | `docs/MEMORIES.md` | 進捗、課題、次タスク、セッション引き継ぎ |
+| ドキュメント | パス |
+|-------------|------|
+| 設計書 | `docs/design.md` |
+| UI ガイドライン | `docs/ui-guidelines.md` |
+| 開発記憶 | `docs/MEMORIES.md` |
 
 ---
 

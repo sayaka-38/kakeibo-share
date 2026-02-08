@@ -6,6 +6,7 @@
  * グループの最近の支払いを非同期で取得して表示。
  * Suspense と組み合わせてスケルトンローディングを実現。
  */
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format/currency";
@@ -21,7 +22,7 @@ import {
 type PaymentSplitRow = {
   user_id: string;
   amount: number;
-  profiles: { display_name: string | null; email: string } | null;
+  profiles: { display_name: string | null; email: string | null } | null;
 };
 
 type RecentPaymentRow = {
@@ -31,7 +32,7 @@ type RecentPaymentRow = {
   payment_date: string;
   payer_id: string;
   settlement_id: string | null;
-  profiles: { display_name: string | null; email: string } | null;
+  profiles: { display_name: string | null; email: string | null } | null;
   payment_splits: PaymentSplitRow[];
 };
 
@@ -136,6 +137,15 @@ export async function RecentPaymentList({
                 <span className="font-medium text-theme-headline">
                   {formatCurrency(Number(payment.amount))}
                 </span>
+                <Link
+                  href={`/payments/new?copyFrom=${payment.id}`}
+                  className="text-theme-muted/70 hover:text-theme-primary transition-colors"
+                  aria-label={t("payments.duplicate")}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                </Link>
                 {currentUserId && payment.payer_id === currentUserId && !payment.settlement_id && (
                   <DeletePaymentForm paymentId={payment.id} />
                 )}

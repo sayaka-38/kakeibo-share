@@ -22,13 +22,13 @@ type RuleWithRelations = {
   created_at: string;
   updated_at: string;
   category: { id: string; name: string; icon: string | null; color: string | null } | null;
-  default_payer: { id: string; display_name: string | null; email: string } | null;
+  default_payer: { id: string; display_name: string | null; email: string | null } | null;
   splits: {
     id: string;
     user_id: string;
     amount: number | null;
     percentage: number | null;
-    user: { id: string; display_name: string | null; email: string } | null;
+    user: { id: string; display_name: string | null; email: string | null } | null;
   }[];
 };
 

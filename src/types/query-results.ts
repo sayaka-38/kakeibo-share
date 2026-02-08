@@ -61,7 +61,7 @@ export type MemberResult = {
   profiles: {
     id: string;
     display_name: string | null;
-    email: string;
+    email: string | null;
   } | null;
 };
 
@@ -75,7 +75,7 @@ export type GroupMemberDetailResult = {
   profiles: {
     id: string;
     display_name: string | null;
-    email: string;
+    email: string | null;
   } | null;
 };
 
@@ -89,7 +89,7 @@ export type DashboardPaymentResult = {
   payment_date: string;
   profiles: {
     display_name: string | null;
-    email: string;
+    email: string | null;
   } | null;
 };
 
@@ -99,7 +99,7 @@ export type DashboardPaymentResult = {
 export type ProfileResult = {
   id: string;
   display_name: string | null;
-  email: string;
+  email: string | null;
   is_demo: boolean;
 };
 

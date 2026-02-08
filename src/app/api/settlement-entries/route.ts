@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { error: "Invalid JSON body" },
+      { error: "リクエストボディが不正です" },
       { status: 400 }
     );
   }
@@ -35,14 +35,14 @@ export async function POST(request: NextRequest) {
   // バリデーション
   if (!sessionId || !description || !payerId || !paymentDate) {
     return NextResponse.json(
-      { error: "sessionId, description, payerId, and paymentDate are required" },
+      { error: "セッションID・説明・支払者・日付は必須です" },
       { status: 400 }
     );
   }
 
   if (description.length < 1 || description.length > 100) {
     return NextResponse.json(
-      { error: "Description must be between 1 and 100 characters" },
+      { error: "説明は1〜100文字で入力してください" },
       { status: 400 }
     );
   }
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
 
   if (sessionError || !session) {
     return NextResponse.json(
-      { error: "Settlement session not found" },
+      { error: "セッションが見つかりません" },
       { status: 404 }
     );
   }
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
 
   if (!membership) {
     return NextResponse.json(
-      { error: "You are not a member of this group" },
+      { error: "このグループのメンバーではありません" },
       { status: 403 }
     );
   }
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
   // draft状態確認
   if (session.status !== "draft") {
     return NextResponse.json(
-      { error: "Cannot add entries to confirmed sessions" },
+      { error: "確定済みセッションにはエントリを追加できません" },
       { status: 400 }
     );
   }
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
   if (error) {
     console.error("Failed to create settlement entry:", error);
     return NextResponse.json(
-      { error: "Failed to create settlement entry" },
+      { error: "エントリの作成に失敗しました" },
       { status: 500 }
     );
   }

@@ -78,7 +78,8 @@
       "passwordHint": "At least 6 characters"
     },
     "errors": {
-      "loginRequired": "You must be logged in"
+      "loginRequired": "You must be logged in",
+      "authenticationFailed": "Authentication failed. Please try again."
     }
   },
   "dashboard": {
@@ -147,6 +148,7 @@
     "deleteConfirm": "Are you sure you want to delete this payment?",
     "edit": "Edit",
     "editPayment": "Edit Payment",
+    "duplicate": "Duplicate",
     "form": {
       "group": "Group",
       "amount": "Amount",

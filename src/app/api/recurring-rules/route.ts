@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   const groupId = request.nextUrl.searchParams.get("groupId");
   if (!groupId) {
     return NextResponse.json(
-      { error: "groupId is required" },
+      { error: "グループIDが必要です" },
       { status: 400 }
     );
   }
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 
   if (!membership) {
     return NextResponse.json(
-      { error: "You are not a member of this group" },
+      { error: "このグループのメンバーではありません" },
       { status: 403 }
     );
   }
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
   if (error) {
     console.error("Failed to fetch recurring rules:", error);
     return NextResponse.json(
-      { error: "Failed to fetch recurring rules" },
+      { error: "ルールの取得に失敗しました" },
       { status: 500 }
     );
   }
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { error: "Invalid JSON body" },
+      { error: "リクエストボディが不正です" },
       { status: 400 }
     );
   }
@@ -97,21 +97,21 @@ export async function POST(request: NextRequest) {
   // バリデーション
   if (!groupId || !description || dayOfMonth === undefined || !defaultPayerId) {
     return NextResponse.json(
-      { error: "groupId, description, dayOfMonth, and defaultPayerId are required" },
+      { error: "グループID・項目名・発生日・支払者は必須です" },
       { status: 400 }
     );
   }
 
   if (description.length < 1 || description.length > 100) {
     return NextResponse.json(
-      { error: "Description must be between 1 and 100 characters" },
+      { error: "項目名は1〜100文字で入力してください" },
       { status: 400 }
     );
   }
 
   if (dayOfMonth < 1 || dayOfMonth > 31) {
     return NextResponse.json(
-      { error: "dayOfMonth must be between 1 and 31" },
+      { error: "発生日は1〜31の範囲で指定してください" },
       { status: 400 }
     );
   }
@@ -120,13 +120,13 @@ export async function POST(request: NextRequest) {
   const isVar = isVariable === true;
   if (isVar && defaultAmount !== null && defaultAmount !== undefined) {
     return NextResponse.json(
-      { error: "Variable rules cannot have a default amount" },
+      { error: "変動ルールにはデフォルト金額を設定できません" },
       { status: 400 }
     );
   }
   if (!isVar && (defaultAmount === null || defaultAmount === undefined || defaultAmount <= 0)) {
     return NextResponse.json(
-      { error: "Fixed rules must have a positive default amount" },
+      { error: "固定ルールには正の金額が必要です" },
       { status: 400 }
     );
   }
@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
 
   if (!membership) {
     return NextResponse.json(
-      { error: "You are not a member of this group" },
+      { error: "このグループのメンバーではありません" },
       { status: 403 }
     );
   }
@@ -166,7 +166,7 @@ export async function POST(request: NextRequest) {
   if (error) {
     console.error("Failed to create recurring rule:", error);
     return NextResponse.json(
-      { error: "Failed to create recurring rule" },
+      { error: "ルールの作成に失敗しました" },
       { status: 500 }
     );
   }

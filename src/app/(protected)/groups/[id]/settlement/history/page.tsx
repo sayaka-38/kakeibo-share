@@ -13,7 +13,7 @@ type ConfirmedSession = {
   status: string;
   confirmed_at: string;
   confirmed_by: string;
-  confirmer?: { display_name: string | null; email: string } | null;
+  confirmer?: { display_name: string | null; email: string | null } | null;
   total_amount: number;
   entry_count: number;
   is_consolidated: boolean;
@@ -99,7 +99,7 @@ export default async function SettlementHistoryPage({ params }: PageProps) {
         status: session.status,
         confirmed_at: session.confirmed_at || "",
         confirmed_by: session.confirmed_by || "",
-        confirmer: session.profiles as { display_name: string | null; email: string } | null,
+        confirmer: session.profiles as { display_name: string | null; email: string | null } | null,
         total_amount: totalAmount,
         entry_count: (entries || []).length,
         is_consolidated: isConsolidated,

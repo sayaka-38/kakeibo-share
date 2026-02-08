@@ -27,7 +27,7 @@ export type SplitWithProfile = {
   user_id: string;
   amount: number;
   display_name: string | null;
-  email: string;
+  email: string | null;
 };
 
 // --------------------------------------------------

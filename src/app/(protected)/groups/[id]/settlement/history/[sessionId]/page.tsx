@@ -109,7 +109,7 @@ export default async function SettlementHistoryDetailPage({ params }: PageProps)
     filled_at: e.filled_at,
     source_payment_id: e.source_payment_id,
     category: e.category as { id: string; name: string; icon: string | null; color: string | null } | null,
-    payer: e.payer as { id: string; display_name: string | null; email: string } | null,
+    payer: e.payer as { id: string; display_name: string | null; email: string | null } | null,
     splits: (e.splits || []).map((s: { id: string; user_id: string; amount: number }) => ({
       id: s.id,
       user_id: s.user_id,
@@ -138,7 +138,7 @@ export default async function SettlementHistoryDetailPage({ params }: PageProps)
 
   const filledEntries = entries.filter((e) => e.status === "filled");
   const totalAmount = filledEntries.reduce((sum, e) => sum + (e.actual_amount || 0), 0);
-  const confirmer = session.confirmer as { display_name: string | null; email: string } | null;
+  const confirmer = session.confirmer as { display_name: string | null; email: string | null } | null;
 
   // 統合済み判定: settled + 非0円清算 + net_transfers が空
   const netTransfers = session.net_transfers as unknown[] | null;

@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   const groupId = request.nextUrl.searchParams.get("groupId");
   if (!groupId) {
     return NextResponse.json(
-      { error: "groupId is required" },
+      { error: "グループIDが必要です" },
       { status: 400 }
     );
   }
@@ -30,13 +30,13 @@ export async function GET(request: NextRequest) {
     // メンバーシップエラーの場合
     if (error.message?.includes("not a member")) {
       return NextResponse.json(
-        { error: "You are not a member of this group" },
+        { error: "このグループのメンバーではありません" },
         { status: 403 }
       );
     }
 
     return NextResponse.json(
-      { error: "Failed to get settlement period suggestion" },
+      { error: "期間提案の取得に失敗しました" },
       { status: 500 }
     );
   }

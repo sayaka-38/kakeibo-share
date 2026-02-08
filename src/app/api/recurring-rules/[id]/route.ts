@@ -34,7 +34,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
   if (error || !rule) {
     return NextResponse.json(
-      { error: "Recurring rule not found" },
+      { error: "ルールが見つかりません" },
       { status: 404 }
     );
   }
@@ -49,7 +49,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
   if (!membership) {
     return NextResponse.json(
-      { error: "You are not a member of this group" },
+      { error: "このグループのメンバーではありません" },
       { status: 403 }
     );
   }
@@ -73,7 +73,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { error: "Invalid JSON body" },
+      { error: "リクエストボディが不正です" },
       { status: 400 }
     );
   }
@@ -87,7 +87,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
   if (fetchError || !existingRule) {
     return NextResponse.json(
-      { error: "Recurring rule not found" },
+      { error: "ルールが見つかりません" },
       { status: 404 }
     );
   }
@@ -102,7 +102,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
   if (!membership) {
     return NextResponse.json(
-      { error: "You are not a member of this group" },
+      { error: "このグループのメンバーではありません" },
       { status: 403 }
     );
   }
@@ -122,14 +122,14 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   // バリデーション
   if (description !== undefined && (description.length < 1 || description.length > 100)) {
     return NextResponse.json(
-      { error: "Description must be between 1 and 100 characters" },
+      { error: "項目名は1〜100文字で入力してください" },
       { status: 400 }
     );
   }
 
   if (dayOfMonth !== undefined && (dayOfMonth < 1 || dayOfMonth > 31)) {
     return NextResponse.json(
-      { error: "dayOfMonth must be between 1 and 31" },
+      { error: "発生日は1〜31の範囲で指定してください" },
       { status: 400 }
     );
   }
@@ -140,13 +140,13 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
   if (newIsVariable && newDefaultAmount !== null) {
     return NextResponse.json(
-      { error: "Variable rules cannot have a default amount" },
+      { error: "変動ルールにはデフォルト金額を設定できません" },
       { status: 400 }
     );
   }
   if (!newIsVariable && (newDefaultAmount === null || newDefaultAmount <= 0)) {
     return NextResponse.json(
-      { error: "Fixed rules must have a positive default amount" },
+      { error: "固定ルールには正の金額が必要です" },
       { status: 400 }
     );
   }
@@ -177,7 +177,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   if (error) {
     console.error("Failed to update recurring rule:", error);
     return NextResponse.json(
-      { error: "Failed to update recurring rule" },
+      { error: "ルールの更新に失敗しました" },
       { status: 500 }
     );
   }
@@ -232,7 +232,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
   if (fetchError || !existingRule) {
     return NextResponse.json(
-      { error: "Recurring rule not found" },
+      { error: "ルールが見つかりません" },
       { status: 404 }
     );
   }
@@ -241,7 +241,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   const group = existingRule.group as { owner_id: string } | null;
   if (!group || group.owner_id !== user.id) {
     return NextResponse.json(
-      { error: "Only group owner can delete recurring rules" },
+      { error: "ルールを削除できるのはグループオーナーのみです" },
       { status: 403 }
     );
   }
@@ -255,7 +255,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   if (error) {
     console.error("Failed to delete recurring rule:", error);
     return NextResponse.json(
-      { error: "Failed to delete recurring rule" },
+      { error: "ルールの削除に失敗しました" },
       { status: 500 }
     );
   }

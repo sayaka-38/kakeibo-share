@@ -26,26 +26,26 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
   if (error) {
     console.error("Failed to confirm receipt:", error);
     return NextResponse.json(
-      { error: "Failed to confirm receipt" },
+      { error: "受取確認に失敗しました" },
       { status: 500 }
     );
   }
 
   if (result === -1) {
     return NextResponse.json(
-      { error: "Settlement session not found" },
+      { error: "セッションが見つかりません" },
       { status: 404 }
     );
   }
   if (result === -2) {
     return NextResponse.json(
-      { error: "You are not a member of this group" },
+      { error: "このグループのメンバーではありません" },
       { status: 403 }
     );
   }
   if (result === -3) {
     return NextResponse.json(
-      { error: "Session is not in pending_payment status" },
+      { error: "セッションは送金待ち状態ではありません" },
       { status: 400 }
     );
   }
