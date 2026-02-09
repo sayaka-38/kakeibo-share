@@ -26,7 +26,7 @@
 | Husky導入 | lint-staged + Husky による SQL commit 時の自動型生成 | #41 |
 | Phase 10A | UX基盤・セキュリティ強化・設定画面＆匿名化退会 | PR未作成 |
 
-テスト: 868件パス（47ファイル） / ビルド正常 / lint クリーン / Migration 027 まで作成
+テスト: 868件パス（47ファイル） / ビルド正常 / lint クリーン / Migration 027 まで push 済み / 型同期済み
 
 ---
 
@@ -74,7 +74,7 @@
 
 - `.env.local`: リモートDB（Supabase hosted）優先
 - ローカル Docker: Codespaces で不安定（リモート設定のまま開発継続）
-- Migration 027 まで作成（026: payments DELETE payer only, 027: anonymize_user RPC）
+- Migration 027 まで push 済み（026: payments DELETE payer only, 027: anonymize_user RPC）
 - profiles.email: NOT NULL 制約解除済み（手動マイグレーション）
 - Husky + lint-staged: SQL マイグレーション commit 時に `npm run db:gen-types` 自動実行
 
