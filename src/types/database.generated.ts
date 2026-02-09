@@ -669,6 +669,10 @@ export type Database = {
         Args: { p_session_id: string; p_user_id: string }
         Returns: number
       }
+      create_demo_bot_partner: {
+        Args: { p_demo_user_id: string; p_group_id: string }
+        Returns: Json
+      }
       delete_payment_splits_for_payer: {
         Args: { p_payment_id: string; p_user_id: string }
         Returns: number
