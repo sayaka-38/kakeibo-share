@@ -52,7 +52,7 @@ export default function SignUpPage() {
           </div>
           <Link
             href="/login"
-            className="inline-block text-theme-primary hover:text-theme-primary/80"
+            className="inline-block text-theme-primary-text hover:text-theme-primary-text/80"
           >
             {t("auth.signup.checkEmail.backToLogin")}
           </Link>
@@ -149,7 +149,7 @@ export default function SignUpPage() {
             {t("auth.signup.hasAccount")}{" "}
             <Link
               href="/login"
-              className="font-medium text-theme-primary hover:text-theme-primary/80"
+              className="font-medium text-theme-primary-text hover:text-theme-primary-text/80"
             >
               {t("auth.signup.signInLink")}
             </Link>

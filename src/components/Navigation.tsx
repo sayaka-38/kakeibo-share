@@ -78,7 +78,7 @@ export default function Navigation() {
               href={item.href}
               className={`flex-1 flex flex-col items-center py-3 px-4 text-xs ${
                 isActive
-                  ? "text-theme-primary border-b-2 border-theme-primary"
+                  ? "text-theme-primary-text border-b-2 border-theme-primary"
                   : "text-theme-text hover:text-theme-headline"
               }`}
             >
@@ -100,7 +100,7 @@ export default function Navigation() {
                   href={item.href}
                   className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm ${
                     isActive
-                      ? "bg-theme-primary/15 text-theme-primary"
+                      ? "bg-theme-primary/15 text-theme-primary-text"
                       : "text-theme-muted hover:bg-theme-bg"
                   }`}
                 >

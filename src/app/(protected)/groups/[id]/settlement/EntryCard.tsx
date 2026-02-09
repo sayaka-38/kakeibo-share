@@ -139,7 +139,7 @@ export default function EntryCard({
               <span className="text-xs ml-1">予定</span>
             </div>
           ) : (
-            <div className="text-sm text-theme-primary">
+            <div className="text-sm text-theme-primary-text">
               {t("settlementSession.fillAmount")}
             </div>
           )}

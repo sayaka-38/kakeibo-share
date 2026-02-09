@@ -57,6 +57,7 @@ export default function FullPaymentForm({
 }: FullPaymentFormProps) {
   const router = useRouter();
   const isEditMode = !!editData;
+  const isDuplicateMode = !!duplicateData;
 
   // editData or duplicateData for pre-fill (duplicateData uses today's date)
   const prefill = editData || duplicateData;
@@ -84,6 +85,7 @@ export default function FullPaymentForm({
 
   const currentMembers = groupId ? members[groupId] || [] : [];
   const otherMembers = currentMembers.filter((m) => m.id !== currentUserId);
+  const isSoloGroup = currentMembers.length <= 1;
 
   // --- カスタム割り勘: 自動補完ロジック ---
   const lastEditedRef = useRef<string | null>(null);
@@ -301,7 +303,7 @@ export default function FullPaymentForm({
 
   if (groups.length === 0) {
     return (
-      <div className="bg-theme-primary/10 border border-theme-card-border rounded-lg p-4 text-theme-primary">
+      <div className="bg-theme-primary/10 border border-theme-card-border rounded-lg p-4 text-theme-primary-text">
         <p>{t("payments.errors.noGroup")}</p>
       </div>
     );
@@ -309,6 +311,13 @@ export default function FullPaymentForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {isDuplicateMode && (
+        <div className="flex items-center gap-2 px-3 py-2 bg-theme-secondary/20 border border-theme-secondary/40 rounded-lg text-xs text-theme-text">
+          <span className="shrink-0">📋</span>
+          <span>{t("payments.form.duplicateBadge")}</span>
+        </div>
+      )}
+
       {error && (
         <div className="bg-theme-accent/10 border border-theme-accent text-theme-accent px-4 py-3 rounded-lg text-sm">
           {error}
@@ -393,67 +402,69 @@ export default function FullPaymentForm({
         error={form.errors.paymentDate}
       />
 
-      {/* Split Type - 3択ラジオ */}
-      <div>
-        <label className="block text-sm font-medium text-theme-text mb-2">
-          {t("payments.form.split")}
-        </label>
-        <div className="flex flex-wrap gap-4">
-          <label className="flex items-center">
-            <input
-              type="radio"
-              name="splitType"
-              value="equal"
-              checked={form.splitType === "equal"}
-              onChange={() => {
-                form.setSplitType("equal");
-                form.setProxyBeneficiaryId("");
-              }}
-              className="mr-2"
-            />
-            <span className="text-sm text-theme-text">
-              {t("payments.form.splitEqually")}
-            </span>
+      {/* Split Type - 3択ラジオ（メンバー2人以上のみ表示） */}
+      {!isSoloGroup && (
+        <div>
+          <label className="block text-sm font-medium text-theme-text mb-2">
+            {t("payments.form.split")}
           </label>
-          <label className="flex items-center">
-            <input
-              type="radio"
-              name="splitType"
-              value="custom"
-              checked={form.splitType === "custom"}
-              onChange={() => {
-                form.setSplitType("custom");
-                form.setProxyBeneficiaryId("");
-              }}
-              className="mr-2"
-            />
-            <span className="text-sm text-theme-text">
-              {t("payments.form.customSplit")}
-            </span>
-          </label>
-          {otherMembers.length > 0 && (
+          <div className="flex flex-wrap gap-4">
             <label className="flex items-center">
               <input
                 type="radio"
                 name="splitType"
-                value="proxy"
-                checked={form.splitType === "proxy"}
+                value="equal"
+                checked={form.splitType === "equal"}
                 onChange={() => {
-                  form.setSplitType("proxy");
-                  // 2人グループ: 自動的に相手を受益者にセット
-                  if (otherMembers.length === 1) {
-                    form.setProxyBeneficiaryId(otherMembers[0].id);
-                  }
+                  form.setSplitType("equal");
+                  form.setProxyBeneficiaryId("");
                 }}
-                className="mr-2 accent-[var(--color-theme-secondary)]"
+                className="mr-2"
               />
               <span className="text-sm text-theme-text">
-                {t("payments.form.splitProxy")}
+                {t("payments.form.splitEqually")}
               </span>
             </label>
-          )}
+            <label className="flex items-center">
+              <input
+                type="radio"
+                name="splitType"
+                value="custom"
+                checked={form.splitType === "custom"}
+                onChange={() => {
+                  form.setSplitType("custom");
+                  form.setProxyBeneficiaryId("");
+                }}
+                className="mr-2"
+              />
+              <span className="text-sm text-theme-text">
+                {t("payments.form.customSplit")}
+              </span>
+            </label>
+            {otherMembers.length > 0 && (
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="splitType"
+                  value="proxy"
+                  checked={form.splitType === "proxy"}
+                  onChange={() => {
+                    form.setSplitType("proxy");
+                    // 2人グループ: 自動的に相手を受益者にセット
+                    if (otherMembers.length === 1) {
+                      form.setProxyBeneficiaryId(otherMembers[0].id);
+                    }
+                  }}
+                  className="mr-2 accent-[var(--color-theme-secondary)]"
+                />
+                <span className="text-sm text-theme-text">
+                  {t("payments.form.splitProxy")}
+                </span>
+              </label>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Custom Splits */}
       {form.splitType === "custom" && currentMembers.length > 0 && (
@@ -468,7 +479,7 @@ export default function FullPaymentForm({
                   splitRemaining === 0
                     ? "text-theme-text"
                     : splitRemaining > 0
-                      ? "text-theme-primary"
+                      ? "text-theme-primary-text"
                       : "text-theme-accent"
                 }`}
               >
@@ -576,8 +587,8 @@ export default function FullPaymentForm({
         className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-theme-button-text bg-theme-primary hover:bg-theme-primary/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isSubmitting
-          ? t(isEditMode ? "payments.form.updating" : "payments.form.submitting")
-          : t(isEditMode ? "payments.form.update" : "payments.form.submit")}
+          ? t(isEditMode ? "payments.form.updating" : isDuplicateMode ? "payments.form.duplicateSubmitting" : "payments.form.submitting")
+          : t(isEditMode ? "payments.form.update" : isDuplicateMode ? "payments.form.duplicateSubmit" : "payments.form.submit")}
       </button>
     </form>
   );

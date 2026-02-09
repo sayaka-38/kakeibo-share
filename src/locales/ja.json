@@ -192,7 +192,10 @@
       "update": "変更を保存する",
       "updating": "保存中...",
       "updateSuccess": "変更を保存しました",
-      "groupNotEditable": "グループはメンバー構成に影響するため変更できません"
+      "groupNotEditable": "グループはメンバー構成に影響するため変更できません",
+      "duplicateBadge": "内容をコピーして新規作成",
+      "duplicateSubmit": "複製を保存",
+      "duplicateSubmitting": "複製を保存中..."
     },
     "validation": {
       "amountMin": "金額は1円以上で入力してください",

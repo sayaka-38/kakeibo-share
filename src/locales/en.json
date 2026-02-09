@@ -174,7 +174,10 @@
       "update": "Save Changes",
       "updating": "Saving...",
       "updateSuccess": "Changes saved",
-      "groupNotEditable": "Group cannot be changed as it affects member composition"
+      "groupNotEditable": "Group cannot be changed as it affects member composition",
+      "duplicateBadge": "Creating new from copy",
+      "duplicateSubmit": "Save Copy",
+      "duplicateSubmitting": "Saving copy..."
     },
     "validation": {
       "amountMin": "Amount must be at least ¥1",

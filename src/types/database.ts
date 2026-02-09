@@ -8,9 +8,20 @@
 
 export type { Json } from "./database.generated";
 
-import type { Database as _Database } from "./database.generated";
-export type { _Database as Database };
-type Database = _Database;
+import type { Database as GeneratedDatabase } from "./database.generated";
+import type { Json } from "./database.generated";
+
+// Override Database to add RPCs not yet in generated types
+export type Database = Omit<GeneratedDatabase, "public"> & {
+  public: Omit<GeneratedDatabase["public"], "Functions"> & {
+    Functions: GeneratedDatabase["public"]["Functions"] & {
+      create_demo_bot_partner: {
+        Args: { p_group_id: string; p_demo_user_id: string };
+        Returns: Json;
+      };
+    };
+  };
+};
 
 // ============================================
 // Role literal type override

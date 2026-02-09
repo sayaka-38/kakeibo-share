@@ -11,12 +11,13 @@
   --theme-headline: #272343;
   --theme-text: #2d334a;
   --theme-primary: #ffd803;
+  --theme-primary-text: #8b7500;
   --theme-button-text: #272343;
   --theme-secondary: #e3f6f5;
-  --theme-accent: #e45858;
+  --theme-accent: #c44040;
   --theme-card-bg: #fffffe;
   --theme-card-border: #d9e8e7;
-  --theme-muted: #717495;
+  --theme-muted: #6e7090;
 
   --background: var(--theme-bg);
   --foreground: var(--theme-text);
@@ -29,12 +30,13 @@
   --theme-headline: #fffffe;
   --theme-text: #b8c1ec;
   --theme-primary: #eebbc3;
+  --theme-primary-text: #eebbc3;
   --theme-button-text: #232946;
   --theme-secondary: #b8c1ec;
   --theme-accent: #d4939d;
   --theme-card-bg: #2a3058;
   --theme-card-border: #3d4470;
-  --theme-muted: #8a91ad;
+  --theme-muted: #949ab0;
 
   --background: var(--theme-bg);
   --foreground: var(--theme-text);
@@ -46,9 +48,10 @@
   --theme-headline: #33272a;
   --theme-text: #594a4e;
   --theme-primary: #ff8ba7;
+  --theme-primary-text: #bf3f5e;
   --theme-button-text: #33272a;
   --theme-secondary: #ffc6c7;
-  --theme-accent: #e74c3c;
+  --theme-accent: #c73b2d;
   --theme-card-bg: #fffffe;
   --theme-card-border: #e8d6cf;
   --theme-muted: #7a6871;
@@ -63,9 +66,10 @@
   --theme-headline: #fffffe;
   --theme-text: #fff3ec;
   --theme-primary: #ffc0ad;
+  --theme-primary-text: #ffc0ad;
   --theme-button-text: #271c19;
   --theme-secondary: #e78fb3;
-  --theme-accent: #9656a1;
+  --theme-accent: #e0a8c0;
   --theme-card-bg: #4a3833;
   --theme-card-border: #6d5650;
   --theme-muted: #d4b5aa;
@@ -80,9 +84,10 @@
   --theme-headline: #001858;
   --theme-text: #172c66;
   --theme-primary: #f582ae;
+  --theme-primary-text: #b74d76;
   --theme-button-text: #001858;
   --theme-secondary: #8bd3dd;
-  --theme-accent: #e74c3c;
+  --theme-accent: #ce3d2e;
   --theme-card-bg: #fffffe;
   --theme-card-border: #e8dfd5;
   --theme-muted: #4a5580;
@@ -98,6 +103,7 @@
   --color-theme-text: var(--theme-text);
   --color-theme-headline: var(--theme-headline);
   --color-theme-primary: var(--theme-primary);
+  --color-theme-primary-text: var(--theme-primary-text);
   --color-theme-button-text: var(--theme-button-text);
   --color-theme-secondary: var(--theme-secondary);
   --color-theme-accent: var(--theme-accent);

@@ -76,7 +76,7 @@ export default async function GroupsPage() {
                   )}
                 </div>
                 {group.role === "owner" && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-theme-primary/15 text-theme-primary">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-theme-primary/15 text-theme-primary-text">
                     {t("common.owner")}
                   </span>
                 )}

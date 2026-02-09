@@ -138,6 +138,20 @@ export async function createDemoSession(
       };
     }
 
+    // 6. Bot パートナーとサンプル支払いを生成（失敗しても続行）
+    try {
+      const { error: botError } = await supabase.rpc(
+        "create_demo_bot_partner",
+        { p_group_id: groupData.id, p_demo_user_id: userId }
+      );
+      if (botError) {
+        console.warn("Demo bot creation skipped:", botError.message);
+      }
+    } catch {
+      // RPC が未デプロイの場合は無視して続行
+      console.warn("Demo bot RPC not available, skipping");
+    }
+
     return {
       success: true,
       data: {

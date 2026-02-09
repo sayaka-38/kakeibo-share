@@ -91,7 +91,7 @@ export default async function RecurringRulesPage({ params }: PageProps) {
       <div className="mb-6">
         <Link
           href={`/groups/${groupId}`}
-          className="text-sm text-theme-primary hover:text-theme-primary/80 mb-2 inline-block"
+          className="text-sm text-theme-primary-text hover:text-theme-primary-text/80 mb-2 inline-block"
         >
           &larr; {group.name}
         </Link>

@@ -68,7 +68,7 @@ export function SplitBadge() {
     <button
       type="button"
       onClick={toggle}
-      className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs font-medium bg-theme-primary/15 text-theme-primary hover:bg-theme-primary/25 transition-colors cursor-pointer"
+      className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs font-medium bg-theme-primary/15 text-theme-primary-text hover:bg-theme-primary/25 transition-colors cursor-pointer"
       aria-expanded={isOpen}
     >
       {t("payments.display.customBadge")}

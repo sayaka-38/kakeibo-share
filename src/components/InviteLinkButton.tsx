@@ -67,7 +67,7 @@ export function InviteLinkButton({ inviteCode }: Props) {
       <h3 className="text-sm font-medium text-theme-headline mb-2">
         {t("groups.invite.link.title")}
       </h3>
-      <p className="text-xs text-theme-primary mb-3">
+      <p className="text-xs text-theme-primary-text mb-3">
         {t("groups.invite.link.description")}
       </p>
 
@@ -122,7 +122,7 @@ export function InviteLinkButton({ inviteCode }: Props) {
         {canShare && (
           <button
             onClick={handleShare}
-            className="inline-flex items-center justify-center px-4 py-2.5 bg-theme-card-bg border border-theme-primary text-theme-primary rounded-lg font-medium text-sm hover:bg-theme-primary/10 active:scale-95 transition-all"
+            className="inline-flex items-center justify-center px-4 py-2.5 bg-theme-card-bg border border-theme-primary text-theme-primary-text rounded-lg font-medium text-sm hover:bg-theme-primary/10 active:scale-95 transition-all"
             aria-label={t("groups.invite.link.share")}
           >
             <svg

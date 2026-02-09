@@ -100,7 +100,7 @@ export default async function GroupDetailPage({ params }: Props) {
       <div className="mb-6">
         <Link
           href="/groups"
-          className="text-sm text-theme-primary hover:text-theme-primary/80"
+          className="text-sm text-theme-primary-text hover:text-theme-primary-text/80"
         >
           &larr; {t("groups.backToGroups")}
         </Link>
@@ -117,7 +117,7 @@ export default async function GroupDetailPage({ params }: Props) {
             </div>
             {isOwner && (
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-theme-primary/15 text-theme-primary">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-theme-primary/15 text-theme-primary-text">
                   {t("common.owner")}
                 </span>
                 <DeleteGroupButton groupId={id} groupName={group.name} />
@@ -164,7 +164,7 @@ export default async function GroupDetailPage({ params }: Props) {
             </Link>
             <Link
               href={`/groups/${id}/recurring-rules`}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium text-theme-primary bg-theme-primary/10 rounded-lg hover:bg-theme-primary/15 transition-colors"
+              className="inline-flex items-center px-4 py-2 text-sm font-medium text-theme-primary-text bg-theme-primary/10 rounded-lg hover:bg-theme-primary/15 transition-colors"
             >
               {t("recurringRules.title")}
             </Link>
@@ -214,7 +214,7 @@ export default async function GroupDetailPage({ params }: Props) {
                   </p>
                 </div>
                 {member.role === "owner" && (
-                  <span className="text-xs text-theme-primary font-medium">
+                  <span className="text-xs text-theme-primary-text font-medium">
                     {t("common.owner")}
                   </span>
                 )}
@@ -242,7 +242,7 @@ export default async function GroupDetailPage({ params }: Props) {
             </h2>
             <Link
               href="/payments"
-              className="text-sm text-theme-primary hover:text-theme-primary/80"
+              className="text-sm text-theme-primary-text hover:text-theme-primary-text/80"
             >
               {t("common.viewAll")}
             </Link>

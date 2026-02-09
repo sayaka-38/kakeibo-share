@@ -199,37 +199,37 @@ export default async function SettlementPage() {
                 <div className="p-4 space-y-6">
                   {/* 計算プロセス（Calculation Breakdown） */}
                   <div className="bg-theme-primary/10 rounded-lg p-4">
-                    <h3 className="text-sm font-medium text-theme-primary mb-3">
+                    <h3 className="text-sm font-medium text-theme-primary-text mb-3">
                       {t("settlement.calculationBreakdown")}
                     </h3>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-theme-primary">
+                        <span className="text-theme-primary-text">
                           {t("settlement.totalExpenses")}
                         </span>
-                        <span className="font-medium text-theme-primary">
+                        <span className="font-medium text-theme-primary-text">
                           {formatCurrency(totalExpenses)}
                         </span>
                       </div>
                       {hasSplits ? (
                         <div className="border-t border-theme-primary/30 pt-2">
-                          <p className="text-xs text-theme-primary">
+                          <p className="text-xs text-theme-primary-text">
                             {t("settlement.splitsBasedNote")}
                           </p>
                         </div>
                       ) : (
                         <>
                           <div className="flex justify-between">
-                            <span className="text-theme-primary">
+                            <span className="text-theme-primary-text">
                               {t("settlement.memberCount", { count: memberCount })}
                             </span>
-                            <span className="text-theme-primary">÷ {memberCount}</span>
+                            <span className="text-theme-primary-text">÷ {memberCount}</span>
                           </div>
                           <div className="border-t border-theme-primary/30 pt-2 flex justify-between">
-                            <span className="text-theme-primary">
+                            <span className="text-theme-primary-text">
                               {t("settlement.perPerson")}
                             </span>
-                            <span className="font-bold text-theme-primary">
+                            <span className="font-bold text-theme-primary-text">
                               {formatCurrency(perPersonAmount)}
                             </span>
                           </div>
@@ -237,10 +237,10 @@ export default async function SettlementPage() {
                       )}
                       {unsettledRemainder > 0 && (
                         <div className="flex justify-between text-xs">
-                          <span className="text-theme-primary">
+                          <span className="text-theme-primary-text">
                             {t("settlement.unsettledRemainder")}
                           </span>
-                          <span className="text-theme-primary">
+                          <span className="text-theme-primary-text">
                             {formatCurrency(unsettledRemainder)}
                           </span>
                         </div>
@@ -272,7 +272,7 @@ export default async function SettlementPage() {
                             <span
                               className={
                                 balance.balance >= 0
-                                  ? "text-theme-primary font-medium"
+                                  ? "text-theme-primary-text font-medium"
                                   : "text-theme-accent font-medium"
                               }
                             >
@@ -317,7 +317,7 @@ export default async function SettlementPage() {
                                 {settlement.toName}
                               </span>
                             </div>
-                            <span className="text-lg font-semibold text-theme-primary">
+                            <span className="text-lg font-semibold text-theme-primary-text">
                               {formatCurrency(settlement.amount)}
                             </span>
                           </div>
