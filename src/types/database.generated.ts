@@ -661,6 +661,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      anonymize_user: { Args: { p_user_id: string }; Returns: boolean }
       confirm_settlement: {
         Args: { p_session_id: string; p_user_id: string }
         Returns: number
