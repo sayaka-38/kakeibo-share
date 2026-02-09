@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { t } from "@/lib/i18n";
 import type { Profile } from "@/types/database";
+import ThemeSelector from "./ThemeSelector";
 
 type HeaderProps = {
   user: Profile | null;
@@ -29,19 +30,22 @@ export default function Header({ user }: HeaderProps) {
             </h1>
           </div>
 
-          {user && (
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-theme-muted">
-                {user.display_name || user.email}
-              </span>
-              <button
-                onClick={handleLogout}
-                className="text-sm text-theme-text hover:text-theme-headline"
-              >
-                {t("common.logout")}
-              </button>
-            </div>
-          )}
+          <div className="flex items-center gap-4">
+            <ThemeSelector />
+            {user && (
+              <>
+                <span className="text-sm text-theme-muted">
+                  {user.display_name || user.email}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="text-sm text-theme-text hover:text-theme-headline"
+                >
+                  {t("common.logout")}
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </header>

@@ -36,7 +36,7 @@ describe("Button", () => {
       render(<Button variant="primary">Primary</Button>);
       const button = screen.getByRole("button");
       expect(button).toHaveClass("bg-theme-primary");
-      expect(button).toHaveClass("text-theme-headline");
+      expect(button).toHaveClass("text-theme-button-text");
     });
 
     it("secondaryバリアントのスタイルが適用される", () => {

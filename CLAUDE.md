@@ -166,6 +166,13 @@ src/
 - `SettlementSessionStatus`: `"draft" | "confirmed" | "pending_payment" | "settled"` のリテラル型
 - `database.ts` の RPC オーバーライド: 全 RPC が generated types に反映済み。新規追加時のみ一時的にオーバーライド
 
+### 支払いフォームアーキテクチャ
+
+- **`usePaymentForm`** (`src/components/payment-form/hooks/usePaymentForm.ts`): 金額・説明・日付・割り勘種別の状態管理とバリデーション
+- **`PaymentFormInitialData`**: `usePaymentForm` に渡す初期値型（編集・複製で共用）
+- **`DuplicatePaymentData`**: `EditPaymentData` から `paymentId` を除いた型。`?copyFrom=<id>` クエリで server-side fetch → フォームに pre-fill
+- **フォーム使い分け**: `FullPaymentForm`（/payments/new）= グループ・カテゴリ・カスタム割り勘対応、`QuickPaymentForm`（Dashboard）= 最小限
+
 ### 開発環境の優先順位
 
 - リモートDB（Supabase）を優先して開発する

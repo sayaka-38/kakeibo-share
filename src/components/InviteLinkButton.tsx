@@ -78,7 +78,7 @@ export function InviteLinkButton({ inviteCode }: Props) {
           className={`flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${
             copied
               ? "bg-theme-text text-white"
-              : "bg-theme-primary text-white hover:bg-theme-primary/80 active:scale-95"
+              : "bg-theme-primary text-theme-button-text hover:bg-theme-primary/80 active:scale-95"
           }`}
         >
           {copied ? (

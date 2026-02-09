@@ -96,7 +96,7 @@ export default function InviteMemberForm({ groupId }: InviteMemberFormProps) {
         <button
           type="submit"
           disabled={loading}
-          className="px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-theme-primary hover:bg-theme-primary/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-theme-button-text bg-theme-primary hover:bg-theme-primary/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? t("groups.invite.adding") : t("groups.invite.add")}
         </button>

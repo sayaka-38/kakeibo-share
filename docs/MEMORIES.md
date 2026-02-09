@@ -20,41 +20,9 @@
 | 支払い削除/編集 | RESTful API + RPC原子的置換 | #29, 済 |
 | 土台強化 | 認証ガード・isProxySplit共通化・CI permissions | #30 |
 | Phase 7 | 清算エンジン完全実装 + 相殺統合 + ゾンビ修正 | #34, #36 |
-| Phase 8 | 構造改善・支払い複製・完全日本語化・email NULL対応 | PR予定 |
+| Phase 8 | 構造改善・支払い複製・完全日本語化・email NULL対応 | #38 |
 
 テスト: 812件パス / ビルド正常 / Migration 024 まで push 済み
-
----
-
-## Phase 8 実施内容
-
-### 構造改善
-- SettlementSessionManager → useSettlementSession フック抽出
-- 相殺計算ロジック → consolidate.ts に完全一本化
-- useMemo 最適化（SettlementResultCard）
-- database.ts 型整理（不要なオーバーライド削除）
-
-### 支払い複製機能
-- `DuplicatePaymentData` 型 + `copyFrom` クエリパラメータ方式
-- 全支払い（清算済み含む）に複製ボタン表示
-- 複製時は日付を今日に自動設定、他の情報（金額・説明・割り勘方式）を継承
-
-### 完全日本語化
-- LoginPage: i18n 対応 + useSearchParams を Suspense で囲む修正
-- auth/callback: エラーキー方式（`?error=auth_failed` → ログインページで翻訳表示）
-- 全 API ルート（settlement-sessions, settlement-entries, recurring-rules）のエラーメッセージ日本語化
-
-### email NULL 対応
-- profiles.email の NOT NULL 制約解除（手動マイグレーション済み）
-- handle_new_user() トリガー: 匿名ユーザー（email NULL）対応
-- 全ローカル型定義を `email: string | null` に更新（20箇所）
-- email 表示箇所のフォールバック追加（`|| "Unknown"`）
-
-### パフォーマンス改善
-- payments/new の N+1 クエリ解消（ループ → `.in()` 一括取得）
-
-### CI 改善
-- CI diff に `--strip-trailing-cr` 適用
 
 ---
 
@@ -82,7 +50,14 @@
 
 ## 次のタスク
 
-### Phase 9–11（将来）
+### Phase 9B（次セッション）
 
-- 清算準備室「個別調整」UI / UIカラー切り替え
+- デモ Bot パートナー（RPC `create_demo_bot_partner` 設計済み、Migration 025）
+- 1人グループ割り勘ガード（`currentMembers.length >= 2`）
+- 複製バッジ「内容をコピーして新規作成」+ ボタン「複製を保存」
+- i18n キー追加（`payments.form.duplicateBadge/duplicateSubmit/duplicateSubmitting`）
+
+### Phase 10–11（将来）
+
+- 清算準備室「個別調整」UI
 - Suspense境界 / クエリ並列化 / 型安全ラッパー

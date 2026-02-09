@@ -132,7 +132,7 @@ export function NumericKeypad({
       {/* 確定キー */}
       <button
         type="button"
-        className={`${keyButtonClasses} bg-theme-primary text-white hover:bg-theme-primary/80 active:bg-theme-primary/70`}
+        className={`${keyButtonClasses} bg-theme-primary text-theme-button-text hover:bg-theme-primary/80 active:bg-theme-primary/70`}
         onClick={handleConfirm}
         disabled={disabled}
         aria-label={t("common.confirm")}

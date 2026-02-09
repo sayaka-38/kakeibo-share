@@ -52,7 +52,7 @@ export default async function GroupsPage() {
         <h1 className="text-2xl font-bold text-theme-headline">{t("groups.title")}</h1>
         <Link
           href="/groups/new"
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-theme-primary hover:bg-theme-primary/80"
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-theme-button-text bg-theme-primary hover:bg-theme-primary/80"
         >
           {t("groups.createGroup")}
         </Link>
@@ -105,7 +105,7 @@ export default async function GroupsPage() {
           <p className="text-theme-text mb-4">{t("groups.noGroups")}</p>
           <Link
             href="/groups/new"
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-theme-primary hover:bg-theme-primary/80"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-theme-button-text bg-theme-primary hover:bg-theme-primary/80"
           >
             {t("groups.createFirstGroup")}
           </Link>

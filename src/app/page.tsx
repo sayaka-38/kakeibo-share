@@ -33,7 +33,7 @@ export default async function Home() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
           <Link
             href="/signup"
-            className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-theme-primary hover:bg-theme-primary/80 transition-colors"
+            className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-theme-button-text bg-theme-primary hover:bg-theme-primary/80 transition-colors"
           >
             {t("landing.getStarted")}
           </Link>
