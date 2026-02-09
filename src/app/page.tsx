@@ -55,7 +55,7 @@ export default async function Home() {
           <div className="bg-theme-card-bg rounded-xl shadow-sm p-6 text-center">
             <div className="w-12 h-12 bg-theme-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg
-                className="w-6 h-6 text-theme-primary"
+                className="w-6 h-6 text-theme-primary-text"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

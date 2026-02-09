@@ -113,7 +113,7 @@ export default async function SettlementHistoryPage({ params }: PageProps) {
       <div className="mb-6">
         <Link
           href={`/groups/${groupId}/settlement`}
-          className="text-sm text-theme-primary hover:text-theme-primary/80 mb-2 inline-block"
+          className="text-sm text-theme-primary-text hover:text-theme-primary-text/80 mb-2 inline-block"
         >
           &larr; 清算準備室
         </Link>
@@ -129,7 +129,7 @@ export default async function SettlementHistoryPage({ params }: PageProps) {
           <p className="text-theme-muted">まだ確定した清算がありません</p>
           <Link
             href={`/groups/${groupId}/settlement`}
-            className="mt-4 inline-block text-theme-primary hover:text-theme-primary/80"
+            className="mt-4 inline-block text-theme-primary-text hover:text-theme-primary-text/80"
           >
             清算を開始する
           </Link>
@@ -149,7 +149,7 @@ export default async function SettlementHistoryPage({ params }: PageProps) {
                       {session.period_start} 〜 {session.period_end}
                     </h3>
                     {session.status === "pending_payment" && (
-                      <span className="text-xs bg-theme-primary/15 text-theme-primary px-1.5 py-0.5 rounded">
+                      <span className="text-xs bg-theme-primary/15 text-theme-primary-text px-1.5 py-0.5 rounded">
                         支払い待ち
                       </span>
                     )}

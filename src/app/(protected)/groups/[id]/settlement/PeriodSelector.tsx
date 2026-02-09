@@ -131,7 +131,7 @@ export default function PeriodSelector({
               </p>
             )}
             {suggestion.oldestUnsettledDate && (
-              <p className="text-xs text-theme-primary">
+              <p className="text-xs text-theme-primary-text">
                 最古の未清算: {suggestion.oldestUnsettledDate}
               </p>
             )}

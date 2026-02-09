@@ -42,18 +42,18 @@ export function DemoBanner({ isDemo, expiresAt }: DemoBannerProps) {
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-theme-primary/15 text-theme-headline">
             {t("demo.banner")}
           </span>
-          <span className="text-sm text-theme-primary">
+          <span className="text-sm text-theme-primary-text">
             {t("demo.expirationNotice")}
           </span>
           {expiresAt && (
-            <span className="text-xs text-theme-primary">
+            <span className="text-xs text-theme-primary-text">
               ({formatRemainingTime(expiresAt)})
             </span>
           )}
         </div>
         <Link
           href="/signup"
-          className="text-sm font-medium text-theme-primary hover:text-theme-primary/80 underline underline-offset-2"
+          className="text-sm font-medium text-theme-primary-text hover:text-theme-primary-text/80 underline underline-offset-2"
         >
           {t("demo.signUpPrompt")}
         </Link>

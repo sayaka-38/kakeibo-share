@@ -287,7 +287,7 @@ export default function SettlementResultCard({
           <>
             <div className="flex justify-between text-sm">
               <span className="text-theme-muted">あなたの支払い</span>
-              <span className="font-medium text-theme-primary">
+              <span className="font-medium text-theme-primary-text">
                 {formatCurrency(myBalance.paid)}
               </span>
             </div>

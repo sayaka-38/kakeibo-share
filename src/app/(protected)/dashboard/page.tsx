@@ -152,7 +152,7 @@ export default async function DashboardPage() {
               </h2>
               <Link
                 href="/payments"
-                className="text-sm text-theme-primary hover:text-theme-primary/80"
+                className="text-sm text-theme-primary-text hover:text-theme-primary-text/80"
               >
                 {t("common.viewAll")}
               </Link>

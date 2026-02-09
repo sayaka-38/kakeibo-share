@@ -7,6 +7,7 @@ type MockSupabaseClient = {
     signInAnonymously: ReturnType<typeof vi.fn>;
   };
   from: ReturnType<typeof vi.fn>;
+  rpc: ReturnType<typeof vi.fn>;
 };
 
 // モックのヘルパー関数
@@ -16,6 +17,7 @@ function createMockSupabase(): MockSupabaseClient {
       signInAnonymously: vi.fn(),
     },
     from: vi.fn(),
+    rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
   };
 }
 
@@ -391,6 +393,108 @@ describe("Demo Session Creation - デモセッション作成", () => {
 
       expect(capturedProfileUpdate.is_demo).toBe(true);
       expect(capturedProfileUpdate.display_name).toBe("デモユーザー");
+    });
+
+    it("成功後にBot RPCを呼び出す", async () => {
+      const mockUserId = "demo-user-123";
+      const mockGroupId = "demo-group-456";
+
+      mockSupabase.auth.signInAnonymously.mockResolvedValue({
+        data: {
+          user: { id: mockUserId },
+          session: { access_token: "token" },
+        },
+        error: null,
+      });
+
+      mockSupabase.rpc.mockResolvedValue({
+        data: { bot_id: "bot-123", bot_name: "さくら（パートナー）", payments_created: 4 },
+        error: null,
+      });
+
+      mockSupabase.from.mockImplementation((table: string) => {
+        if (table === "profiles") return createProfileUpdateMock(mockUserId);
+        if (table === "groups") {
+          return {
+            insert: vi.fn().mockReturnValue({
+              select: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: { id: mockGroupId }, error: null,
+                }),
+              }),
+            }),
+          };
+        }
+        if (table === "group_members") return { insert: vi.fn().mockResolvedValue({ data: {}, error: null }) };
+        if (table === "demo_sessions") {
+          return {
+            insert: vi.fn().mockReturnValue({
+              select: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: { id: "session-123", expires_at: new Date().toISOString() }, error: null,
+                }),
+              }),
+            }),
+          };
+        }
+        return { insert: vi.fn(), update: vi.fn() };
+      });
+
+      const result = await createDemoSession(mockSupabase as never);
+
+      expect(result.success).toBe(true);
+      expect(mockSupabase.rpc).toHaveBeenCalledWith("create_demo_bot_partner", {
+        p_group_id: mockGroupId,
+        p_demo_user_id: mockUserId,
+      });
+    });
+
+    it("Bot RPC失敗でもセッション作成は成功する", async () => {
+      const mockUserId = "demo-user-123";
+
+      mockSupabase.auth.signInAnonymously.mockResolvedValue({
+        data: {
+          user: { id: mockUserId },
+          session: { access_token: "token" },
+        },
+        error: null,
+      });
+
+      mockSupabase.rpc.mockResolvedValue({
+        data: null,
+        error: { message: "function create_demo_bot_partner does not exist" },
+      });
+
+      mockSupabase.from.mockImplementation((table: string) => {
+        if (table === "profiles") return createProfileUpdateMock(mockUserId);
+        if (table === "groups") {
+          return {
+            insert: vi.fn().mockReturnValue({
+              select: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: { id: "group-123" }, error: null,
+                }),
+              }),
+            }),
+          };
+        }
+        if (table === "group_members") return { insert: vi.fn().mockResolvedValue({ data: {}, error: null }) };
+        if (table === "demo_sessions") {
+          return {
+            insert: vi.fn().mockReturnValue({
+              select: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: { id: "session-123", expires_at: new Date().toISOString() }, error: null,
+                }),
+              }),
+            }),
+          };
+        }
+        return { insert: vi.fn(), update: vi.fn() };
+      });
+
+      const result = await createDemoSession(mockSupabase as never);
+      expect(result.success).toBe(true);
     });
 
     it("作成されたデモグループに適切な名前が設定されている", async () => {

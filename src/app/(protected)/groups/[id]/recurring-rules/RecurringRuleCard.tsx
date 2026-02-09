@@ -102,7 +102,7 @@ export default function RecurringRuleCard({
         <div className="text-right shrink-0">
           <div
             className={`font-semibold ${
-              rule.is_variable ? "text-theme-primary" : "text-theme-headline"
+              rule.is_variable ? "text-theme-primary-text" : "text-theme-headline"
             }`}
           >
             {amountDisplay}

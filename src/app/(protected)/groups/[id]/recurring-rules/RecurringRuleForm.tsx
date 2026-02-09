@@ -353,7 +353,7 @@ export default function RecurringRuleForm({
               <p className="mt-1 text-sm text-theme-accent">{errors.dayOfMonth}</p>
             )}
             {dayOfMonth === "31" && (
-              <p className="mt-1 text-xs text-theme-primary">
+              <p className="mt-1 text-xs text-theme-primary-text">
                 {t("recurringRules.dayOfMonthEndHint")}
               </p>
             )}
@@ -431,7 +431,7 @@ export default function RecurringRuleForm({
                   className={`text-xs font-medium ${
                     Math.abs(percentageTotal - 100) < 0.1
                       ? "text-theme-text"
-                      : "text-theme-primary"
+                      : "text-theme-primary-text"
                   }`}
                 >
                   {t("recurringRules.percentageTotal", {

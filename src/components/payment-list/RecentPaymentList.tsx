@@ -139,7 +139,7 @@ export async function RecentPaymentList({
                 </span>
                 <Link
                   href={`/payments/new?copyFrom=${payment.id}`}
-                  className="text-theme-muted/70 hover:text-theme-primary transition-colors"
+                  className="text-theme-muted/70 hover:text-theme-primary-text transition-colors"
                   aria-label={t("payments.duplicate")}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

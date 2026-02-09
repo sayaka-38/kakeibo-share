@@ -6,7 +6,7 @@
 
 ## 最終更新日
 
-2026-02-08
+2026-02-09
 
 ---
 
@@ -21,8 +21,10 @@
 | 土台強化 | 認証ガード・isProxySplit共通化・CI permissions | #30 |
 | Phase 7 | 清算エンジン完全実装 + 相殺統合 + ゾンビ修正 | #34, #36 |
 | Phase 8 | 構造改善・支払い複製・完全日本語化・email NULL対応 | #38 |
+| Phase 9A | テーマシステム基盤 — 5パレット・CSS変数・ThemeProvider | #39 |
+| Phase 9B | UX磨き — デモBot・割り勘ガード・複製可視化・WCAGコントラスト | #40 |
 
-テスト: 812件パス / ビルド正常 / Migration 024 まで push 済み
+テスト: 829件パス / ビルド正常 / Migration 025 まで push 済み
 
 ---
 
@@ -36,6 +38,8 @@
 - **末日対応**: `day_of_month = 31` → 2月は28/29日（`get_actual_day_of_month` ヘルパー）
 - **後出しレシート**: `generate_settlement_entries` が `settlement_id IS NULL` の既存 payments を自動取り込み
 - **email NULL**: profiles.email は NULL 可（匿名/デモユーザー）。表示時は `display_name || email || "Unknown"` のフォールバック必須
+- **テーマ primary-text 分離**: `text-theme-primary-text` はテキスト専用（WCAG AA対応の暗色）、`bg-theme-primary` はボタン背景用（鮮やかな元色を維持）
+- **デモ Bot RPC**: `create_demo_bot_partner` は SECURITY DEFINER で auth.users にBot挿入。失敗時はグレースフルに無視して続行
 
 ---
 
@@ -43,19 +47,12 @@
 
 - `.env.local`: リモートDB（Supabase hosted）優先
 - ローカル Docker: Codespaces で不安定（リモート設定のまま開発継続）
-- Migration 024 まで push 済み
+- Migration 025 まで push 済み
 - profiles.email: NOT NULL 制約解除済み（手動マイグレーション）
 
 ---
 
 ## 次のタスク
-
-### Phase 9B（次セッション）
-
-- デモ Bot パートナー（RPC `create_demo_bot_partner` 設計済み、Migration 025）
-- 1人グループ割り勘ガード（`currentMembers.length >= 2`）
-- 複製バッジ「内容をコピーして新規作成」+ ボタン「複製を保存」
-- i18n キー追加（`payments.form.duplicateBadge/duplicateSubmit/duplicateSubmitting`）
 
 ### Phase 10–11（将来）
 

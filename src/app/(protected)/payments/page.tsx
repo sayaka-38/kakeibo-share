@@ -195,7 +195,7 @@ export default async function PaymentsPage() {
                             </span>
                             <Link
                               href={`/payments/new?copyFrom=${payment.id}`}
-                              className="text-theme-muted/70 hover:text-theme-primary transition-colors"
+                              className="text-theme-muted/70 hover:text-theme-primary-text transition-colors"
                               aria-label={t("payments.duplicate")}
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -205,7 +205,7 @@ export default async function PaymentsPage() {
                             {payment.payer_id === user?.id && !payment.settlement_id && (
                               <Link
                                 href={`/payments/${payment.id}/edit`}
-                                className="text-theme-muted/70 hover:text-theme-primary transition-colors"
+                                className="text-theme-muted/70 hover:text-theme-primary-text transition-colors"
                                 aria-label={t("payments.edit")}
                               >
                                 <svg
