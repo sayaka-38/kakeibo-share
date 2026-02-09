@@ -19,6 +19,10 @@ export type Database = Omit<GeneratedDatabase, "public"> & {
         Args: { p_group_id: string; p_demo_user_id: string };
         Returns: Json;
       };
+      anonymize_user: {
+        Args: { p_user_id: string };
+        Returns: boolean;
+      };
     };
   };
 };

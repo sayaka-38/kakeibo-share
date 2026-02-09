@@ -150,6 +150,7 @@ src/
 | `settle_consolidated_sessions` | 統合済み旧セッション一括 settled 化 | DEFINER |
 | `replace_payment_splits` | splits の原子的置換 | DEFINER |
 | `get_settlement_period_suggestion` | スマート期間提案 | INVOKER |
+| `anonymize_user` | 退会時プロフィール匿名化 + グループ退去 | DEFINER |
 
 #### 相殺統合ロジック
 
@@ -172,6 +173,14 @@ src/
 - **`PaymentFormInitialData`**: `usePaymentForm` に渡す初期値型（編集・複製で共用）
 - **`DuplicatePaymentData`**: `EditPaymentData` から `paymentId` を除いた型。`?copyFrom=<id>` クエリで server-side fetch → フォームに pre-fill
 - **フォーム使い分け**: `FullPaymentForm`（/payments/new）= グループ・カテゴリ・カスタム割り勘対応、`QuickPaymentForm`（Dashboard）= 最小限
+
+### 退会ユーザーの扱い（匿名化パターン）
+
+- `profiles` 行は**絶対に DELETE しない**。`payments.payer_id` 等の FK 参照が壊れるため
+- 退会処理は `anonymize_user` RPC で匿名化（display_name = "退会済みユーザー", email/avatar = NULL）
+- 退会済みユーザーの `display_name` は `"退会済みユーザー"` 固定。UI 表示時は通常の `display_name || email || "Unknown"` フォールバックで自動的にこの名前が表示される
+- `auth.users` レコードは admin API で削除（再ログイン防止）
+- 支払い編集・削除の認可は `payer_id === user.id` のみ。グループオーナーの例外なし
 
 ### 開発環境の優先順位
 

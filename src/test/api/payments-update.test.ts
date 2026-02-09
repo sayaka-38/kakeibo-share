@@ -291,7 +291,7 @@ describe("API Route 実装詳細", () => {
       }
       const content = fs.readFileSync(API_ROUTE_PATH, "utf-8");
       const putHandler = content.slice(content.indexOf("export async function PUT"));
-      // PUT ハンドラでは owner_id チェックを行わない（DELETE とは異なる）
+      // PUT ハンドラでは owner_id チェックを行わない（支払者本人のみ）
       expect(putHandler).not.toContain("ownerMatch");
       expect(putHandler).not.toContain("owner_id");
     });

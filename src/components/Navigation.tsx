@@ -58,11 +58,17 @@ export default function Navigation() {
 
   const navItems = getNavItems(lastGroupId);
 
-  // 清算リンクのアクティブ判定（グループの清算準備室も含む）
-  const isSettlementActive = (href: string) => {
+  // ナビアイテムのアクティブ判定
+  const isNavItemActive = (href: string) => {
+    // 清算: pathname に /settlement が含まれていれば active
     if (href.includes("/settlement")) {
       return pathname.includes("/settlement");
     }
+    // グループ: /groups 配下だが /settlement ページは除外（清算と二重判定を防止）
+    if (href === "/groups") {
+      return pathname.startsWith("/groups") && !pathname.includes("/settlement");
+    }
+    // その他: プレフィックス一致
     return pathname.startsWith(href);
   };
 
@@ -71,7 +77,7 @@ export default function Navigation() {
       {/* Mobile navigation */}
       <div className="md:hidden flex overflow-x-auto">
         {navItems.map((item) => {
-          const isActive = isSettlementActive(item.href);
+          const isActive = isNavItemActive(item.href);
           return (
             <Link
               key={item.labelKey}
@@ -93,7 +99,7 @@ export default function Navigation() {
       <div className="hidden md:block p-4">
         <ul className="space-y-2">
           {navItems.map((item) => {
-            const isActive = isSettlementActive(item.href);
+            const isActive = isNavItemActive(item.href);
             return (
               <li key={item.labelKey}>
                 <Link
