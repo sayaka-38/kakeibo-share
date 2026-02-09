@@ -161,7 +161,7 @@ export default function JoinGroupPage({ params }: Props) {
             </p>
             <Link
               href={`/groups/${state.groupId}`}
-              className="inline-flex items-center justify-center w-full px-4 py-3 bg-theme-primary text-white font-medium rounded-lg hover:bg-theme-primary/80 transition-colors"
+              className="inline-flex items-center justify-center w-full px-4 py-3 bg-theme-primary text-theme-button-text font-medium rounded-lg hover:bg-theme-primary/80 transition-colors"
             >
               {t("groups.invite.join.goToGroup")}
             </Link>
@@ -200,7 +200,7 @@ export default function JoinGroupPage({ params }: Props) {
             <div className="space-y-3">
               <Link
                 href="/login"
-                className="inline-flex items-center justify-center w-full px-4 py-3 bg-theme-primary text-white font-medium rounded-lg hover:bg-theme-primary/80 transition-colors"
+                className="inline-flex items-center justify-center w-full px-4 py-3 bg-theme-primary text-theme-button-text font-medium rounded-lg hover:bg-theme-primary/80 transition-colors"
               >
                 {t("auth.login.title")}
               </Link>

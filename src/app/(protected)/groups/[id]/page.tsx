@@ -158,7 +158,7 @@ export default async function GroupDetailPage({ params }: Props) {
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
               href={`/groups/${id}/settlement`}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-theme-primary rounded-lg hover:bg-theme-primary/80 transition-colors"
+              className="inline-flex items-center px-4 py-2 text-sm font-medium text-theme-button-text bg-theme-primary rounded-lg hover:bg-theme-primary/80 transition-colors"
             >
               {t("settlementSession.title")}
             </Link>

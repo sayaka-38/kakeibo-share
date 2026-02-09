@@ -296,6 +296,9 @@
       "confirmReceiptFailed": "Failed to confirm receipt"
     }
   },
+  "theme": {
+    "label": "Color Theme"
+  },
   "recurringRules": {
     "title": "Recurring Rules",
     "subtitle": "Set up templates for monthly recurring expenses",

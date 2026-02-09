@@ -71,7 +71,7 @@ export default async function DashboardPage() {
           </p>
           <Link
             href="/groups/new"
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-theme-primary hover:bg-theme-primary/80"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-theme-button-text bg-theme-primary hover:bg-theme-primary/80"
           >
             {t("dashboard.welcome.createGroup")}
           </Link>
@@ -82,7 +82,7 @@ export default async function DashboardPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Link
               href="/payments/new"
-              className="bg-theme-primary text-white rounded-lg p-4 text-center hover:bg-theme-primary/80 transition-colors"
+              className="bg-theme-primary text-theme-button-text rounded-lg p-4 text-center hover:bg-theme-primary/80 transition-colors"
             >
               <span className="block text-2xl mb-1">+</span>
               <span className="text-sm">{t("dashboard.quickActions.addPayment")}</span>

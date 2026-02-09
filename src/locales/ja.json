@@ -314,6 +314,9 @@
       "confirmReceiptFailed": "受取確認に失敗しました"
     }
   },
+  "theme": {
+    "label": "テーマカラー"
+  },
   "recurringRules": {
     "title": "固定費ルール",
     "subtitle": "毎月発生する固定費のテンプレートを設定",

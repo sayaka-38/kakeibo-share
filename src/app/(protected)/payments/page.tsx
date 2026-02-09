@@ -105,7 +105,7 @@ export default async function PaymentsPage() {
         <h1 className="text-2xl font-bold text-theme-headline">{t("payments.title")}</h1>
         <Link
           href="/payments/new"
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-theme-primary hover:bg-theme-primary/80"
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-theme-button-text bg-theme-primary hover:bg-theme-primary/80"
         >
           {t("payments.addPayment")}
         </Link>
@@ -256,7 +256,7 @@ export default async function PaymentsPage() {
           <p className="text-theme-text mb-4">{t("payments.noPayments")}</p>
           <Link
             href="/payments/new"
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-theme-primary hover:bg-theme-primary/80"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-theme-button-text bg-theme-primary hover:bg-theme-primary/80"
           >
             {t("payments.addFirstPayment")}
           </Link>

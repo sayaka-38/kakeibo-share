@@ -1,25 +1,94 @@
 @import "tailwindcss";
 
 /* ============================================================
- * Theme: Happy Hues Palette 14
- * カラー切り替え（Phase 10予定）を見据え、CSS変数で管理
+ * Theme System — 5 palettes with [data-theme] switching
  * ============================================================ */
-:root {
-  --background: #f2f7f5;
-  --foreground: #00473e;
 
-  /* Happy Hues Palette 14 — テーマカラー */
-  --theme-bg: #f2f7f5;
-  --theme-text: #00473e;
-  --theme-headline: #00332c;
-  --theme-primary: #faae2b;
-  --theme-secondary: #ffa3d1;
-  --theme-accent: #fa5246;
+/* Palette 14 (default light) */
+:root,
+[data-theme="14"] {
+  --theme-bg: #fffffe;
+  --theme-headline: #272343;
+  --theme-text: #2d334a;
+  --theme-primary: #ffd803;
+  --theme-button-text: #272343;
+  --theme-secondary: #e3f6f5;
+  --theme-accent: #e45858;
+  --theme-card-bg: #fffffe;
+  --theme-card-border: #d9e8e7;
+  --theme-muted: #717495;
 
-  /* UI要素用のセマンティック変数 */
-  --theme-card-bg: #ffffff;
-  --theme-card-border: #e0ebe7;
-  --theme-muted: #5f8f85;
+  --background: var(--theme-bg);
+  --foreground: var(--theme-text);
+  --radius-lg: 0.75rem;
+}
+
+/* Palette 12 (dark) */
+[data-theme="12"] {
+  --theme-bg: #232946;
+  --theme-headline: #fffffe;
+  --theme-text: #b8c1ec;
+  --theme-primary: #eebbc3;
+  --theme-button-text: #232946;
+  --theme-secondary: #b8c1ec;
+  --theme-accent: #d4939d;
+  --theme-card-bg: #2a3058;
+  --theme-card-border: #3d4470;
+  --theme-muted: #8a91ad;
+
+  --background: var(--theme-bg);
+  --foreground: var(--theme-text);
+}
+
+/* Palette 15 (light) */
+[data-theme="15"] {
+  --theme-bg: #faeee7;
+  --theme-headline: #33272a;
+  --theme-text: #594a4e;
+  --theme-primary: #ff8ba7;
+  --theme-button-text: #33272a;
+  --theme-secondary: #ffc6c7;
+  --theme-accent: #e74c3c;
+  --theme-card-bg: #fffffe;
+  --theme-card-border: #e8d6cf;
+  --theme-muted: #7a6871;
+
+  --background: var(--theme-bg);
+  --foreground: var(--theme-text);
+}
+
+/* Palette 16 (dark) */
+[data-theme="16"] {
+  --theme-bg: #55423d;
+  --theme-headline: #fffffe;
+  --theme-text: #fff3ec;
+  --theme-primary: #ffc0ad;
+  --theme-button-text: #271c19;
+  --theme-secondary: #e78fb3;
+  --theme-accent: #9656a1;
+  --theme-card-bg: #4a3833;
+  --theme-card-border: #6d5650;
+  --theme-muted: #d4b5aa;
+
+  --background: var(--theme-bg);
+  --foreground: var(--theme-text);
+}
+
+/* Palette 17 (light) */
+[data-theme="17"] {
+  --theme-bg: #fef6e4;
+  --theme-headline: #001858;
+  --theme-text: #172c66;
+  --theme-primary: #f582ae;
+  --theme-button-text: #001858;
+  --theme-secondary: #8bd3dd;
+  --theme-accent: #e74c3c;
+  --theme-card-bg: #fffffe;
+  --theme-card-border: #e8dfd5;
+  --theme-muted: #4a5580;
+
+  --background: var(--theme-bg);
+  --foreground: var(--theme-text);
 }
 
 @theme inline {
@@ -29,6 +98,7 @@
   --color-theme-text: var(--theme-text);
   --color-theme-headline: var(--theme-headline);
   --color-theme-primary: var(--theme-primary);
+  --color-theme-button-text: var(--theme-button-text);
   --color-theme-secondary: var(--theme-secondary);
   --color-theme-accent: var(--theme-accent);
   --color-theme-card-bg: var(--theme-card-bg);
@@ -36,13 +106,6 @@
   --color-theme-muted: var(--theme-muted);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
