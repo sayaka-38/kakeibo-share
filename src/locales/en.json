@@ -79,7 +79,16 @@
     },
     "errors": {
       "loginRequired": "You must be logged in",
-      "authenticationFailed": "Authentication failed. Please try again."
+      "authenticationFailed": "Authentication failed. Please try again.",
+      "invalidCredentials": "Invalid email or password",
+      "emailNotConfirmed": "Email not confirmed. Please check your inbox.",
+      "userAlreadyRegistered": "This email is already registered",
+      "passwordTooShort": "Password must be at least 6 characters",
+      "rateLimitExceeded": "Too many requests. Please try again later.",
+      "invalidEmail": "Please enter a valid email address",
+      "networkError": "Network error. Please check your connection.",
+      "samePassword": "New password must be different from the current password",
+      "unknown": "An error occurred. Please try again."
     }
   },
   "dashboard": {
@@ -230,7 +239,43 @@
     "dashboard": "Dashboard",
     "payments": "Payments",
     "settlement": "Settlement",
-    "groups": "Groups"
+    "groups": "Groups",
+    "settings": "Settings"
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": {
+      "title": "Profile",
+      "displayName": "Display Name",
+      "displayNamePlaceholder": "Enter your name",
+      "update": "Save",
+      "updating": "Saving...",
+      "updateSuccess": "Profile saved",
+      "updateFailed": "Failed to save profile"
+    },
+    "password": {
+      "title": "Change Password",
+      "newPassword": "New Password",
+      "newPasswordPlaceholder": "At least 6 characters",
+      "confirmPassword": "Confirm New Password",
+      "confirmPasswordPlaceholder": "Enter again",
+      "change": "Change Password",
+      "changing": "Changing...",
+      "changeSuccess": "Password changed",
+      "changeFailed": "Failed to change password",
+      "mismatch": "Passwords do not match",
+      "tooShort": "Password must be at least 6 characters"
+    },
+    "deleteAccount": {
+      "title": "Delete Account",
+      "description": "Deleting your account will anonymize your profile. Past payment records are kept for settlement integrity, but your name will no longer be displayed.",
+      "warning": "This action cannot be undone.",
+      "confirmLabel": "Type \"delete\" to confirm",
+      "confirmPlaceholder": "delete",
+      "delete": "Delete Account",
+      "deleting": "Deleting...",
+      "deleteFailed": "Failed to delete account"
+    }
   },
   "categories": {
     "foodGroceries": "Food & Groceries",

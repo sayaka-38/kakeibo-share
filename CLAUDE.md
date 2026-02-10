@@ -11,46 +11,20 @@
 
 ---
 
-## 最優先ルール: 4つの開発アーキテクチャ
+## 必須アーキテクチャ規約（違反コードはマージ不可）
 
-以下は**全実装で遵守必須**のアーキテクチャ規約。違反コードはマージ不可。
-
-### 1. Server Actions 禁止 → API Routes
-
-`"use server"` は使用禁止。すべてのサーバー処理は `app/api/*/route.ts` で実装し、Client Component から `fetch()` で呼び出す。
-
-### 2. 共通認証: `authenticateRequest()`
-
-API Route の認証は `src/lib/api/authenticate.ts` の `authenticateRequest()` を使用。直接 `supabase.auth.getUser()` を書かない。
-
-```typescript
-const auth = await authenticateRequest();
-if (!auth.success) return auth.response;
-const { user, supabase } = auth;
-```
-
-### 3. 通貨フォーマット: `formatCurrency()`
-
-金額表示は `src/lib/format/currency.ts` の `formatCurrency()` を使用。`¥` やカンマ区切りをハードコーディングしない。清算画面では `showSign: true` オプションで `+¥` / `-¥` を表示。
-
-### 4. 環境変数: `getSupabaseEnv()`
-
-Supabase の環境変数は `src/lib/env.ts` の `getSupabaseEnv()` で取得。`process.env.XXX!`（non-null assertion）は禁止。
+1. **Server Actions 禁止** → `app/api/*/route.ts` + Client `fetch()`
+2. **認証**: `authenticateRequest()` (`src/lib/api/authenticate.ts`)
+3. **通貨**: `formatCurrency()` (`src/lib/format/currency.ts`)。清算は `showSign: true`
+4. **環境変数**: `getSupabaseEnv()` (`src/lib/env.ts`)。`process.env.XXX!` 禁止
 
 ---
 
-## よく使うコマンド
+## コマンド
 
 ```bash
-npm run dev          # 開発サーバー起動
-npm run build        # プロダクションビルド
-npm run lint         # ESLint
-npm run test         # テスト（ウォッチ）
-npm run test:run     # テスト（単発）
-npm run db:start     # ローカル Supabase 起動
-npm run db:stop      # ローカル Supabase 停止
-npm run db:reset     # ローカル DB リセット
-npm run db:gen-types # TypeScript 型定義を自動生成
+npm run dev / build / lint / test / test:run
+npm run db:start / db:stop / db:reset / db:gen-types
 ```
 
 ---
@@ -59,154 +33,91 @@ npm run db:gen-types # TypeScript 型定義を自動生成
 
 ```
 src/
-├── app/
-│   ├── (protected)/     # 認証必須ページ
-│   ├── api/             # API Routes
-│   ├── auth/            # 認証コールバック
-│   ├── login/           # ログイン
-│   └── signup/          # サインアップ
-├── components/          # 再利用コンポーネント
-├── lib/
-│   ├── api/             # authenticateRequest 等
-│   ├── format/          # formatCurrency 等
-│   ├── i18n/            # 国際化（翻訳関数）
-│   └── supabase/        # Supabase クライアント (server / client / middleware)
-├── locales/             # 辞書ファイル（ja.json, en.json）
-├── test/                # テストファイル
-└── types/               # 型定義
+├── app/(protected)/  # 認証必須ページ
+├── app/api/          # API Routes
+├── components/       # 再利用コンポーネント
+├── lib/api/          # authenticateRequest
+├── lib/auth/         # translateAuthError
+├── lib/format/       # formatCurrency
+├── lib/i18n/         # t() 翻訳関数
+├── lib/settlement/   # consolidateTransfers 等
+├── lib/supabase/     # server / client / middleware
+├── lib/theme/        # ThemeProvider / useTheme
+├── locales/          # ja.json, en.json
+├── test/             # テストファイル
+└── types/            # database.ts, database.generated.ts
 ```
 
 ---
 
-## 開発哲学（4原則）
+## 開発哲学
 
-1. **モバイルアプリ的操作感** — 即時フィードバック、楽観的UI、スケルトンローディング、最小限の画面遷移
-2. **ルームメイトへの配慮** — 「未払い」→「清算待ち」、「借金」→「立替」、赤字表示は最小限、公平性を可視化
-3. **クリーンコード** — 単一責任、UI→ロジック→データの一方向依存、リテラル型優先、副作用分離
-4. **堅実な技術選択** — 上記4アーキテクチャに従い、実績のあるパターンのみ採用
+1. **モバイルアプリ的操作感** — 即時フィードバック、楽観的UI、最小限の画面遷移
+2. **ルームメイトへの配慮** — 「清算待ち」「立替」等の柔らかい表現、公平性の可視化
+3. **クリーンコード** — 単一責任、リテラル型優先、副作用分離
+4. **堅実な技術選択** — 上記4規約に従い、実績パターンのみ
 
 ---
 
 ## ワークフロー
 
-### TDD（Strict Red-Green-Refactor）
-
-- **Red**: テストを先に書き、失敗を確認
-- **Green**: テストを通す最小限の実装
-- **Refactor**: リファクタリング案を提示
-- テスト優先順位: 異常系（バリデーション → 認証 → ネットワーク）→ 正常系
-
-### 承認フロー（Human-in-the-Loop）
-
-以下の場面では**必ずプランを提示し、ユーザー承認後に実装**:
-- ファイルの新規作成
-- 破壊的な変更（既存機能の削除・大幅変更）
-- アーキテクチャの決定（新技術導入、設計パターン変更）
-
-### Git 戦略
-
-- ブランチ命名: `feature/xxx` / `fix/xxx`
-- `main` への直接コミット・プッシュは**例外なく禁止**（ドキュメントのみの変更も PR 経由）
-- Phase/Step 開始時に必ず専用ブランチを作成
-- PR マージ後は古いブランチを削除（1世代前は緊急切り戻し用に残す）
-
-### 記憶の保持
-
-- セッション開始時: `docs/MEMORIES.md` を読み、前回の文脈を把握
-- 作業の区切り・セッション終了前: 完了作業、残課題、次タスクを `docs/MEMORIES.md` に**自律的に**記録
+- **TDD**: Red → Green → Refactor。異常系 → 正常系の順
+- **承認フロー**: 新規ファイル・破壊的変更・アーキテクチャ決定はユーザー承認後に実装
+- **Git**: `feature/xxx` / `fix/xxx`。`main` 直接コミット禁止。PR 経由のみ
+- **記憶**: セッション終了前に `docs/MEMORIES.md` を更新
 
 ---
 
-## DB操作・環境ルール
+## DB ルール
 
-### payment_splits の更新は RPC 経由
+- **splits 更新**: RPC `replace_payment_splits` 経由（PostgREST DELETE + RLS バグ回避）
+- **複数テーブル更新**: RPC で原子性担保。変更後 `npm run db:gen-types`
+- **退会**: `anonymize_user` RPC（profiles 物理削除禁止、FK 維持）
+- **支払い認可**: `payer_id === user.id` のみ。オーナー例外なし
 
-- `payment_splits` の DELETE/INSERT を直接実行しない。必ず RPC `replace_payment_splits` を使用する
-- 理由: PostgREST の DELETE + RLS で `auth.uid()` がサイレントに失敗し、二重登録が発生するため
-- RPC は SECURITY DEFINER で RLS をバイパスし、DELETE + INSERT を単一トランザクションで原子的に実行する
-
-### 複数テーブル更新は RPC で原子性を担保
-
-- 削除+挿入がセットになる処理や、複数テーブルにまたがる更新は PostgreSQL 関数（RPC）として実装する
-- RPC を作成・修正した際は `npm run db:gen-types` を実行して TypeScript の型を同期すること
-
-### 清算エンジンの設計規約
-
-#### 清算フロー（ステータス遷移）
+### 清算フロー
 
 `draft` → `confirmed` → `pending_payment` → `settled`
 
-- `confirm_settlement` RPC: draft → confirmed（エントリを payments/payment_splits に変換）
-- `report-payment` API: confirmed → pending_payment（送金報告）
-- `confirm_settlement_receipt` RPC: pending_payment → settled（受取確認、同グループの全 pending_payment を一括更新）
+### RPC 一覧
 
-#### RPC 一覧
+| RPC | 用途 |
+|-----|------|
+| `generate_settlement_entries` | 期間内エントリ自動生成 |
+| `confirm_settlement` | draft → confirmed |
+| `confirm_settlement_receipt` | pending_payment → settled（一括） |
+| `settle_consolidated_sessions` | 統合済み旧セッション settled 化 |
+| `replace_payment_splits` | splits 原子的置換 |
+| `get_settlement_period_suggestion` | スマート期間提案 |
+| `anonymize_user` | 退会匿名化 + グループ退去 |
+| `create_demo_bot_partner` | デモBot作成 |
 
-| RPC | 用途 | SECURITY |
-|-----|------|----------|
-| `generate_settlement_entries` | 期間内のエントリ自動生成 | DEFINER |
-| `confirm_settlement` | draft → confirmed（payments 変換） | DEFINER |
-| `confirm_settlement_receipt` | pending_payment → settled（一括） | DEFINER |
-| `settle_consolidated_sessions` | 統合済み旧セッション一括 settled 化 | DEFINER |
-| `replace_payment_splits` | splits の原子的置換 | DEFINER |
-| `get_settlement_period_suggestion` | スマート期間提案 | INVOKER |
+### 相殺統合ロジック
 
-#### 相殺統合ロジック
-
-- **共通ユーティリティ**: `src/lib/settlement/consolidate.ts`
-  - `consolidateTransfers()`: 複数セッションの net_transfers を合算→グリーディマッチングで最適振込指示を生成
-  - `balancesToTransfers()`: MemberBalance 配列から NetTransfer 配列を導出
-  - `calculateMyTransferBalance()`: 特定ユーザーの送金/受取残高を net_transfers から計算
-- 新しい相殺計算を追加する場合は、必ずこのモジュールに集約すること
-
-#### 型定義ルール
-
-- `SettlementSessionRow`: `src/types/database.ts` で定義。`net_transfers` JSONB を `NetTransfer[] | null` として型付け
-- `NetTransfer`: 送金指示の1要素（from_id, from_name, to_id, to_name, amount）
-- `SettlementSessionStatus`: `"draft" | "confirmed" | "pending_payment" | "settled"` のリテラル型
-- `database.ts` の RPC オーバーライド: 全 RPC が generated types に反映済み。新規追加時のみ一時的にオーバーライド
-
-### 支払いフォームアーキテクチャ
-
-- **`usePaymentForm`** (`src/components/payment-form/hooks/usePaymentForm.ts`): 金額・説明・日付・割り勘種別の状態管理とバリデーション
-- **`PaymentFormInitialData`**: `usePaymentForm` に渡す初期値型（編集・複製で共用）
-- **`DuplicatePaymentData`**: `EditPaymentData` から `paymentId` を除いた型。`?copyFrom=<id>` クエリで server-side fetch → フォームに pre-fill
-- **フォーム使い分け**: `FullPaymentForm`（/payments/new）= グループ・カテゴリ・カスタム割り勘対応、`QuickPaymentForm`（Dashboard）= 最小限
-
-### 開発環境の優先順位
-
-- リモートDB（Supabase）を優先して開発する
-- ローカル Docker 環境が不安定な場合は無理に復旧せず、リモート設定のまま開発を継続してよい
+`src/lib/settlement/consolidate.ts` に集約: `consolidateTransfers()`, `balancesToTransfers()`, `calculateMyTransferBalance()`
 
 ---
 
-## DBスキーマ辞書
+## DB スキーマ辞書
 
-**推測禁止。以下のテーブル定義のみ使用可。**
+> 最新は `src/types/database.generated.ts`。不整合は `npm run db:gen-types` で解消
 
-> **注意**: 最新の型定義は `src/types/database.generated.ts` を正とする。不整合がある場合は `npm run db:gen-types` を実行すること。
+| テーブル | 主要カラム |
+|---------|-----------|
+| `profiles` | id, display_name, email?, avatar_url, is_demo |
+| `groups` | id, name, description, owner_id, invite_code |
+| `group_members` | id, group_id, user_id, role |
+| `payments` | id, group_id, payer_id, category_id, amount, description, payment_date |
+| `payment_splits` | id, payment_id, user_id, amount, is_paid |
+| `categories` | id, name, icon, color, is_default, group_id |
+| `demo_sessions` | id, user_id, group_id, expires_at |
+| `recurring_rules` | id, group_id, description, amount, category_id, day_of_month, default_payer_id |
+| `recurring_rule_splits` | id, rule_id, user_id, amount |
+| `settlement_sessions` | id, group_id, period_start/end, status, net_transfers, is_zero_settlement |
+| `settlement_entries` | id, session_id, entry_type, description, expected/actual_amount, payer_id, status |
+| `settlement_entry_splits` | id, entry_id, user_id, amount |
 
-| テーブル | カラム |
-|---------|--------|
-| `profiles` | id, display_name, email (nullable), avatar_url, is_demo, created_at, updated_at |
-| `groups` | id, name, description, owner_id, invite_code, created_at, updated_at |
-| `group_members` | id, group_id, user_id, role, created_at |
-| `payments` | id, group_id, payer_id, category_id, amount, description, payment_date, created_at, updated_at |
-| `payment_splits` | id, payment_id, user_id, amount, is_paid, created_at |
-| `categories` | id, name, icon, color, is_default, group_id, created_at |
-| `demo_sessions` | id, user_id, group_id, expires_at, created_at |
-| `recurring_rules` | id, group_id, description, amount, category_id, day_of_month, default_payer_id, created_at, updated_at |
-| `recurring_rule_splits` | id, rule_id, user_id, amount, created_at |
-| `settlement_sessions` | id, group_id, period_start, period_end, status, created_by, confirmed_at, confirmed_by, net_transfers, is_zero_settlement, payment_reported_at/by, settled_at/by, created_at |
-| `settlement_entries` | id, session_id, recurring_rule_id, entry_type, description, expected_amount, actual_amount, payer_id, category_id, status, filled_by, filled_at, created_at, updated_at |
-| `settlement_entry_splits` | id, entry_id, user_id, amount, created_at |
-
-### 型定義ファイル構成
-
-| ファイル | 役割 | 編集 |
-|---------|------|------|
-| `src/types/database.generated.ts` | Supabase CLI 自動生成 | **手動編集禁止** |
-| `src/types/database.ts` | ヘルパー型・リテラル型オーバーライド | 手動編集可 |
+型ファイル: `database.generated.ts`（自動生成・編集禁止） / `database.ts`（ヘルパー型・手動編集可）
 
 ---
 
@@ -222,20 +133,10 @@ src/
 
 ## セキュリティポリシー
 
-`~/.claude/config.json` で定義。以下は**ユーザーの明示的承認なしに実行禁止**:
-
-| 禁止操作 | 対象 |
-|---------|------|
-| システム | `sudo`, `rm`, `rm -rf` |
-| 機密ファイル | `.env*`, SSH鍵, `*token*`, `*key*`, `secrets/**` |
-| ネットワーク | `curl`, `wget`, `nc` |
-| パッケージ削除 | `npm uninstall`, `npm remove` |
-| DB直接操作 | `psql`, `mysql`, `mcp__supabase__execute_sql` |
+ユーザー承認なしの実行禁止: `sudo`, `rm`, `.env*`, SSH鍵, `curl/wget`, `npm uninstall`, `psql`
 
 ---
 
-## セッション終了プロセス (`/done`)
+## セッション終了 (`/done`)
 
-1. `docs/MEMORIES.md` を更新（完了作業、ペンディング、技術的文脈）
-2. 完了・未完了・次の一手をチェックリスト形式で提示
-3. テストパス・コミット漏れの最終確認 →「引き継ぎ準備完了」を報告
+1. `docs/MEMORIES.md` 更新 → 2. チェックリスト提示 → 3. テスト・コミット最終確認

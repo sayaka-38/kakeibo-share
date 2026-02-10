@@ -17,10 +17,8 @@ type RouteContext = {
  * 支払いを削除する。
  *
  * 認可:
- *   - 支払者本人 (payer_id === user.id)
- *   - グループオーナー (groups.owner_id === user.id)
+ *   - 支払者本人のみ (payer_id === user.id)
  *
- * groupId はクライアントから受け取らず、DB から導出（改ざん防止）。
  * payment_splits は ON DELETE CASCADE で自動削除される。
  */
 export async function DELETE(
@@ -43,10 +41,10 @@ export async function DELETE(
     if (!auth.success) return auth.response;
     const { user, supabase } = auth;
 
-    // 3. 支払い情報を取得（groups を結合して owner_id も取得）
+    // 3. 支払い情報を取得
     const { data: payment, error: fetchError } = await supabase
       .from("payments")
-      .select("id, payer_id, group_id, settlement_id, groups (owner_id)")
+      .select("id, payer_id, settlement_id")
       .eq("id", id)
       .single();
 
@@ -73,13 +71,8 @@ export async function DELETE(
       );
     }
 
-    // 5. 認可チェック: 支払者本人 OR グループオーナー
-    const payerMatch = payment.payer_id === user.id;
-    const ownerMatch =
-      (payment.groups as unknown as { owner_id: string })?.owner_id ===
-      user.id;
-
-    if (!payerMatch && !ownerMatch) {
+    // 5. 認可チェック: 支払者本人のみ
+    if (payment.payer_id !== user.id) {
       return NextResponse.json(
         { error: "この支払いを削除する権限がありません" },
         { status: 403 }

@@ -5,12 +5,12 @@
  *
  * 認可ルール:
  *   - 支払者本人 (payer_id === user.id) → 削除可
- *   - グループオーナー (groups.owner_id === user.id) → 削除可
+ *   - グループオーナー → 403（他者データ保護のため削除不可）
  *   - それ以外のメンバー → 403
  *
  * 二重防御:
  *   - アプリ層: この API Route で明示的に 403 を返す
- *   - DB 層: RLS ポリシー payments_delete_payer_or_owner
+ *   - DB 層: RLS ポリシー payments_delete_payer
  */
 
 import { describe, it, expect } from "vitest";
@@ -28,7 +28,7 @@ const API_ROUTE_PATH = path.join(
 
 const RLS_MIGRATION_PATH = path.join(
   process.cwd(),
-  "supabase/migrations/20260101000010_payments_delete_owner.sql"
+  "supabase/migrations/20260101000026_payments_delete_payer_only.sql"
 );
 
 describe("DELETE /api/payments/[id] API Route", () => {
@@ -68,8 +68,8 @@ describe("DELETE /api/payments/[id] API Route", () => {
       );
       // DELETE ハンドラでは request.json() を呼んでいない
       expect(deleteHandler).not.toContain("request.json()");
-      // groups テーブルから owner_id を結合取得している
-      expect(deleteHandler).toContain("groups");
+      // payer_id で認可チェックしている
+      expect(deleteHandler).toContain("payer_id");
     });
   });
 
@@ -108,14 +108,14 @@ describe("支払い削除の認可ロジック仕様", () => {
       expect(scenario.expectedResult).toBe("allowed");
     });
 
-    it("グループオーナーは削除できる", () => {
+    it("グループオーナーでも他者の支払いは削除できない", () => {
       const scenario = {
         user: "group_owner",
         action: "DELETE",
-        expectedResult: "allowed",
-        httpStatus: 200,
+        expectedResult: "denied",
+        httpStatus: 403,
       };
-      expect(scenario.expectedResult).toBe("allowed");
+      expect(scenario.expectedResult).toBe("denied");
     });
 
     it("メンバー（支払者でもオーナーでもない）は削除できない", () => {
@@ -142,7 +142,7 @@ describe("支払い削除の認可ロジック仕様", () => {
   describe("二重防御（アプリ層 + RLS）", () => {
     it("アプリ層で明示的な 403 エラーを返す（ユーザーフレンドリーなメッセージ）", () => {
       const appLayer = {
-        check: "payer_id === user.id OR groups.owner_id === user.id",
+        check: "payer_id === user.id",
         errorStatus: 403,
         errorMessage: "この支払いを削除する権限がありません",
       };
@@ -151,12 +151,12 @@ describe("支払い削除の認可ロジック仕様", () => {
 
     it("RLS ポリシーが最終防衛ラインとして機能する", () => {
       const rlsPolicy = {
-        name: "payments_delete_payer_or_owner",
+        name: "payments_delete_payer",
         operation: "DELETE",
-        using: "payer_id = auth.uid() OR is_group_owner(group_id, auth.uid())",
+        using: "payer_id = auth.uid()",
       };
       expect(rlsPolicy.using).toContain("payer_id");
-      expect(rlsPolicy.using).toContain("is_group_owner");
+      expect(rlsPolicy.using).toContain("auth.uid()");
     });
   });
 
@@ -239,12 +239,21 @@ describe("API Route 実装詳細", () => {
       expect(content).toContain("payer_id");
     });
 
-    it("groups.owner_id と user.id の比較を実装している", () => {
+    it("支払者本人のみ削除可能な認可チェックを実装している", () => {
       if (!fs.existsSync(API_ROUTE_PATH)) {
         expect.fail("API Route ファイルが存在しない（Red フェーズ）");
       }
       const content = fs.readFileSync(API_ROUTE_PATH, "utf-8");
-      expect(content).toContain("owner_id");
+      // DELETE ハンドラ部分のみ検証
+      const deleteHandler = content.slice(
+        content.indexOf("export async function DELETE"),
+        content.indexOf("export async function PUT") === -1
+          ? undefined
+          : content.indexOf("export async function PUT")
+      );
+      // グループオーナー例外が除去されていること
+      expect(deleteHandler).not.toContain("owner_id");
+      expect(deleteHandler).not.toContain("ownerMatch");
     });
   });
 });
@@ -259,28 +268,22 @@ describe("RLS マイグレーション", () => {
     expect(exists).toBe(true);
   });
 
-  it("マイグレーション内容に is_group_owner が含まれる", () => {
+  it("マイグレーション内容に payer_id = auth.uid() のみの条件が含まれる", () => {
     if (!fs.existsSync(RLS_MIGRATION_PATH)) {
       expect.fail("マイグレーションファイルが存在しない（Red フェーズ）");
     }
     const content = fs.readFileSync(RLS_MIGRATION_PATH, "utf-8");
-    expect(content).toContain("is_group_owner");
+    expect(content).toContain("payer_id = auth.uid()");
+    // グループオーナー例外が除去されていること
+    expect(content).not.toContain("is_group_owner");
   });
 
-  it("マイグレーション内容に payer_id が含まれる", () => {
-    if (!fs.existsSync(RLS_MIGRATION_PATH)) {
-      expect.fail("マイグレーションファイルが存在しない（Red フェーズ）");
-    }
-    const content = fs.readFileSync(RLS_MIGRATION_PATH, "utf-8");
-    expect(content).toContain("payer_id");
-  });
-
-  it("既存ポリシー payments_delete_payer を DROP している", () => {
+  it("旧ポリシー payments_delete_payer_or_owner を DROP している", () => {
     if (!fs.existsSync(RLS_MIGRATION_PATH)) {
       expect.fail("マイグレーションファイルが存在しない（Red フェーズ）");
     }
     const content = fs.readFileSync(RLS_MIGRATION_PATH, "utf-8");
     expect(content).toContain("DROP POLICY");
-    expect(content).toContain("payments_delete_payer");
+    expect(content).toContain("payments_delete_payer_or_owner");
   });
 });

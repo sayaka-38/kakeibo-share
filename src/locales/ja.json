@@ -79,7 +79,16 @@
     },
     "errors": {
       "loginRequired": "ログインが必要です",
-      "authenticationFailed": "認証に失敗しました。もう一度お試しください。"
+      "authenticationFailed": "認証に失敗しました。もう一度お試しください。",
+      "invalidCredentials": "メールアドレスまたはパスワードが正しくありません",
+      "emailNotConfirmed": "メールアドレスの確認が完了していません。受信トレイを確認してください。",
+      "userAlreadyRegistered": "このメールアドレスはすでに登録されています",
+      "passwordTooShort": "パスワードは6文字以上で入力してください",
+      "rateLimitExceeded": "リクエスト回数の上限に達しました。しばらくしてからお試しください。",
+      "invalidEmail": "有効なメールアドレスを入力してください",
+      "networkError": "ネットワークエラーが発生しました。接続を確認してください。",
+      "samePassword": "新しいパスワードは現在のパスワードと異なるものを入力してください",
+      "unknown": "エラーが発生しました。もう一度お試しください。"
     }
   },
   "dashboard": {
@@ -248,7 +257,43 @@
     "dashboard": "ダッシュボード",
     "payments": "支払い",
     "settlement": "清算",
-    "groups": "グループ"
+    "groups": "グループ",
+    "settings": "設定"
+  },
+  "settings": {
+    "title": "設定",
+    "profile": {
+      "title": "プロフィール",
+      "displayName": "表示名",
+      "displayNamePlaceholder": "表示名を入力",
+      "update": "保存",
+      "updating": "保存中...",
+      "updateSuccess": "プロフィールを保存しました",
+      "updateFailed": "プロフィールの保存に失敗しました"
+    },
+    "password": {
+      "title": "パスワード変更",
+      "newPassword": "新しいパスワード",
+      "newPasswordPlaceholder": "6文字以上",
+      "confirmPassword": "新しいパスワード（確認）",
+      "confirmPasswordPlaceholder": "もう一度入力",
+      "change": "パスワードを変更",
+      "changing": "変更中...",
+      "changeSuccess": "パスワードを変更しました",
+      "changeFailed": "パスワードの変更に失敗しました",
+      "mismatch": "パスワードが一致しません",
+      "tooShort": "パスワードは6文字以上で入力してください"
+    },
+    "deleteAccount": {
+      "title": "アカウント削除",
+      "description": "アカウントを削除すると、プロフィール情報は匿名化されます。過去の支払い記録は清算の整合性のために保持されますが、あなたの名前は表示されなくなります。",
+      "warning": "この操作は取り消せません。",
+      "confirmLabel": "確認のため「削除」と入力してください",
+      "confirmPlaceholder": "削除",
+      "delete": "アカウントを削除",
+      "deleting": "削除中...",
+      "deleteFailed": "アカウントの削除に失敗しました"
+    }
   },
   "categories": {
     "foodGroceries": "食費・日用品",

@@ -32,7 +32,9 @@ type RecentPaymentRow = {
   payment_date: string;
   payer_id: string;
   settlement_id: string | null;
+  category_id: string | null;
   profiles: { display_name: string | null; email: string | null } | null;
+  categories: { name: string; icon: string | null } | null;
   payment_splits: PaymentSplitRow[];
 };
 
@@ -59,9 +61,14 @@ export async function RecentPaymentList({
       payment_date,
       payer_id,
       settlement_id,
+      category_id,
       profiles (
         display_name,
         email
+      ),
+      categories (
+        name,
+        icon
       ),
       payment_splits (
         user_id,
@@ -87,16 +94,14 @@ export async function RecentPaymentList({
   }
 
   return (
-    <ul className="divide-y divide-theme-card-border">
+    <div className="divide-y divide-theme-card-border">
       {payments.map((payment) => {
         const isProxy = isProxySplit(payment.payment_splits, payment.payer_id);
-
         const custom = isCustomSplit(
           payment.payment_splits,
           payment.payer_id,
           Number(payment.amount)
         );
-
         const splitsWithProfile: SplitWithProfile[] =
           payment.payment_splits.map((s) => ({
             user_id: s.user_id,
@@ -105,48 +110,62 @@ export async function RecentPaymentList({
             email: s.profiles?.email ?? "",
           }));
 
+        const categoryIcon = payment.categories?.icon || "💰";
+        const isOwner = currentUserId && payment.payer_id === currentUserId;
+        const isSettled = !!payment.settlement_id;
+
         const rowContent = (
           <>
-            <div className="flex justify-between items-start">
-              <div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className="font-medium text-theme-headline">
+            <div className="flex items-center gap-3">
+              {/* Category icon */}
+              <span className="w-9 h-9 rounded-full bg-theme-primary/15 flex items-center justify-center text-base shrink-0">
+                {categoryIcon}
+              </span>
+
+              {/* Title + subtitle */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="font-medium text-theme-headline text-sm truncate">
                     {payment.description}
-                  </p>
-                  {payment.settlement_id && (
-                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-theme-text/15 text-theme-text">
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  </span>
+                  {isSettled && (
+                    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-theme-text/15 text-theme-text">
+                      <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                       </svg>
                       清算済
                     </span>
                   )}
                   {isProxy && (
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-theme-secondary/15 text-theme-secondary">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-theme-secondary/15 text-theme-secondary">
                       {t("payments.display.proxyBadge")}
                     </span>
                   )}
                   {custom && <SplitBadge />}
                 </div>
-                <p className="text-sm text-theme-text">
-                  {payment.profiles?.display_name || payment.profiles?.email} -{" "}
+                <div className="text-xs text-theme-muted">
+                  {payment.profiles?.display_name || payment.profiles?.email}
+                  {" · "}
                   {payment.payment_date}
-                </p>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="font-medium text-theme-headline">
-                  {formatCurrency(Number(payment.amount))}
-                </span>
+
+              {/* Amount + actions */}
+              <span className="font-semibold text-sm text-theme-headline shrink-0">
+                {formatCurrency(Number(payment.amount))}
+              </span>
+
+              <div className="flex items-center gap-1.5 shrink-0">
                 <Link
                   href={`/payments/new?copyFrom=${payment.id}`}
-                  className="text-theme-muted/70 hover:text-theme-primary-text transition-colors"
+                  className="p-1 text-theme-muted/50 hover:text-theme-primary-text transition-colors"
                   aria-label={t("payments.duplicate")}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                   </svg>
                 </Link>
-                {currentUserId && payment.payer_id === currentUserId && !payment.settlement_id && (
+                {isOwner && !isSettled && (
                   <DeletePaymentForm paymentId={payment.id} />
                 )}
               </div>
@@ -156,15 +175,15 @@ export async function RecentPaymentList({
         );
 
         return (
-          <li key={payment.id} className="px-4 py-3">
+          <div key={payment.id} className="px-4 py-3">
             {custom ? (
               <SplitAccordionProvider>{rowContent}</SplitAccordionProvider>
             ) : (
               rowContent
             )}
-          </li>
+          </div>
         );
       })}
-    </ul>
+    </div>
   );
 }

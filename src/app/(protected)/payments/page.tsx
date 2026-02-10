@@ -127,23 +127,21 @@ export default async function PaymentsPage() {
             });
 
             return (
-              <div key={month} className="bg-theme-card-bg rounded-lg shadow">
+              <div key={month} className="bg-theme-card-bg rounded-lg border border-theme-card-border overflow-hidden">
                 <div className="px-4 py-3 border-b border-theme-card-border flex justify-between items-center">
                   <h2 className="font-medium text-theme-headline">{monthName}</h2>
                   <span className="text-sm font-medium text-theme-muted">
                     {t("common.total")}: {formatCurrency(monthTotal)}
                   </span>
                 </div>
-                <ul className="divide-y divide-theme-card-border">
+                <div className="divide-y divide-theme-card-border">
                   {monthPayments.map((payment) => {
                     const isProxy = isProxySplit(payment.payment_splits, payment.payer_id);
-
                     const custom = isCustomSplit(
                       payment.payment_splits,
                       payment.payer_id,
                       Number(payment.amount)
                     );
-
                     const splitsWithProfile: SplitWithProfile[] =
                       payment.payment_splits.map((s, idx) => ({
                         user_id: `${s.user_id}-${idx}`,
@@ -152,81 +150,82 @@ export default async function PaymentsPage() {
                         email: s.profiles?.email ?? "",
                       }));
 
+                    const categoryIcon = payment.categories?.icon || "💰";
+                    const isOwner = payment.payer_id === user?.id;
+                    const isSettled = !!payment.settlement_id;
+
                     const rowContent = (
                       <>
-                        <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-3">
+                          {/* Category icon */}
+                          <span className="w-9 h-9 rounded-full bg-theme-primary/15 flex items-center justify-center text-base shrink-0">
+                            {categoryIcon}
+                          </span>
+
+                          {/* Title + subtitle */}
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <p className="font-medium text-theme-headline truncate">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-medium text-theme-headline text-sm truncate">
                                 {payment.description}
-                              </p>
+                              </span>
                               {payment.categories && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-theme-bg text-theme-muted">
+                                <span className="text-[10px] bg-theme-bg text-theme-muted px-1.5 py-0.5 rounded">
                                   {payment.categories.name}
                                 </span>
                               )}
-                              {payment.settlement_id && (
-                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs font-medium bg-theme-text/15 text-theme-text">
-                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              {isSettled && (
+                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-theme-text/15 text-theme-text">
+                                  <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                                   </svg>
                                   清算済
                                 </span>
                               )}
                               {isProxy && (
-                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-theme-secondary/15 text-theme-secondary">
+                                <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-theme-secondary/15 text-theme-secondary">
                                   {t("payments.display.proxyBadge")}
                                 </span>
                               )}
                               {custom && <SplitBadge />}
                             </div>
-                            <p className="text-sm text-theme-text">
-                              {payment.profiles?.display_name ||
-                                payment.profiles?.email}{" "}
-                              - {payment.payment_date}
-                            </p>
-                            <p className="text-xs text-theme-muted">
+                            <div className="text-xs text-theme-muted">
+                              {payment.profiles?.display_name || payment.profiles?.email}
+                              {" · "}
+                              {payment.payment_date}
+                              {" · "}
                               {payment.groups?.name}
-                            </p>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-4 ml-4">
-                            <span className="font-medium text-theme-headline">
-                              {formatCurrency(Number(payment.amount))}
-                            </span>
+
+                          {/* Amount + actions */}
+                          <span className="font-semibold text-sm text-theme-headline shrink-0">
+                            {formatCurrency(Number(payment.amount))}
+                          </span>
+
+                          {/* Action icons */}
+                          <div className="flex items-center gap-1.5 shrink-0">
                             <Link
                               href={`/payments/new?copyFrom=${payment.id}`}
-                              className="text-theme-muted/70 hover:text-theme-primary-text transition-colors"
+                              className="p-1 text-theme-muted/50 hover:text-theme-primary-text transition-colors"
                               aria-label={t("payments.duplicate")}
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                               </svg>
                             </Link>
-                            {payment.payer_id === user?.id && !payment.settlement_id && (
+                            {isOwner && !isSettled && (
                               <Link
                                 href={`/payments/${payment.id}/edit`}
-                                className="text-theme-muted/70 hover:text-theme-primary-text transition-colors"
+                                className="p-1 text-theme-muted/50 hover:text-theme-primary-text transition-colors"
                                 aria-label={t("payments.edit")}
                               >
-                                <svg
-                                  className="w-4 h-4"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                                  />
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                 </svg>
                               </Link>
                             )}
-                            {payment.payer_id === user?.id && !payment.settlement_id && (
-                              <DeletePaymentForm
-                                paymentId={payment.id}
-                              />
+                            {isOwner && !isSettled && (
+                              <DeletePaymentForm paymentId={payment.id} />
                             )}
                           </div>
                         </div>
@@ -235,7 +234,7 @@ export default async function PaymentsPage() {
                     );
 
                     return (
-                      <li key={`${payment.id}-${payment.updated_at}`} className="px-4 py-3">
+                      <div key={`${payment.id}-${payment.updated_at}`} className="px-4 py-3">
                         {custom ? (
                           <SplitAccordionProvider>
                             {rowContent}
@@ -243,16 +242,16 @@ export default async function PaymentsPage() {
                         ) : (
                           rowContent
                         )}
-                      </li>
+                      </div>
                     );
                   })}
-                </ul>
+                </div>
               </div>
             );
           })}
         </div>
       ) : (
-        <div className="bg-theme-card-bg rounded-lg shadow p-6 text-center">
+        <div className="bg-theme-card-bg rounded-lg border border-theme-card-border p-6 text-center">
           <p className="text-theme-text mb-4">{t("payments.noPayments")}</p>
           <Link
             href="/payments/new"
