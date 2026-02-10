@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { t } from "@/lib/i18n";
+import { translateAuthError } from "@/lib/auth/translate-error";
 
 function getInitialError(searchParams: ReturnType<typeof useSearchParams>): string | null {
   const urlError = searchParams.get("error");
@@ -35,7 +36,7 @@ function LoginForm() {
     });
 
     if (error) {
-      setError(error.message);
+      setError(translateAuthError(error.message));
       setLoading(false);
       return;
     }

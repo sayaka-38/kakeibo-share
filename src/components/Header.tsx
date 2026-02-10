@@ -15,8 +15,13 @@ type HeaderProps = {
 export default function Header({ user }: HeaderProps) {
   const handleLogout = async () => {
     const supabase = createClient();
-    await supabase.auth.signOut();
-    window.location.href = LP_URL;
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // signOut failure should not prevent redirect
+    }
+    // Use window.location.replace to prevent back-button returning to protected page
+    window.location.replace(LP_URL);
   };
 
   return (

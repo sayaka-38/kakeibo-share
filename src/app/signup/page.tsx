@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { t } from "@/lib/i18n";
+import { translateAuthError } from "@/lib/auth/translate-error";
 
 export default function SignUpPage() {
   const [email, setEmail] = useState("");
@@ -31,7 +32,7 @@ export default function SignUpPage() {
     });
 
     if (error) {
-      setError(error.message);
+      setError(translateAuthError(error.message));
       setLoading(false);
       return;
     }

@@ -95,8 +95,9 @@ describe("フロントエンド清算済みガード", () => {
   describe("RecentPaymentList — 削除ボタン非表示", () => {
     it("settlement_id がある場合に削除ボタンを非表示にする条件がある", () => {
       const content = fs.readFileSync(PAYMENT_LIST_PATH, "utf-8");
-      // !payment.settlement_id の条件で DeletePaymentForm を制御
-      expect(content).toContain("!payment.settlement_id");
+      // isSettled が payment.settlement_id から導出され、!isSettled で制御
+      expect(content).toContain("!!payment.settlement_id");
+      expect(content).toContain("!isSettled");
       expect(content).toContain("DeletePaymentForm");
     });
 
@@ -128,21 +129,21 @@ describe("フロントエンド清算済みガード", () => {
 
     it("清算済みの支払いで編集ボタンを非表示にする", () => {
       const content = fs.readFileSync(PAYMENTS_PAGE_PATH, "utf-8");
-      // 編集リンクの条件に !payment.settlement_id が含まれる
-      expect(content).toContain("!payment.settlement_id");
-      // edit リンクとの近接関係を確認
+      // isSettled が payment.settlement_id から導出されている
+      expect(content).toContain("!!payment.settlement_id");
+      // edit リンクの近くで !isSettled ガードが使われている
       const editLinkIdx = content.indexOf("/payments/${payment.id}/edit");
-      const guardIdx = content.lastIndexOf("!payment.settlement_id", editLinkIdx);
+      const guardIdx = content.lastIndexOf("!isSettled", editLinkIdx);
       expect(guardIdx).toBeGreaterThan(-1);
     });
 
     it("清算済みの支払いで削除ボタンを非表示にする", () => {
       const content = fs.readFileSync(PAYMENTS_PAGE_PATH, "utf-8");
-      // DeletePaymentForm の使用箇所（import ではなく JSX）の条件に !payment.settlement_id が含まれる
+      // DeletePaymentForm の使用箇所（import ではなく JSX）の条件に !isSettled が含まれる
       const importEnd = content.indexOf("DeletePaymentForm") + "DeletePaymentForm".length;
       const usageIdx = content.indexOf("DeletePaymentForm", importEnd);
       expect(usageIdx).toBeGreaterThan(-1);
-      const guardIdx = content.lastIndexOf("!payment.settlement_id", usageIdx);
+      const guardIdx = content.lastIndexOf("!isSettled", usageIdx);
       expect(guardIdx).toBeGreaterThan(-1);
     });
   });

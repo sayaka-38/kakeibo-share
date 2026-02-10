@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useTheme, type ThemeId } from "@/lib/theme";
 import { t } from "@/lib/i18n";
 
@@ -21,6 +22,33 @@ const palettes: PaletteOption[] = [
 
 export default function ThemeSelector() {
   const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true); // eslint-disable-line react-hooks/set-state-in-effect -- hydration guard pattern
+  }, []);
+
+  // SSR / 初回レンダリング時はプレースホルダーを表示し、Hydration Error を防止
+  if (!mounted) {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-theme-muted hidden sm:inline">
+          {t("theme.label")}
+        </span>
+        <div className="flex gap-1.5">
+          {palettes.map((p) => (
+            <div
+              key={p.id}
+              className="w-6 h-6 rounded-full border-2 border-transparent"
+              style={{
+                background: `linear-gradient(135deg, ${p.bg} 50%, ${p.primary} 50%)`,
+              }}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center gap-2">

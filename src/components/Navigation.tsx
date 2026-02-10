@@ -31,6 +31,7 @@ function getNavItems(lastGroupId: string | null) {
     { href: "/payments", labelKey: "navigation.payments", icon: "receipt" },
     { href: settlementHref, labelKey: "navigation.settlement", icon: "calculator" },
     { href: "/groups", labelKey: "navigation.groups", icon: "users" },
+    { href: "/settings", labelKey: "navigation.settings", icon: "settings" },
   ];
 }
 
@@ -58,15 +59,19 @@ export default function Navigation() {
 
   const navItems = getNavItems(lastGroupId);
 
-  // ナビアイテムのアクティブ判定
-  const isNavItemActive = (href: string) => {
+  // ナビアイテムのアクティブ判定（labelKey で分岐し、href の重複に左右されない）
+  const isNavItemActive = (href: string, labelKey: string) => {
     // 清算: pathname に /settlement が含まれていれば active
-    if (href.includes("/settlement")) {
+    if (labelKey === "navigation.settlement") {
       return pathname.includes("/settlement");
     }
     // グループ: /groups 配下だが /settlement ページは除外（清算と二重判定を防止）
-    if (href === "/groups") {
+    if (labelKey === "navigation.groups") {
       return pathname.startsWith("/groups") && !pathname.includes("/settlement");
+    }
+    // 設定: 完全一致
+    if (labelKey === "navigation.settings") {
+      return pathname === "/settings";
     }
     // その他: プレフィックス一致
     return pathname.startsWith(href);
@@ -77,7 +82,7 @@ export default function Navigation() {
       {/* Mobile navigation */}
       <div className="md:hidden flex overflow-x-auto">
         {navItems.map((item) => {
-          const isActive = isNavItemActive(item.href);
+          const isActive = isNavItemActive(item.href, item.labelKey);
           return (
             <Link
               key={item.labelKey}
@@ -99,7 +104,7 @@ export default function Navigation() {
       <div className="hidden md:block p-4">
         <ul className="space-y-2">
           {navItems.map((item) => {
-            const isActive = isNavItemActive(item.href);
+            const isActive = isNavItemActive(item.href, item.labelKey);
             return (
               <li key={item.labelKey}>
                 <Link
@@ -185,6 +190,28 @@ function NavIcon({ name }: { name: string }) {
             strokeLinejoin="round"
             strokeWidth={2}
             d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+          />
+        </svg>
+      );
+    case "settings":
+      return (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+          />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
           />
         </svg>
       );

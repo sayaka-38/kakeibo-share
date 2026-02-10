@@ -112,7 +112,7 @@ export default function RecurringRuleList({
           <p className="text-sm text-theme-muted">{t("recurringRules.noRulesHint")}</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="bg-theme-card-bg rounded-lg border border-theme-card-border overflow-hidden divide-y divide-theme-card-border">
           {rules.map((rule) => (
             <RecurringRuleCard
               key={rule.id}

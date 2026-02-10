@@ -50,7 +50,7 @@ export default function RecurringRuleCard({
   // 発生日の表示
   const dayDisplay =
     rule.day_of_month === 31
-      ? `${t("recurringRules.dayOfMonthHint", { day: "末" })}`
+      ? t("recurringRules.dayOfMonthHint", { day: "末" })
       : t("recurringRules.dayOfMonthHint", { day: String(rule.day_of_month) });
 
   // 金額の表示
@@ -58,127 +58,105 @@ export default function RecurringRuleCard({
     ? t("recurringRules.variableAmount")
     : formatCurrency(rule.default_amount || 0);
 
-  // 分割タイプの表示
-  const splitDisplay =
-    rule.split_type === "custom"
-      ? t("recurringRules.splitCustom")
-      : t("recurringRules.splitEqual");
+  // カテゴリアイコン
+  const categoryIcon = rule.category?.icon || "📋";
 
-  // カスタム分割の詳細
-  const splitDetails =
-    rule.split_type === "custom" && rule.splits.length > 0
-      ? rule.splits
-          .map((s) => {
-            const name = s.user?.display_name || s.user?.email || "Unknown";
-            const value = s.percentage !== null ? `${s.percentage}%` : formatCurrency(s.amount || 0);
-            return `${name}: ${value}`;
-          })
-          .join(", ")
-      : null;
+  // 削除確認モード
+  if (showDeleteConfirm) {
+    return (
+      <div className={`flex items-center justify-between px-4 py-3 ${!rule.is_active ? "opacity-60" : ""}`}>
+        <span className="text-sm text-theme-muted">
+          {t("recurringRules.deleteConfirm")}
+        </span>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={handleDelete}
+            loading={isDeleting}
+          >
+            {t("common.delete")}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowDeleteConfirm(false)}
+            disabled={isDeleting}
+          >
+            {t("common.cancel")}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div
-      className={`bg-theme-card-bg rounded-lg shadow border p-4 ${
-        !rule.is_active ? "opacity-60" : ""
-      }`}
-    >
-      {/* Header Row */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
+    <div className={!rule.is_active ? "opacity-60" : ""}>
+      <div className="flex items-center gap-3 px-4 py-3">
+        {/* Category icon */}
+        <span className="w-9 h-9 rounded-full bg-theme-primary/15 flex items-center justify-center text-base shrink-0">
+          {categoryIcon}
+        </span>
+
+        {/* Title + subtitle — clickable to edit */}
+        <button
+          type="button"
+          onClick={onEdit}
+          className="flex-1 min-w-0 text-left hover:opacity-80 transition-opacity"
+        >
           <div className="flex items-center gap-2">
-            <h3 className="font-medium text-theme-headline truncate">
+            <span className="font-medium text-theme-headline text-sm truncate">
               {rule.description}
-            </h3>
+            </span>
             {!rule.is_active && (
-              <span className="text-xs bg-theme-card-border text-theme-muted px-2 py-0.5 rounded">
+              <span className="text-[10px] bg-theme-card-border text-theme-muted px-1.5 py-0.5 rounded shrink-0">
                 {t("recurringRules.inactive")}
               </span>
             )}
           </div>
-          {rule.category && (
-            <span className="text-xs text-theme-muted">{rule.category.name}</span>
-          )}
-        </div>
-        <div className="text-right shrink-0">
-          <div
-            className={`font-semibold ${
-              rule.is_variable ? "text-theme-primary-text" : "text-theme-headline"
-            }`}
+          <span className="text-xs text-theme-muted">{dayDisplay}</span>
+        </button>
+
+        {/* Amount */}
+        <span
+          className={`font-semibold text-sm shrink-0 ${
+            rule.is_variable ? "text-theme-primary-text" : "text-theme-headline"
+          }`}
+        >
+          {amountDisplay}
+        </span>
+
+        {/* Delete icon (owner only) */}
+        {isOwner && (
+          <button
+            type="button"
+            onClick={() => setShowDeleteConfirm(true)}
+            className="p-1 text-theme-muted/50 hover:text-theme-accent transition-colors shrink-0"
+            aria-label={t("common.delete")}
           >
-            {amountDisplay}
-          </div>
-          <div className="text-xs text-theme-muted">{dayDisplay}</div>
-        </div>
-      </div>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        )}
 
-      {/* Details Row */}
-      <div className="mt-3 flex items-center gap-4 text-sm text-theme-muted">
-        <div className="flex items-center gap-1">
-          <span className="text-theme-muted/70">支払:</span>
-          <span>
-            {rule.default_payer?.display_name || rule.default_payer?.email}
-          </span>
-        </div>
-        <div className="flex items-center gap-1">
-          <span className="text-theme-muted/70">分割:</span>
-          <span>{splitDisplay}</span>
-        </div>
+        {/* Chevron */}
+        <button
+          type="button"
+          onClick={onEdit}
+          className="p-1 text-theme-muted shrink-0"
+          aria-label={t("common.edit")}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
       </div>
-
-      {/* Custom Split Details */}
-      {splitDetails && (
-        <div className="mt-2 text-xs text-theme-muted bg-theme-bg rounded px-2 py-1">
-          {splitDetails}
-        </div>
-      )}
 
       {/* Error */}
       {error && (
-        <div className="mt-2 text-sm text-theme-accent">{error}</div>
+        <div className="px-4 pb-2 text-sm text-theme-accent">{error}</div>
       )}
-
-      {/* Actions */}
-      <div className="mt-3 flex items-center justify-end gap-2">
-        <Button variant="ghost" size="sm" onClick={onEdit}>
-          {t("common.edit")}
-        </Button>
-        {isOwner && (
-          <>
-            {showDeleteConfirm ? (
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-theme-muted">
-                  {t("recurringRules.deleteConfirm")}
-                </span>
-                <Button
-                  variant="danger"
-                  size="sm"
-                  onClick={handleDelete}
-                  loading={isDeleting}
-                >
-                  {t("common.delete")}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowDeleteConfirm(false)}
-                  disabled={isDeleting}
-                >
-                  {t("common.cancel")}
-                </Button>
-              </div>
-            ) : (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowDeleteConfirm(true)}
-                className="text-theme-accent hover:text-theme-accent/80 hover:bg-theme-accent/10"
-              >
-                {t("common.delete")}
-              </Button>
-            )}
-          </>
-        )}
-      </div>
     </div>
   );
 }

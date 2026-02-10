@@ -79,7 +79,16 @@
     },
     "errors": {
       "loginRequired": "ログインが必要です",
-      "authenticationFailed": "認証に失敗しました。もう一度お試しください。"
+      "authenticationFailed": "認証に失敗しました。もう一度お試しください。",
+      "invalidCredentials": "メールアドレスまたはパスワードが正しくありません",
+      "emailNotConfirmed": "メールアドレスの確認が完了していません。受信トレイを確認してください。",
+      "userAlreadyRegistered": "このメールアドレスはすでに登録されています",
+      "passwordTooShort": "パスワードは6文字以上で入力してください",
+      "rateLimitExceeded": "リクエスト回数の上限に達しました。しばらくしてからお試しください。",
+      "invalidEmail": "有効なメールアドレスを入力してください",
+      "networkError": "ネットワークエラーが発生しました。接続を確認してください。",
+      "samePassword": "新しいパスワードは現在のパスワードと異なるものを入力してください",
+      "unknown": "エラーが発生しました。もう一度お試しください。"
     }
   },
   "dashboard": {

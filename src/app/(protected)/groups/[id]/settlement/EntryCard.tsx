@@ -47,6 +47,9 @@ export default function EntryCard({
     members.find((m) => m.id === entry.payer_id)?.email ||
     "Unknown";
 
+  // payer_id が自分のエントリのみ編集・スキップ可
+  const isOwner = entry.payer_id === currentUserId;
+
   // 入力者名（filled の場合）
   const filledByMember = entry.filled_by
     ? members.find((m) => m.id === entry.filled_by)
@@ -151,8 +154,8 @@ export default function EntryCard({
         <div className="mt-2 text-sm text-theme-accent">{error}</div>
       )}
 
-      {/* Actions */}
-      {entry.status !== "skipped" && (
+      {/* Actions — 自分の支払いのみ編集・スキップ可 */}
+      {entry.status !== "skipped" && isOwner && (
         <div className="mt-3 flex items-center justify-end gap-2">
           {entry.status === "pending" && (
             <Button

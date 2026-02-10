@@ -79,7 +79,16 @@
     },
     "errors": {
       "loginRequired": "You must be logged in",
-      "authenticationFailed": "Authentication failed. Please try again."
+      "authenticationFailed": "Authentication failed. Please try again.",
+      "invalidCredentials": "Invalid email or password",
+      "emailNotConfirmed": "Email not confirmed. Please check your inbox.",
+      "userAlreadyRegistered": "This email is already registered",
+      "passwordTooShort": "Password must be at least 6 characters",
+      "rateLimitExceeded": "Too many requests. Please try again later.",
+      "invalidEmail": "Please enter a valid email address",
+      "networkError": "Network error. Please check your connection.",
+      "samePassword": "New password must be different from the current password",
+      "unknown": "An error occurred. Please try again."
     }
   },
   "dashboard": {

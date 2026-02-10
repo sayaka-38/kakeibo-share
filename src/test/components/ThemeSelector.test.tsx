@@ -19,12 +19,14 @@ const localStorageMock = (() => {
 
 Object.defineProperty(window, "localStorage", { value: localStorageMock });
 
-function renderWithProvider() {
-  return render(
-    <ThemeProvider>
-      <ThemeSelector />
-    </ThemeProvider>
-  );
+async function renderWithProvider() {
+  await act(async () => {
+    render(
+      <ThemeProvider>
+        <ThemeSelector />
+      </ThemeProvider>
+    );
+  });
 }
 
 describe("ThemeSelector", () => {
@@ -35,14 +37,14 @@ describe("ThemeSelector", () => {
     document.documentElement.removeAttribute("data-theme");
   });
 
-  it("5つのパレットボタンをレンダリングする", () => {
-    renderWithProvider();
+  it("5つのパレットボタンをレンダリングする", async () => {
+    await renderWithProvider();
     const buttons = screen.getAllByRole("button");
     expect(buttons).toHaveLength(5);
   });
 
-  it("各ボタンにaria-labelがある", () => {
-    renderWithProvider();
+  it("各ボタンにaria-labelがある", async () => {
+    await renderWithProvider();
     expect(screen.getByLabelText("Sunny")).toBeInTheDocument();
     expect(screen.getByLabelText("Night")).toBeInTheDocument();
     expect(screen.getByLabelText("Rose")).toBeInTheDocument();
@@ -50,16 +52,16 @@ describe("ThemeSelector", () => {
     expect(screen.getByLabelText("Marine")).toBeInTheDocument();
   });
 
-  it("ボタンクリックでテーマが切り替わる", () => {
-    renderWithProvider();
+  it("ボタンクリックでテーマが切り替わる", async () => {
+    await renderWithProvider();
     act(() => {
       fireEvent.click(screen.getByLabelText("Night"));
     });
     expect(document.documentElement.getAttribute("data-theme")).toBe("12");
   });
 
-  it("選択中のボタンにscale-110クラスが付く", () => {
-    renderWithProvider();
+  it("選択中のボタンにscale-110クラスが付く", async () => {
+    await renderWithProvider();
     // Default theme "14" = Sunny should have scale-110
     const sunnyButton = screen.getByLabelText("Sunny");
     expect(sunnyButton.className).toContain("scale-110");
