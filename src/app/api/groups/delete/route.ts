@@ -36,7 +36,6 @@ export async function POST(request: Request) {
       .single();
 
     if (groupError || !group) {
-      console.log("[API /groups/delete] Group not found:", groupId);
       return NextResponse.json(
         { error: "グループが見つかりません" },
         { status: 404 }
@@ -45,11 +44,6 @@ export async function POST(request: Request) {
 
     // 5. オーナー権限チェック
     if (group.owner_id !== user.id) {
-      console.log("[API /groups/delete] Permission denied:", {
-        groupId,
-        userId: user.id,
-        ownerId: group.owner_id,
-      });
       return NextResponse.json(
         { error: "グループを削除する権限がありません" },
         { status: 403 }
@@ -69,12 +63,6 @@ export async function POST(request: Request) {
         { status: 500 }
       );
     }
-
-    console.log("[API /groups/delete] Group deleted:", {
-      groupId,
-      groupName: group.name,
-      deletedBy: user.id,
-    });
 
     // 7. 成功
     return NextResponse.json({

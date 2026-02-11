@@ -25,6 +25,7 @@
 ```bash
 npm run dev / build / lint / test / test:run
 npm run db:start / db:stop / db:reset / db:gen-types
+npm run db:gen-types:linked   # Docker不可時のフォールバック
 ```
 
 ---
@@ -41,21 +42,12 @@ src/
 ├── lib/format/       # formatCurrency
 ├── lib/i18n/         # t() 翻訳関数
 ├── lib/settlement/   # consolidateTransfers 等
-├── lib/supabase/     # server / client / middleware
+├── lib/supabase/     # server / client / middleware / admin
 ├── lib/theme/        # ThemeProvider / useTheme
 ├── locales/          # ja.json, en.json
 ├── test/             # テストファイル
 └── types/            # database.ts, database.generated.ts
 ```
-
----
-
-## 開発哲学
-
-1. **モバイルアプリ的操作感** — 即時フィードバック、楽観的UI、最小限の画面遷移
-2. **ルームメイトへの配慮** — 「清算待ち」「立替」等の柔らかい表現、公平性の可視化
-3. **クリーンコード** — 単一責任、リテラル型優先、副作用分離
-4. **堅実な技術選択** — 上記4規約に従い、実績パターンのみ
 
 ---
 
@@ -74,10 +66,7 @@ src/
 - **複数テーブル更新**: RPC で原子性担保。変更後 `npm run db:gen-types`
 - **退会**: `anonymize_user` RPC（profiles 物理削除禁止、FK 維持）
 - **支払い認可**: `payer_id === user.id` のみ。オーナー例外なし
-
-### 清算フロー
-
-`draft` → `confirmed` → `pending_payment` → `settled`
+- **清算フロー**: `draft` → `confirmed` → `pending_payment` → `settled`
 
 ### RPC 一覧
 
@@ -91,10 +80,6 @@ src/
 | `get_settlement_period_suggestion` | スマート期間提案 |
 | `anonymize_user` | 退会匿名化 + グループ退去 |
 | `create_demo_bot_partner` | デモBot作成 |
-
-### 相殺統合ロジック
-
-`src/lib/settlement/consolidate.ts` に集約: `consolidateTransfers()`, `balancesToTransfers()`, `calculateMyTransferBalance()`
 
 ---
 

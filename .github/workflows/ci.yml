@@ -10,9 +10,10 @@ permissions:
   contents: read
   security-events: write
 
+# ローカルスタックのデフォルト値（秘密情報なし）
 env:
-  NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+  NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
 
 jobs:
   lint:
@@ -77,7 +78,7 @@ jobs:
         continue-on-error: true
 
   supabase:
-    name: Supabase Types Check
+    name: Supabase Schema & Types Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -87,17 +88,25 @@ jobs:
         with:
           version: latest
 
+      - name: Start Supabase local stack
+        run: supabase start
+
+      - name: Run migrations and seed
+        run: supabase db reset
+
       - name: Check generated types are up to date
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
-          supabase gen types typescript --project-id byvtpkuocvjnwvihipvy --schema public 2>/dev/null > /tmp/database.generated.ts
+          supabase gen types typescript --local --schema public > /tmp/database.generated.ts
           if ! diff --strip-trailing-cr -q src/types/database.generated.ts /tmp/database.generated.ts > /dev/null 2>&1; then
             echo "::error::database.generated.ts is out of date. Run 'npm run db:gen-types' and commit."
             diff --strip-trailing-cr src/types/database.generated.ts /tmp/database.generated.ts || true
             exit 1
           fi
           echo "Generated types are up to date."
+
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop
 
   build:
     name: Build

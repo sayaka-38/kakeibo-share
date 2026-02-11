@@ -226,7 +226,6 @@ export async function deleteDemoSession(
     }
   }
 
-  // TODO: ユーザー削除の実装（必要に応じて）
   return { success: true };
 }
 
