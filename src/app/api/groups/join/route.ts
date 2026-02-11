@@ -68,7 +68,6 @@ export async function POST(request: Request) {
       .single();
 
     if (groupError || !group) {
-      console.log("[API /groups/join] Group not found:", groupError?.message);
       return NextResponse.json(
         { error: "この招待リンクは無効です" },
         { status: 404 }
