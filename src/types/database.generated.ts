@@ -7,50 +7,34 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.1"
-  }
   public: {
     Tables: {
       categories: {
         Row: {
           color: string | null
-          created_at: string
           group_id: string | null
           icon: string | null
           id: string
-          is_default: boolean | null
+          is_default: boolean
           name: string
         }
         Insert: {
           color?: string | null
-          created_at?: string
           group_id?: string | null
           icon?: string | null
           id?: string
-          is_default?: boolean | null
+          is_default?: boolean
           name: string
         }
         Update: {
           color?: string | null
-          created_at?: string
           group_id?: string | null
           icon?: string | null
           id?: string
-          is_default?: boolean | null
+          is_default?: boolean
           name?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "categories_group_id_fkey"
-            columns: ["group_id"]
-            isOneToOne: false
-            referencedRelation: "groups"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       demo_sessions: {
         Row: {
@@ -93,23 +77,23 @@ export type Database = {
       }
       group_members: {
         Row: {
-          created_at: string
           group_id: string
           id: string
+          joined_at: string
           role: string
           user_id: string
         }
         Insert: {
-          created_at?: string
           group_id: string
           id?: string
+          joined_at?: string
           role: string
           user_id: string
         }
         Update: {
-          created_at?: string
           group_id?: string
           id?: string
+          joined_at?: string
           role?: string
           user_id?: string
         }
@@ -160,7 +144,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "groups_owner_id_fkey"
+            foreignKeyName: "groups_created_by_fkey"
             columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -171,25 +155,19 @@ export type Database = {
       payment_splits: {
         Row: {
           amount: number
-          created_at: string
           id: string
-          is_paid: boolean
           payment_id: string
           user_id: string
         }
         Insert: {
           amount: number
-          created_at?: string
           id?: string
-          is_paid?: boolean
           payment_id: string
           user_id: string
         }
         Update: {
           amount?: number
-          created_at?: string
           id?: string
-          is_paid?: boolean
           payment_id?: string
           user_id?: string
         }
@@ -263,7 +241,7 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "payments_payer_id_fkey"
+            foreignKeyName: "payments_paid_by_fkey"
             columns: ["payer_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -283,7 +261,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           display_name: string | null
-          email: string | null
+          email: string
           id: string
           is_demo: boolean
           updated_at: string
@@ -292,8 +270,8 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
-          email?: string | null
-          id: string
+          email: string
+          id?: string
           is_demo?: boolean
           updated_at?: string
         }
@@ -301,7 +279,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
-          email?: string | null
+          email?: string
           id?: string
           is_demo?: boolean
           updated_at?: string
@@ -656,12 +634,68 @@ export type Database = {
           },
         ]
       }
+      settlements: {
+        Row: {
+          amount: number
+          created_at: string
+          from_user: string
+          group_id: string
+          id: string
+          settled_at: string | null
+          to_user: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          from_user: string
+          group_id: string
+          id?: string
+          settled_at?: string | null
+          to_user: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          from_user?: string
+          group_id?: string
+          id?: string
+          settled_at?: string | null
+          to_user?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "settlements_from_user_fkey"
+            columns: ["from_user"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settlements_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settlements_to_user_fkey"
+            columns: ["to_user"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
       anonymize_user: { Args: { p_user_id: string }; Returns: boolean }
+      calculate_user_balance: {
+        Args: { p_group_id: string; p_user_id: string }
+        Returns: number
+      }
       confirm_settlement: {
         Args: { p_session_id: string; p_user_id: string }
         Returns: number
@@ -872,3 +906,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
