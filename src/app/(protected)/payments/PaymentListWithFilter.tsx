@@ -76,7 +76,7 @@ export default function PaymentListWithFilter({
               month: "long",
             });
 
-            const { dateOrder, byDate } = groupPaymentsByDate(monthPayments);
+            const dateGroups = groupPaymentsByDate(monthPayments);
 
             return (
               <div
@@ -91,9 +91,9 @@ export default function PaymentListWithFilter({
                     {t("common.total")}: {formatCurrency(monthTotal)}
                   </span>
                 </div>
-                {dateOrder.map((date, dateIdx) => (
+                {dateGroups.map((group, dateIdx) => (
                   <div
-                    key={date}
+                    key={group.date}
                     className={
                       dateIdx > 0
                         ? "border-t border-theme-card-border"
@@ -101,15 +101,14 @@ export default function PaymentListWithFilter({
                     }
                   >
                     <div className="px-4 py-1.5 text-xs font-semibold text-theme-text bg-theme-bg">
-                      {formatDateHeader(date)}
+                      {formatDateHeader(group.date)}
                     </div>
                     <div className="divide-y divide-dashed divide-theme-card-border/60">
-                      {byDate[date]!.map((payment) => (
+                      {group.payments.map((payment) => (
                         <PaymentRow
                           key={`${payment.id}-${payment.updated_at}`}
                           payment={payment}
                           userId={userId}
-                          groupName={payment.groups?.name}
                           showCategoryBadge
                         />
                       ))}

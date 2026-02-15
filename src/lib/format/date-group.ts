@@ -37,12 +37,14 @@ export function groupByDate<T>(
 }
 
 /**
- * Convenience wrapper: group payment-like objects by payment_date.
+ * Group payment-like objects by payment_date.
+ * Returns an array of { date, payments } sorted by original order (typically date descending).
  */
 export function groupPaymentsByDate<T extends { payment_date: string }>(
   payments: T[]
-): { dateOrder: string[]; byDate: Record<string, T[]> } {
-  return groupByDate(payments, (p) => p.payment_date);
+): { date: string; payments: T[] }[] {
+  const { dateOrder, byDate } = groupByDate(payments, (p) => p.payment_date);
+  return dateOrder.map((date) => ({ date, payments: byDate[date]! }));
 }
 
 /**

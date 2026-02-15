@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { t } from "@/lib/i18n";
@@ -39,13 +39,15 @@ type FullPaymentFormProps = {
   currentUserId: string;
   editData?: EditPaymentData;
   duplicateData?: DuplicatePaymentData;
+  /** グループ固定モード: グループ選択を非表示にし、成功時にページリフレッシュ */
+  fixedGroupId?: string;
 };
 
 /**
- * フル機能の支払い登録フォーム
+ * 統合支払い登録フォーム
  *
- * /payments/new ページで使用
- * グループ選択、カテゴリ選択、割り勘設定（均等/カスタム/全額立替）を含む
+ * /payments/new と /groups/[id] の両方で使用。
+ * fixedGroupId 指定時はグループ選択を省略し、インラインモードで動作。
  */
 export default function FullPaymentForm({
   groups,
@@ -54,10 +56,12 @@ export default function FullPaymentForm({
   currentUserId,
   editData,
   duplicateData,
+  fixedGroupId,
 }: FullPaymentFormProps) {
   const router = useRouter();
   const isEditMode = !!editData;
   const isDuplicateMode = !!duplicateData;
+  const isInlineMode = !!fixedGroupId;
 
   // editData or duplicateData for pre-fill (duplicateData uses today's date)
   const prefill = editData || duplicateData;
@@ -75,9 +79,17 @@ export default function FullPaymentForm({
   const form = usePaymentForm(initialData);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
-  // フル版専用の状態
-  const [groupId, setGroupId] = useState(prefill?.groupId || groups[0]?.id || "");
+  useEffect(() => {
+    if (showSuccess) {
+      const timer = setTimeout(() => setShowSuccess(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccess]);
+
+  // グループ状態: fixedGroupId があればそれを使用
+  const [groupId, setGroupId] = useState(fixedGroupId || prefill?.groupId || groups[0]?.id || "");
   const [categoryId, setCategoryId] = useState(prefill?.categoryId ?? "");
   const [customSplits, setCustomSplits] = useState<{ [userId: string]: string }>(
     prefill?.customSplits ?? {}
@@ -292,8 +304,16 @@ export default function FullPaymentForm({
         }
       }
 
-      router.push("/payments");
-      router.refresh();
+      if (isInlineMode) {
+        form.reset();
+        setCategoryId("");
+        setCustomSplits({});
+        setShowSuccess(true);
+        router.refresh();
+      } else {
+        router.push("/payments");
+        router.refresh();
+      }
     } catch {
       setError(t("payments.errors.updateFailed"));
     } finally {
@@ -318,42 +338,54 @@ export default function FullPaymentForm({
         </div>
       )}
 
+      {showSuccess && (
+        <div
+          className="bg-theme-text/10 border border-theme-text text-theme-text px-4 py-3 rounded-lg text-sm animate-fade-in"
+          role="status"
+          aria-live="polite"
+        >
+          {t("payments.form.submitSuccess")}
+        </div>
+      )}
+
       {error && (
         <div className="bg-theme-accent/10 border border-theme-accent text-theme-accent px-4 py-3 rounded-lg text-sm">
           {error}
         </div>
       )}
 
-      {/* Group Selection */}
-      <div>
-        <label
-          htmlFor="group"
-          className="block text-sm font-medium text-theme-text"
-        >
-          {t("payments.form.group")}
-        </label>
-        <select
-          id="group"
-          value={groupId}
-          onChange={(e) => setGroupId(e.target.value)}
-          required
-          disabled={isEditMode}
-          className={`mt-1 block w-full px-3 py-2 border border-theme-card-border rounded-lg shadow-sm text-theme-headline focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary ${
-            isEditMode ? "bg-theme-bg cursor-not-allowed" : ""
-          }`}
-        >
-          {groups.map((group) => (
-            <option key={group.id} value={group.id}>
-              {group.name}
-            </option>
-          ))}
-        </select>
-        {isEditMode && (
-          <p className="mt-1 text-xs text-theme-muted">
-            {t("payments.form.groupNotEditable")}
-          </p>
-        )}
-      </div>
+      {/* Group Selection (hidden in inline/fixed mode) */}
+      {!isInlineMode && (
+        <div>
+          <label
+            htmlFor="group"
+            className="block text-sm font-medium text-theme-text"
+          >
+            {t("payments.form.group")}
+          </label>
+          <select
+            id="group"
+            value={groupId}
+            onChange={(e) => setGroupId(e.target.value)}
+            required
+            disabled={isEditMode}
+            className={`mt-1 block w-full px-3 py-2 border border-theme-card-border rounded-lg shadow-sm text-theme-headline focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary ${
+              isEditMode ? "bg-theme-bg cursor-not-allowed" : ""
+            }`}
+          >
+            {groups.map((group) => (
+              <option key={group.id} value={group.id}>
+                {group.name}
+              </option>
+            ))}
+          </select>
+          {isEditMode && (
+            <p className="mt-1 text-xs text-theme-muted">
+              {t("payments.form.groupNotEditable")}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Amount - 共通コンポーネント使用 */}
       <AmountField

@@ -78,22 +78,22 @@ export async function RecentPaymentList({
     );
   }
 
-  const { dateOrder, byDate } = groupPaymentsByDate(payments);
+  const grouped = groupPaymentsByDate(payments);
 
   return (
     <div>
-      {dateOrder.map((date, dateIdx) => (
+      {grouped.map((group, idx) => (
         <div
-          key={date}
+          key={group.date}
           className={
-            dateIdx > 0 ? "border-t border-theme-card-border" : ""
+            idx > 0 ? "border-t border-theme-card-border" : ""
           }
         >
           <div className="px-4 py-1.5 text-xs font-semibold text-theme-text bg-theme-bg">
-            {formatDateHeader(date)}
+            {formatDateHeader(group.date)}
           </div>
           <div className="divide-y divide-dashed divide-theme-card-border/60">
-            {byDate[date]!.map((payment) => (
+            {group.payments.map((payment) => (
               <PaymentRow
                 key={payment.id}
                 payment={payment}

@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format/currency";
 import InviteMemberForm from "@/components/InviteMemberForm";
-import { GroupPaymentForm } from "@/components/GroupPaymentForm";
+import FullPaymentForm from "@/components/payment-form/FullPaymentForm";
 import { InviteLinkButton } from "@/components/InviteLinkButton";
 import { RecentPaymentList } from "@/components/payment-list/RecentPaymentList";
 import { PaymentListSkeleton } from "@/components/payment-list/PaymentListSkeleton";
@@ -14,7 +14,7 @@ import type {
   GroupResult,
   GroupMemberDetailResult,
 } from "@/types/query-results";
-import type { Category } from "@/types/database";
+import type { Category, Profile } from "@/types/database";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -180,12 +180,16 @@ export default async function GroupDetailPage({ params }: Props) {
           </h2>
         </div>
         <div className="px-4 py-4 sm:p-6">
-          <GroupPaymentForm
-            groupId={id}
-            currentUserId={user?.id || ""}
-            memberIds={members?.map((m) => m.profiles?.id).filter((id): id is string => !!id) || []}
-            members={members?.map((m) => m.profiles).filter((p): p is NonNullable<typeof p> => p !== null).map((p) => ({ id: p.id, displayName: p.display_name || p.email || "Unknown" })) || []}
+          <FullPaymentForm
+            groups={[group as import("@/types/database").Group]}
             categories={categories || []}
+            members={{
+              [id]: (members
+                ?.map((m) => m.profiles)
+                .filter((p): p is NonNullable<typeof p> => p !== null) || []) as Profile[],
+            }}
+            currentUserId={user?.id || ""}
+            fixedGroupId={id}
           />
         </div>
       </div>
