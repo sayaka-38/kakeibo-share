@@ -51,50 +51,49 @@ export function PaymentRow({
 
   const rowContent = (
     <>
-      <div className="flex items-start gap-3">
-        {/* Category icon */}
-        <span className="w-9 h-9 rounded-full bg-theme-primary/15 flex items-center justify-center text-base shrink-0">
-          {categoryIcon}
-        </span>
-
-        {/* Left: Title + subtitle with badges */}
-        <div className="flex-1 min-w-0">
-          <span className="font-medium text-theme-headline text-sm truncate block">
-            {payment.description}
+      <div className="grid grid-cols-[1fr_auto] gap-3 items-start">
+        {/* Left: Icon + Title/subtitle (truncatable) */}
+        <div className="flex items-start gap-3 min-w-0">
+          <span className="w-9 h-9 rounded-full bg-theme-primary/15 flex items-center justify-center text-base shrink-0">
+            {categoryIcon}
           </span>
-          <div className="flex items-center gap-1 mt-0.5 text-xs text-theme-muted overflow-hidden">
-            <span className="max-w-[150px] min-w-0 truncate">
-              {payment.profiles?.display_name || payment.profiles?.email}
+          <div className="min-w-0">
+            <span className="font-medium text-theme-headline text-sm truncate block">
+              {payment.description}
             </span>
-            {groupName && (
-              <>
-                <span className="shrink-0">/</span>
-                <span className="max-w-[5rem] min-w-0 truncate">
-                  {groupName}
+            <div className="flex items-center gap-1 mt-0.5 text-xs text-theme-muted overflow-hidden">
+              <span className="min-w-0 truncate">
+                {payment.profiles?.display_name || payment.profiles?.email}
+              </span>
+              {groupName && (
+                <>
+                  <span className="shrink-0">/</span>
+                  <span className="max-w-[5rem] min-w-0 truncate">
+                    {groupName}
+                  </span>
+                </>
+              )}
+              {showCategoryBadge && payment.categories && (
+                <span className="text-[10px] bg-theme-bg text-theme-muted px-1.5 py-0.5 rounded shrink-0">
+                  {payment.categories.name}
                 </span>
-              </>
-            )}
-            {showCategoryBadge && payment.categories && (
-              <span className="text-[10px] bg-theme-bg text-theme-muted px-1.5 py-0.5 rounded shrink-0">
-                {payment.categories.name}
-              </span>
-            )}
-            {isProxy && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-theme-secondary/15 text-theme-secondary shrink-0">
-                {t("payments.display.proxyBadge")}
-              </span>
-            )}
-            {custom && <SplitBadge />}
+              )}
+              {isProxy && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-theme-secondary/15 text-theme-secondary shrink-0">
+                  {t("payments.display.proxyBadge")}
+                </span>
+              )}
+              {custom && <SplitBadge />}
+            </div>
           </div>
         </div>
 
-        {/* Right: Amount + Actions (fixed slot) */}
-        <div className="w-[6.5rem] shrink-0 flex flex-col items-end gap-1">
-          <span className="font-semibold text-sm text-theme-headline">
+        {/* Right: Amount + Actions (pixel-stable slot) */}
+        <div className="flex flex-col items-end gap-1">
+          <span className="font-semibold text-sm text-theme-headline whitespace-nowrap">
             {formatCurrency(Number(payment.amount))}
           </span>
           <div className="flex items-center gap-1.5">
-            {/* Fixed slot for edit+delete / settled label */}
             <div className="w-16 flex items-center justify-end gap-1">
               {isSettled && (
                 <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-theme-text/15 text-theme-text">
@@ -139,7 +138,6 @@ export function PaymentRow({
                 <DeletePaymentForm paymentId={payment.id} />
               )}
             </div>
-            {/* Duplicate — always in same position */}
             <Link
               href={`/payments/new?copyFrom=${payment.id}`}
               className="p-1 text-theme-muted/50 hover:text-theme-primary-text transition-colors"

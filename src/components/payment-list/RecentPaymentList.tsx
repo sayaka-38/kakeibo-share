@@ -6,7 +6,7 @@
  */
 import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
-import { formatDateHeader, groupByDate } from "@/lib/format/date-group";
+import { formatDateHeader, groupPaymentsByDate } from "@/lib/format/date-group";
 import { PaymentRow } from "./PaymentRow";
 import type { PaymentSplitRow } from "./types";
 
@@ -78,10 +78,7 @@ export async function RecentPaymentList({
     );
   }
 
-  const { dateOrder, byDate } = groupByDate(
-    payments,
-    (p) => p.payment_date
-  );
+  const { dateOrder, byDate } = groupPaymentsByDate(payments);
 
   return (
     <div>

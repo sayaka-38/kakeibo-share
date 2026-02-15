@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { t } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format/currency";
-import { formatDateHeader, groupByDate } from "@/lib/format/date-group";
+import { formatDateHeader, groupPaymentsByDate, groupPaymentsByMonth } from "@/lib/format/date-group";
 import { PaymentRow } from "@/components/payment-list/PaymentRow";
 import type { PaymentWithRelations } from "@/components/payment-list/types";
 
@@ -25,17 +25,7 @@ export default function PaymentListWithFilter({
     ? payments.filter((p) => p.group_id === selectedGroupId)
     : payments;
 
-  // Group payments by month
-  const paymentsByMonth: { [key: string]: PaymentWithRelations[] } = {};
-  filteredPayments.forEach((payment) => {
-    const month = payment.payment_date.substring(0, 7);
-    if (!paymentsByMonth[month]) {
-      paymentsByMonth[month] = [];
-    }
-    paymentsByMonth[month]!.push(payment);
-  });
-
-  const months = Object.keys(paymentsByMonth).sort().reverse();
+  const { months, byMonth: paymentsByMonth } = groupPaymentsByMonth(filteredPayments);
 
   return (
     <>
@@ -86,10 +76,7 @@ export default function PaymentListWithFilter({
               month: "long",
             });
 
-            const { dateOrder, byDate } = groupByDate(
-              monthPayments,
-              (p) => p.payment_date
-            );
+            const { dateOrder, byDate } = groupPaymentsByDate(monthPayments);
 
             return (
               <div

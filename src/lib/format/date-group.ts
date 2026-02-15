@@ -35,3 +35,25 @@ export function groupByDate<T>(
   }
   return { dateOrder, byDate };
 }
+
+/**
+ * Convenience wrapper: group payment-like objects by payment_date.
+ */
+export function groupPaymentsByDate<T extends { payment_date: string }>(
+  payments: T[]
+): { dateOrder: string[]; byDate: Record<string, T[]> } {
+  return groupByDate(payments, (p) => p.payment_date);
+}
+
+/**
+ * Group payment-like objects by month (YYYY-MM), newest first.
+ */
+export function groupPaymentsByMonth<T extends { payment_date: string }>(
+  payments: T[]
+): { months: string[]; byMonth: Record<string, T[]> } {
+  const { dateOrder, byDate } = groupByDate(
+    payments,
+    (p) => p.payment_date.substring(0, 7)
+  );
+  return { months: dateOrder.sort().reverse(), byMonth: byDate };
+}

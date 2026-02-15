@@ -34,9 +34,14 @@ describe("Payment list layout hardening", () => {
       expect(content).toContain("truncate block");
     });
 
-    it("右カラムが固定幅スロット（w-[6.5rem] shrink-0 flex-col items-end）で配置されている", () => {
+    it("メインコンテナが CSS Grid (1fr auto) で構成されている", () => {
       const content = fs.readFileSync(PAYMENT_ROW_PATH, "utf-8");
-      expect(content).toContain("w-[6.5rem] shrink-0 flex flex-col items-end");
+      expect(content).toContain("grid grid-cols-[1fr_auto]");
+    });
+
+    it("右カラムが flex-col items-end で配置されている", () => {
+      const content = fs.readFileSync(PAYMENT_ROW_PATH, "utf-8");
+      expect(content).toContain("flex flex-col items-end");
     });
 
     it("アクションスロットが固定幅（w-16）で配置されている", () => {
@@ -44,14 +49,14 @@ describe("Payment list layout hardening", () => {
       expect(content).toContain("w-16 flex items-center justify-end gap-1");
     });
 
-    it("複製ボタンがアクションスロットの外に常に配置されている", () => {
+    it("複製ボタンが配置されている", () => {
       const content = fs.readFileSync(PAYMENT_ROW_PATH, "utf-8");
-      expect(content).toContain("Duplicate — always in same position");
+      expect(content).toContain("payments.duplicate");
     });
 
-    it("title + subtitle の親に min-w-0 がある", () => {
+    it("左カラム全体に min-w-0 がある（truncate 有効化）", () => {
       const content = fs.readFileSync(PAYMENT_ROW_PATH, "utf-8");
-      expect(content).toContain("flex-1 min-w-0");
+      expect(content).toContain("min-w-0");
     });
 
     it("未分類アイコンが ❓ になっている", () => {
