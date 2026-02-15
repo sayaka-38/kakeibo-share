@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { formatDateHeader, groupByDate } from "@/lib/format/date-group";
+import {
+  formatDateHeader,
+  groupByDate,
+  groupPaymentsByDate,
+  groupPaymentsByMonth,
+} from "@/lib/format/date-group";
 
 describe("formatDateHeader", () => {
   it("formats YYYY-MM-DD as Japanese date with weekday", () => {
@@ -53,5 +58,48 @@ describe("groupByDate", () => {
 
     const { dateOrder } = groupByDate(items, (i) => i.date);
     expect(dateOrder).toEqual(["2026-02-10", "2026-02-12"]);
+  });
+});
+
+describe("groupPaymentsByDate", () => {
+  it("groups by payment_date without explicit accessor", () => {
+    const payments = [
+      { id: "a", payment_date: "2026-02-15" },
+      { id: "b", payment_date: "2026-02-15" },
+      { id: "c", payment_date: "2026-02-14" },
+    ];
+
+    const { dateOrder, byDate } = groupPaymentsByDate(payments);
+    expect(dateOrder).toEqual(["2026-02-15", "2026-02-14"]);
+    expect(byDate["2026-02-15"]).toHaveLength(2);
+    expect(byDate["2026-02-14"]).toHaveLength(1);
+  });
+
+  it("returns empty for no payments", () => {
+    const { dateOrder, byDate } = groupPaymentsByDate([]);
+    expect(dateOrder).toEqual([]);
+    expect(byDate).toEqual({});
+  });
+});
+
+describe("groupPaymentsByMonth", () => {
+  it("groups by YYYY-MM and sorts months descending", () => {
+    const payments = [
+      { id: "1", payment_date: "2026-01-10" },
+      { id: "2", payment_date: "2026-02-05" },
+      { id: "3", payment_date: "2026-01-20" },
+      { id: "4", payment_date: "2026-02-15" },
+    ];
+
+    const { months, byMonth } = groupPaymentsByMonth(payments);
+    expect(months).toEqual(["2026-02", "2026-01"]);
+    expect(byMonth["2026-01"]).toHaveLength(2);
+    expect(byMonth["2026-02"]).toHaveLength(2);
+  });
+
+  it("returns empty for no payments", () => {
+    const { months, byMonth } = groupPaymentsByMonth([]);
+    expect(months).toEqual([]);
+    expect(byMonth).toEqual({});
   });
 });
