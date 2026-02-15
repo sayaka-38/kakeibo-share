@@ -338,6 +338,7 @@ export type Database = {
           description: string
           group_id: string
           id: string
+          interval_months: number
           is_active: boolean
           is_variable: boolean
           split_type: string
@@ -352,6 +353,7 @@ export type Database = {
           description: string
           group_id: string
           id?: string
+          interval_months?: number
           is_active?: boolean
           is_variable?: boolean
           split_type?: string
@@ -366,6 +368,7 @@ export type Database = {
           description?: string
           group_id?: string
           id?: string
+          interval_months?: number
           is_active?: boolean
           is_variable?: boolean
           split_type?: string

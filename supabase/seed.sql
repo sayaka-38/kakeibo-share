@@ -107,3 +107,32 @@ INSERT INTO payment_splits (payment_id, user_id, amount) VALUES
 -- 清算結果:
 -- Alice: 立替3000 - 負担(1500+4000) = -2500 (Alice が Bob に 2500円支払い)
 -- Bob:   立替8000 - 負担(1500+4000) = +2500 (Bob が 2500円受け取り)
+
+-- ============================================
+-- 5. 2つ目のグループ（グループフィルタ検証用）
+-- ============================================
+INSERT INTO groups (id, name, description, owner_id) VALUES (
+  'f6666666-6666-6666-6666-666666666666',
+  '趣味サークル',
+  'Alice と Bob の趣味グループ',
+  'b2222222-2222-2222-2222-222222222222'
+);
+
+INSERT INTO group_members (group_id, user_id, role) VALUES
+  ('f6666666-6666-6666-6666-666666666666', 'a1111111-1111-1111-1111-111111111111', 'member'),
+  ('f6666666-6666-6666-6666-666666666666', 'b2222222-2222-2222-2222-222222222222', 'owner');
+
+-- 趣味サークルの支払い (Bob: ボードゲーム購入 5000円)
+INSERT INTO payments (id, group_id, payer_id, amount, description, category_id, payment_date) VALUES (
+  'a7777777-7777-7777-7777-777777777777',
+  'f6666666-6666-6666-6666-666666666666',
+  'b2222222-2222-2222-2222-222222222222',
+  5000,
+  'ボードゲーム購入',
+  (SELECT id FROM categories WHERE name = '娯楽費' AND is_default = true LIMIT 1),
+  CURRENT_DATE
+);
+
+INSERT INTO payment_splits (payment_id, user_id, amount) VALUES
+  ('a7777777-7777-7777-7777-777777777777', 'a1111111-1111-1111-1111-111111111111', 2500),
+  ('a7777777-7777-7777-7777-777777777777', 'b2222222-2222-2222-2222-222222222222', 2500);

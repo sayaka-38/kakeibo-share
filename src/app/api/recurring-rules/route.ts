@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/api/authenticate";
+import { validateRecurringRule } from "@/lib/validation/recurring-rule";
 
 // =============================================================================
 // GET /api/recurring-rules?groupId=xxx
@@ -92,43 +93,34 @@ export async function POST(request: NextRequest) {
     defaultPayerId,
     splitType,
     splits,
+    intervalMonths,
   } = body;
 
-  // バリデーション
-  if (!groupId || !description || dayOfMonth === undefined || !defaultPayerId) {
+  if (!groupId) {
     return NextResponse.json(
-      { error: "グループID・項目名・発生日・支払者は必須です" },
+      { error: "グループIDが必要です" },
       { status: 400 }
     );
   }
 
-  if (description.length < 1 || description.length > 100) {
-    return NextResponse.json(
-      { error: "項目名は1〜100文字で入力してください" },
-      { status: 400 }
-    );
-  }
-
-  if (dayOfMonth < 1 || dayOfMonth > 31) {
-    return NextResponse.json(
-      { error: "発生日は1〜31の範囲で指定してください" },
-      { status: 400 }
-    );
-  }
-
-  // is_variable と default_amount の整合性チェック
+  const day = Number(dayOfMonth);
+  const interval = Number(intervalMonths ?? 1);
   const isVar = isVariable === true;
-  if (isVar && defaultAmount !== null && defaultAmount !== undefined) {
-    return NextResponse.json(
-      { error: "変動ルールにはデフォルト金額を設定できません" },
-      { status: 400 }
-    );
-  }
-  if (!isVar && (defaultAmount === null || defaultAmount === undefined || defaultAmount <= 0)) {
-    return NextResponse.json(
-      { error: "固定ルールには正の金額が必要です" },
-      { status: 400 }
-    );
+
+  // 共通バリデーション
+  const validation = validateRecurringRule({
+    description: description ?? "",
+    dayOfMonth: day,
+    defaultPayerId: defaultPayerId ?? "",
+    isVariable: isVar,
+    defaultAmount: isVar ? (defaultAmount ?? undefined) : defaultAmount,
+    intervalMonths: interval,
+    splitType: splitType || "equal",
+  });
+
+  if (!validation.success) {
+    const firstError = Object.values(validation.errors)[0];
+    return NextResponse.json({ error: firstError }, { status: 400 });
   }
 
   // メンバーシップ確認
@@ -155,18 +147,19 @@ export async function POST(request: NextRequest) {
       description,
       default_amount: isVar ? null : defaultAmount,
       is_variable: isVar,
-      day_of_month: dayOfMonth,
+      day_of_month: day,
       default_payer_id: defaultPayerId,
       split_type: splitType || "equal",
       is_active: true,
+      interval_months: interval,
     })
     .select()
     .single();
 
   if (error) {
-    console.error("Failed to create recurring rule:", error);
+    console.error("Failed to create recurring rule:", error.message, error.details, error.hint);
     return NextResponse.json(
-      { error: "ルールの作成に失敗しました" },
+      { error: "ルールの作成に失敗しました", details: error.message },
       { status: 500 }
     );
   }

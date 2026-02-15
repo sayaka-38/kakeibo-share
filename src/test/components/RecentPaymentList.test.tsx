@@ -88,11 +88,12 @@ describe("RecentPaymentList", () => {
       expect(container.textContent).toContain("suzuki@example.com");
     });
 
-    it("日付が表示される", async () => {
+    it("日付がヘッダーとして「M月D日(曜日)」形式で表示される", async () => {
       const { container } = render(await RecentPaymentList({ groupId: "test-group-id" }));
 
-      expect(container.textContent).toContain("2026-01-25");
-      expect(container.textContent).toContain("2026-01-24");
+      // 日付ヘッダー形式
+      expect(container.textContent).toContain("1月25日(日)");
+      expect(container.textContent).toContain("1月24日(土)");
     });
   });
 

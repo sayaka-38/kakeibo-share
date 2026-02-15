@@ -78,9 +78,9 @@ export default function Navigation() {
   };
 
   return (
-    <nav className="bg-theme-card-bg border-b border-theme-card-border md:border-b-0 md:border-r md:w-64 md:min-h-[calc(100vh-4rem)]">
+    <nav className="bg-theme-card-bg border-b border-theme-card-border md:border-b-0 md:border-r md:w-64 md:shrink-0 md:min-h-[calc(100vh-4rem)]">
       {/* Mobile navigation */}
-      <div className="md:hidden flex overflow-x-auto">
+      <div className="md:hidden flex overflow-x-auto px-2">
         {navItems.map((item) => {
           const isActive = isNavItemActive(item.href, item.labelKey);
           return (

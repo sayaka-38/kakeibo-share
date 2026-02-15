@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/api/authenticate";
+import {
+  validateDescription,
+  validateDayOfMonth,
+  validateIntervalMonths,
+  validateAmount,
+} from "@/lib/validation/recurring-rule";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -117,39 +123,29 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     splitType,
     isActive,
     splits,
+    intervalMonths,
   } = body;
 
-  // バリデーション
-  if (description !== undefined && (description.length < 1 || description.length > 100)) {
-    return NextResponse.json(
-      { error: "項目名は1〜100文字で入力してください" },
-      { status: 400 }
-    );
+  // 共通バリデーション（部分更新: 提供されたフィールドのみ検証）
+  if (description !== undefined) {
+    const err = validateDescription(description);
+    if (err) return NextResponse.json({ error: err }, { status: 400 });
   }
 
-  if (dayOfMonth !== undefined && (dayOfMonth < 1 || dayOfMonth > 31)) {
-    return NextResponse.json(
-      { error: "発生日は1〜31の範囲で指定してください" },
-      { status: 400 }
-    );
+  if (dayOfMonth !== undefined) {
+    const err = validateDayOfMonth(Number(dayOfMonth));
+    if (err) return NextResponse.json({ error: err }, { status: 400 });
   }
 
-  // is_variable と default_amount の整合性チェック
+  if (intervalMonths !== undefined) {
+    const err = validateIntervalMonths(Number(intervalMonths));
+    if (err) return NextResponse.json({ error: err }, { status: 400 });
+  }
+
   const newIsVariable = isVariable !== undefined ? isVariable : existingRule.is_variable;
   const newDefaultAmount = defaultAmount !== undefined ? defaultAmount : existingRule.default_amount;
-
-  if (newIsVariable && newDefaultAmount !== null) {
-    return NextResponse.json(
-      { error: "変動ルールにはデフォルト金額を設定できません" },
-      { status: 400 }
-    );
-  }
-  if (!newIsVariable && (newDefaultAmount === null || newDefaultAmount <= 0)) {
-    return NextResponse.json(
-      { error: "固定ルールには正の金額が必要です" },
-      { status: 400 }
-    );
-  }
+  const amountErr = validateAmount(newIsVariable, newDefaultAmount);
+  if (amountErr) return NextResponse.json({ error: amountErr }, { status: 400 });
 
   // 更新データを構築
   const updateData: Record<string, unknown> = {};
@@ -161,10 +157,11 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   } else if (defaultAmount !== undefined) {
     updateData.default_amount = defaultAmount;
   }
-  if (dayOfMonth !== undefined) updateData.day_of_month = dayOfMonth;
+  if (dayOfMonth !== undefined) updateData.day_of_month = Number(dayOfMonth);
   if (defaultPayerId !== undefined) updateData.default_payer_id = defaultPayerId;
   if (splitType !== undefined) updateData.split_type = splitType;
   if (isActive !== undefined) updateData.is_active = isActive;
+  if (intervalMonths !== undefined) updateData.interval_months = Number(intervalMonths);
 
   // ルールを更新
   const { data: rule, error } = await supabase
@@ -216,7 +213,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 // DELETE /api/recurring-rules/[id]
 // 固定費ルールを削除（オーナーのみ）
 // =============================================================================
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   const auth = await authenticateRequest();
   if (!auth.success) return auth.response;
   const { user, supabase } = auth;

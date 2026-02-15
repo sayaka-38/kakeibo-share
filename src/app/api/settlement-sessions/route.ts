@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/api/authenticate";
+import { generateSettlementEntries } from "@/lib/settlement/generate-entries";
 
 // =============================================================================
 // GET /api/settlement-sessions?groupId=xxx
@@ -151,40 +152,43 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // エントリを自動生成（RPC呼び出し）
-  const { data: entryCount, error: rpcError } = await supabase
-    .rpc("generate_settlement_entries", {
-      p_session_id: session.id,
-      p_user_id: user.id,
-    });
-
-  if (rpcError) {
-    console.error("Failed to generate settlement entries:", rpcError);
-    // セッションは作成済みなので続行（エラー情報をレスポンスに含める）
+  // エントリを自動生成（TS関数）
+  let entryCount: number;
+  try {
+    entryCount = await generateSettlementEntries(
+      supabase,
+      session.id,
+      groupId,
+      periodStart,
+      periodEnd,
+      user.id
+    );
+  } catch (err) {
+    console.error("Failed to generate settlement entries:", err);
     return NextResponse.json(
       {
         session,
         entriesGenerated: 0,
-        rpcError: rpcError.message,
+        error: "エントリの生成に失敗しました",
       },
       { status: 201 }
     );
   }
 
-  // RPCの戻り値が負の場合はエラーコード
-  if (typeof entryCount === "number" && entryCount < 0) {
+  // 負の戻り値はエラーコード
+  if (entryCount < 0) {
     const errorMessages: Record<number, string> = {
       [-1]: "セッションが見つかりません",
       [-2]: "権限がありません",
       [-3]: "セッションはドラフト状態ではありません",
     };
-    console.error("RPC returned error code:", entryCount, errorMessages[entryCount]);
+    console.error("generateSettlementEntries returned error code:", entryCount, errorMessages[entryCount]);
     return NextResponse.json(
       {
         session,
         entriesGenerated: 0,
-        rpcErrorCode: entryCount,
-        rpcErrorMessage: errorMessages[entryCount] || "Unknown error",
+        errorCode: entryCount,
+        errorMessage: errorMessages[entryCount] || "Unknown error",
       },
       { status: 201 }
     );
@@ -193,7 +197,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json(
     {
       session,
-      entriesGenerated: entryCount ?? 0,
+      entriesGenerated: entryCount,
     },
     { status: 201 }
   );

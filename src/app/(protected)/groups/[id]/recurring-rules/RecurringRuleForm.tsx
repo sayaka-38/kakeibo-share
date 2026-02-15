@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { t } from "@/lib/i18n";
 import { Button } from "@/components/ui/Button";
 import { AmountFieldWithKeypad } from "@/components/payment-form/fields/AmountFieldWithKeypad";
+import { validateRecurringRule } from "@/lib/validation/recurring-rule";
 import type { Category, Profile } from "@/types/database";
 import type { RuleWithRelations } from "./RecurringRuleList";
 
@@ -46,6 +47,9 @@ export default function RecurringRuleForm({
   const [splitType, setSplitType] = useState<"equal" | "custom">(
     (editingRule?.split_type as "equal" | "custom") || "equal"
   );
+  const [intervalMonths, setIntervalMonths] = useState(
+    String(editingRule?.interval_months ?? 1)
+  );
 
   // カスタム分割: パーセンテージ
   const [percentages, setPercentages] = useState<{ [userId: string]: string }>(() => {
@@ -82,32 +86,24 @@ export default function RecurringRuleForm({
     setPercentages((prev) => ({ ...prev, [userId]: value }));
   }, []);
 
-  // Validation
+  // Validation (shared with API)
   const validate = (): boolean => {
-    const newErrors: { [key: string]: string } = {};
-
-    if (!description.trim()) {
-      newErrors.description = t("recurringRules.validation.descriptionRequired");
+    const result = validateRecurringRule({
+      description,
+      dayOfMonth: dayOfMonth ? parseInt(dayOfMonth) : NaN,
+      defaultPayerId,
+      isVariable,
+      defaultAmount: isVariable ? undefined : (amount ? parseInt(amount) : undefined),
+      intervalMonths: parseInt(intervalMonths) || 1,
+      splitType,
+      percentageTotal: splitType === "custom" ? percentageTotal : undefined,
+    });
+    if (!result.success) {
+      setErrors(result.errors);
+      return false;
     }
-
-    if (!dayOfMonth) {
-      newErrors.dayOfMonth = t("recurringRules.validation.dayRequired");
-    }
-
-    if (!defaultPayerId) {
-      newErrors.defaultPayerId = t("recurringRules.validation.payerRequired");
-    }
-
-    if (!isVariable && (!amount || parseInt(amount) <= 0)) {
-      newErrors.amount = t("recurringRules.validation.amountRequired");
-    }
-
-    if (splitType === "custom" && Math.abs(percentageTotal - 100) > 0.1) {
-      newErrors.percentages = t("recurringRules.percentageMismatch");
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setErrors({});
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -129,6 +125,7 @@ export default function RecurringRuleForm({
         dayOfMonth: parseInt(dayOfMonth),
         defaultPayerId,
         splitType,
+        intervalMonths: parseInt(intervalMonths),
         splits:
           splitType === "custom"
             ? members.map((m) => ({
@@ -357,6 +354,28 @@ export default function RecurringRuleForm({
                 {t("recurringRules.dayOfMonthEndHint")}
               </p>
             )}
+          </div>
+
+          {/* Interval Months */}
+          <div>
+            <label
+              htmlFor="rule-interval"
+              className="block text-sm font-medium text-theme-text mb-1"
+            >
+              {t("recurringRules.interval")}
+            </label>
+            <select
+              id="rule-interval"
+              value={intervalMonths}
+              onChange={(e) => setIntervalMonths(e.target.value)}
+              className="block w-full px-3 py-2 border border-theme-card-border rounded-lg shadow-sm text-theme-headline focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
+            >
+              <option value="1">{t("recurringRules.intervalMonthly")}</option>
+              <option value="2">{t("recurringRules.intervalEveryNMonths", { n: "2" })}</option>
+              <option value="3">{t("recurringRules.intervalEveryNMonths", { n: "3" })}</option>
+              <option value="6">{t("recurringRules.intervalEveryNMonths", { n: "6" })}</option>
+              <option value="12">{t("recurringRules.intervalEveryNMonths", { n: "12" })}</option>
+            </select>
           </div>
 
           {/* Default Payer */}
