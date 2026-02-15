@@ -27,3 +27,13 @@ export {
   type SettlementSuggestion,
   type SettlementResult,
 } from "./suggest-settlements";
+
+// 固定費スケジュール計算
+export {
+  shouldRuleFireInMonth,
+  getActualDayOfMonth,
+  computeRuleDatesInPeriod,
+} from "./recurring-schedule";
+
+// 清算エントリ生成
+export { generateSettlementEntries } from "./generate-entries";

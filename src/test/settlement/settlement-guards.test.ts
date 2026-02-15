@@ -21,7 +21,12 @@ const PAYMENT_LIST_PATH = path.join(
 
 const PAYMENTS_PAGE_PATH = path.join(
   process.cwd(),
-  "src/app/(protected)/payments/page.tsx"
+  "src/app/(protected)/payments/PaymentListWithFilter.tsx"
+);
+
+const PAYMENT_ROW_PATH = path.join(
+  process.cwd(),
+  "src/components/payment-list/PaymentRow.tsx"
 );
 
 const EDIT_PAGE_PATH = path.join(
@@ -92,43 +97,47 @@ describe("清算済み支払いの編集・削除ガード", () => {
 // =============================================================================
 
 describe("フロントエンド清算済みガード", () => {
-  describe("RecentPaymentList — 削除ボタン非表示", () => {
+  describe("PaymentRow (共通部品) — 削除ボタン非表示", () => {
     it("settlement_id がある場合に削除ボタンを非表示にする条件がある", () => {
-      const content = fs.readFileSync(PAYMENT_LIST_PATH, "utf-8");
+      const content = fs.readFileSync(PAYMENT_ROW_PATH, "utf-8");
       // isSettled が payment.settlement_id から導出され、!isSettled で制御
       expect(content).toContain("!!payment.settlement_id");
       expect(content).toContain("!isSettled");
       expect(content).toContain("DeletePaymentForm");
     });
 
-    it("清算済ラベルにチェックアイコンが含まれる", () => {
+    it("RecentPaymentList が PaymentRow を使用している", () => {
       const content = fs.readFileSync(PAYMENT_LIST_PATH, "utf-8");
+      expect(content).toContain("PaymentRow");
+    });
+
+    it("清算済ラベルにチェックアイコンが含まれる", () => {
+      const content = fs.readFileSync(PAYMENT_ROW_PATH, "utf-8");
       // チェックマークSVGパスが含まれる
       expect(content).toContain("M5 13l4 4L19 7");
       expect(content).toContain("清算済");
     });
 
     it("清算済ラベルがテーマカラー（深緑）を使用している", () => {
-      const content = fs.readFileSync(PAYMENT_LIST_PATH, "utf-8");
+      const content = fs.readFileSync(PAYMENT_ROW_PATH, "utf-8");
       // settlement_id バッジ周辺で bg-theme-text/15 を使用
       expect(content).toContain("bg-theme-text/15 text-theme-text");
     });
   });
 
   describe("支払い一覧ページ (/payments) — 清算済みガード", () => {
-    it("settlement_id を型定義に含んでいる", () => {
-      const content = fs.readFileSync(PAYMENTS_PAGE_PATH, "utf-8");
+    it("settlement_id を型定義に含んでいる (types.ts)", () => {
+      // PaymentRowData の settlement_id は共通型ファイルで定義
+      const typesPath = path.join(
+        process.cwd(),
+        "src/components/payment-list/types.ts"
+      );
+      const content = fs.readFileSync(typesPath, "utf-8");
       expect(content).toContain("settlement_id: string | null");
     });
 
-    it("清算済みの支払いに清算済ラベルを表示する", () => {
-      const content = fs.readFileSync(PAYMENTS_PAGE_PATH, "utf-8");
-      expect(content).toContain("payment.settlement_id");
-      expect(content).toContain("清算済");
-    });
-
-    it("清算済みの支払いで編集ボタンを非表示にする", () => {
-      const content = fs.readFileSync(PAYMENTS_PAGE_PATH, "utf-8");
+    it("PaymentRow で清算済ラベル・編集/削除ガードが実装されている", () => {
+      const content = fs.readFileSync(PAYMENT_ROW_PATH, "utf-8");
       // isSettled が payment.settlement_id から導出されている
       expect(content).toContain("!!payment.settlement_id");
       // edit リンクの近くで !isSettled ガードが使われている
@@ -137,14 +146,19 @@ describe("フロントエンド清算済みガード", () => {
       expect(guardIdx).toBeGreaterThan(-1);
     });
 
-    it("清算済みの支払いで削除ボタンを非表示にする", () => {
-      const content = fs.readFileSync(PAYMENTS_PAGE_PATH, "utf-8");
+    it("PaymentRow で削除ボタンに !isSettled ガードがある", () => {
+      const content = fs.readFileSync(PAYMENT_ROW_PATH, "utf-8");
       // DeletePaymentForm の使用箇所（import ではなく JSX）の条件に !isSettled が含まれる
       const importEnd = content.indexOf("DeletePaymentForm") + "DeletePaymentForm".length;
       const usageIdx = content.indexOf("DeletePaymentForm", importEnd);
       expect(usageIdx).toBeGreaterThan(-1);
       const guardIdx = content.lastIndexOf("!isSettled", usageIdx);
       expect(guardIdx).toBeGreaterThan(-1);
+    });
+
+    it("PaymentListWithFilter が PaymentRow を使用している", () => {
+      const content = fs.readFileSync(PAYMENTS_PAGE_PATH, "utf-8");
+      expect(content).toContain("PaymentRow");
     });
   });
 

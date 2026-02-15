@@ -19,6 +19,7 @@ type RuleWithRelations = {
   default_payer_id: string;
   split_type: string;
   is_active: boolean;
+  interval_months: number;
   created_at: string;
   updated_at: string;
   category: { id: string; name: string; icon: string | null; color: string | null } | null;

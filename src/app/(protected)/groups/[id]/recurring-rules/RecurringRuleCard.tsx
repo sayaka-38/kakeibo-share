@@ -53,6 +53,12 @@ export default function RecurringRuleCard({
       ? t("recurringRules.dayOfMonthHint", { day: "末" })
       : t("recurringRules.dayOfMonthHint", { day: String(rule.day_of_month) });
 
+  // 発生間隔の表示
+  const intervalDisplay =
+    rule.interval_months > 1
+      ? t("recurringRules.intervalEveryNMonths", { n: String(rule.interval_months) })
+      : null;
+
   // 金額の表示
   const amountDisplay = rule.is_variable
     ? t("recurringRules.variableAmount")
@@ -114,7 +120,12 @@ export default function RecurringRuleCard({
               </span>
             )}
           </div>
-          <span className="text-xs text-theme-muted">{dayDisplay}</span>
+          <span className="text-xs text-theme-muted">
+            {dayDisplay}
+            {intervalDisplay && (
+              <> · <span className="text-theme-primary-text">{intervalDisplay}</span></>
+            )}
+          </span>
         </button>
 
         {/* Amount */}

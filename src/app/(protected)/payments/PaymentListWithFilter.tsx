@@ -1,0 +1,149 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { t } from "@/lib/i18n";
+import { formatCurrency } from "@/lib/format/currency";
+import { formatDateHeader, groupByDate } from "@/lib/format/date-group";
+import { PaymentRow } from "@/components/payment-list/PaymentRow";
+import type { PaymentWithRelations } from "@/components/payment-list/types";
+
+type PaymentListWithFilterProps = {
+  payments: PaymentWithRelations[];
+  groups: { id: string; name: string }[];
+  userId: string;
+};
+
+export default function PaymentListWithFilter({
+  payments,
+  groups,
+  userId,
+}: PaymentListWithFilterProps) {
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+
+  const filteredPayments = selectedGroupId
+    ? payments.filter((p) => p.group_id === selectedGroupId)
+    : payments;
+
+  // Group payments by month
+  const paymentsByMonth: { [key: string]: PaymentWithRelations[] } = {};
+  filteredPayments.forEach((payment) => {
+    const month = payment.payment_date.substring(0, 7);
+    if (!paymentsByMonth[month]) {
+      paymentsByMonth[month] = [];
+    }
+    paymentsByMonth[month]!.push(payment);
+  });
+
+  const months = Object.keys(paymentsByMonth).sort().reverse();
+
+  return (
+    <>
+      {/* Group filter chips */}
+      {groups.length > 1 && (
+        <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 mb-6">
+          <button
+            type="button"
+            onClick={() => setSelectedGroupId(null)}
+            className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+              selectedGroupId === null
+                ? "bg-theme-primary text-theme-button-text"
+                : "bg-theme-bg text-theme-muted hover:bg-theme-card-border"
+            }`}
+          >
+            {t("payments.filter.all")}
+          </button>
+          {groups.map((g) => (
+            <button
+              key={g.id}
+              type="button"
+              onClick={() => setSelectedGroupId(g.id)}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                selectedGroupId === g.id
+                  ? "bg-theme-primary text-theme-button-text"
+                  : "bg-theme-bg text-theme-muted hover:bg-theme-card-border"
+              }`}
+            >
+              {g.name}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Payment list */}
+      {filteredPayments.length > 0 ? (
+        <div className="space-y-6">
+          {months.map((month) => {
+            const monthPayments = paymentsByMonth[month] || [];
+            const monthTotal = monthPayments.reduce(
+              (sum, p) => sum + Number(p.amount),
+              0
+            );
+
+            const monthDate = new Date(month + "-01");
+            const monthName = monthDate.toLocaleDateString("ja-JP", {
+              year: "numeric",
+              month: "long",
+            });
+
+            const { dateOrder, byDate } = groupByDate(
+              monthPayments,
+              (p) => p.payment_date
+            );
+
+            return (
+              <div
+                key={month}
+                className="bg-theme-card-bg rounded-lg border border-theme-card-border overflow-hidden"
+              >
+                <div className="px-4 py-3 border-b border-theme-card-border flex justify-between items-center">
+                  <h2 className="font-medium text-theme-headline">
+                    {monthName}
+                  </h2>
+                  <span className="text-sm font-medium text-theme-muted">
+                    {t("common.total")}: {formatCurrency(monthTotal)}
+                  </span>
+                </div>
+                {dateOrder.map((date, dateIdx) => (
+                  <div
+                    key={date}
+                    className={
+                      dateIdx > 0
+                        ? "border-t border-theme-card-border"
+                        : ""
+                    }
+                  >
+                    <div className="px-4 py-1.5 text-xs font-semibold text-theme-text bg-theme-bg">
+                      {formatDateHeader(date)}
+                    </div>
+                    <div className="divide-y divide-dashed divide-theme-card-border/60">
+                      {byDate[date]!.map((payment) => (
+                        <PaymentRow
+                          key={`${payment.id}-${payment.updated_at}`}
+                          payment={payment}
+                          userId={userId}
+                          groupName={payment.groups?.name}
+                          showCategoryBadge
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="bg-theme-card-bg rounded-lg border border-theme-card-border p-6 text-center">
+          <p className="text-theme-text mb-4">{t("payments.noPayments")}</p>
+          <Link
+            href="/payments/new"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-theme-button-text bg-theme-primary hover:bg-theme-primary/80"
+          >
+            {t("payments.addFirstPayment")}
+          </Link>
+        </div>
+      )}
+    </>
+  );
+}

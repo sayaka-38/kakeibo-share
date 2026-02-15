@@ -200,6 +200,9 @@
       "beneficiarySameAsPayer": "Beneficiary must be someone other than yourself",
       "customSplitMismatch": "Split total ({splitTotal}) doesn't match the payment amount ({total})"
     },
+    "filter": {
+      "all": "All"
+    },
     "display": {
       "proxyBadge": "Paid for",
       "proxyFor": "For {name}",
@@ -285,7 +288,8 @@
     "transportation": "Transportation",
     "entertainment": "Entertainment",
     "healthcare": "Healthcare",
-    "other": "Other"
+    "other": "Other",
+    "uncategorized": "Uncategorized"
   },
   "settlementSession": {
     "title": "Settlement Room",
@@ -357,6 +361,9 @@
     "dayOfMonth": "Day of Month",
     "dayOfMonthHint": "Every {day}th",
     "dayOfMonthEndHint": "* Day 31 will be treated as the last day of the month (Feb 28/29)",
+    "interval": "Frequency",
+    "intervalMonthly": "Monthly",
+    "intervalEveryNMonths": "Every {n} months",
     "isVariable": "Amount Type",
     "fixedAmount": "Fixed",
     "variableAmount": "Variable",
@@ -387,8 +394,12 @@
     },
     "validation": {
       "descriptionRequired": "Please enter a name",
+      "descriptionMax": "Name must be 100 characters or less",
       "amountRequired": "Fixed amount rules require an amount",
+      "variableNoAmount": "Variable rules cannot have a default amount",
       "dayRequired": "Please select a day",
+      "dayRange": "Day must be between 1 and 31",
+      "intervalRange": "Interval must be between 1 and 12 months",
       "payerRequired": "Please select a default payer"
     },
     "errors": {
