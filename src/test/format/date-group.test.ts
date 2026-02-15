@@ -62,23 +62,24 @@ describe("groupByDate", () => {
 });
 
 describe("groupPaymentsByDate", () => {
-  it("groups by payment_date without explicit accessor", () => {
+  it("returns array of { date, payments } preserving order", () => {
     const payments = [
       { id: "a", payment_date: "2026-02-15" },
       { id: "b", payment_date: "2026-02-15" },
       { id: "c", payment_date: "2026-02-14" },
     ];
 
-    const { dateOrder, byDate } = groupPaymentsByDate(payments);
-    expect(dateOrder).toEqual(["2026-02-15", "2026-02-14"]);
-    expect(byDate["2026-02-15"]).toHaveLength(2);
-    expect(byDate["2026-02-14"]).toHaveLength(1);
+    const result = groupPaymentsByDate(payments);
+    expect(result).toHaveLength(2);
+    expect(result[0].date).toBe("2026-02-15");
+    expect(result[0].payments).toHaveLength(2);
+    expect(result[1].date).toBe("2026-02-14");
+    expect(result[1].payments).toHaveLength(1);
   });
 
-  it("returns empty for no payments", () => {
-    const { dateOrder, byDate } = groupPaymentsByDate([]);
-    expect(dateOrder).toEqual([]);
-    expect(byDate).toEqual({});
+  it("returns empty array for no payments", () => {
+    const result = groupPaymentsByDate([]);
+    expect(result).toEqual([]);
   });
 });
 

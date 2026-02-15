@@ -18,6 +18,7 @@ export type PaymentRowData = {
   categories: { name: string; icon: string | null } | null;
   profiles: { display_name: string | null; email: string | null } | null;
   payment_splits: PaymentSplitRow[];
+  groups?: { name: string } | null;
 };
 
 /** Extended type for /payments page (includes group, timestamps) */

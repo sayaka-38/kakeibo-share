@@ -27,20 +27,19 @@
 | Phase 10A+B | ナビ修正・ログアウトLP遷移・payer-only DELETE・設定画面・匿名化退会・UI統一・認証日本語化 | #43 |
 | Phase 11-Step1 | インフラ正常化: seed.sql・.env.test・vitest env固定・CI ローカルスタック化・secrets依存除去 | #44, #45 |
 | Phase 11-Step2 | interval_months追加・PaymentRow共通化・清算エントリTS化・バリデーション共通化・UI改善 | #46 |
-| Phase 11-Step2.5 | groupPaymentsByDate/Month抽出・PaymentRow CSS Grid化・レイアウト堅牢化 | （本PR） |
+| Phase 11-Step2.5 | groupPaymentsByDate/Month抽出・PaymentRow CSS Grid化・レイアウト堅牢化 | #47 |
+| Phase 11-Final | フォーム統合(fixedGroupId)・PaymentRow groupName廃止・groupPaymentsByDate配列化 | （本PR） |
 
 テスト: 977件パス（55ファイル） / ビルド正常 / lint クリーン / Migration 028 まで
 
 ---
 
-## Phase 11 Step 2.5 詳細
+## Phase 11 最終ブラッシュアップ詳細
 
-- **date-group.ts**: `groupPaymentsByDate()` / `groupPaymentsByMonth()` 追加。`payment_date` アクセサ内蔵の型安全ラッパー
-- **RecentPaymentList**: `groupByDate(payments, ...)` → `groupPaymentsByDate(payments)` に簡素化
-- **PaymentListWithFilter**: 8行の手動月グルーピングを `groupPaymentsByMonth()` 1行に置換
-- **PaymentRow CSS Grid化**: `flex` → `grid grid-cols-[1fr_auto]`。右カラム（金額+アクション）がピクセル固定、左カラムは `min-w-0` で truncate
-- **金額に `whitespace-nowrap`** 追加で折り返し防止
-- **レイアウトテスト更新**: CSS Grid 構造に合わせて PaymentLayout.test.tsx の3テストを修正、5テスト追加
+- **フォーム統合**: `GroupPaymentForm` 廃止。`FullPaymentForm` に `fixedGroupId` prop 追加でインラインモード対応（グループ選択非表示、成功時フォームリセット+ページリフレッシュ）
+- **PaymentRow簡素化**: `groupName` prop 廃止 → `payment.groups?.name` を内部で直接参照。`PaymentRowData` 型に `groups?` フィールド追加
+- **groupPaymentsByDate配列化**: 戻り値を `{ date, payments }[]` に変更。呼び出し側で `dateOrder`/`byDate` の分離参照が不要に
+- **InlinePaymentForm**: テスト用に維持（PaymentForm として re-export）
 
 ---
 

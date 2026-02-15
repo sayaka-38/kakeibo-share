@@ -20,16 +20,15 @@ import type { PaymentRowData } from "./types";
 type PaymentRowProps = {
   payment: PaymentRowData;
   userId?: string;
-  groupName?: string;
   showCategoryBadge?: boolean;
 };
 
 export function PaymentRow({
   payment,
   userId,
-  groupName,
   showCategoryBadge,
 }: PaymentRowProps) {
+  const groupName = payment.groups?.name;
   const isProxy = isProxySplit(payment.payment_splits, payment.payer_id);
   const custom = isCustomSplit(
     payment.payment_splits,
