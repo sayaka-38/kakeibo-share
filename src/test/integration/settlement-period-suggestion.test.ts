@@ -34,8 +34,9 @@ describe("get_settlement_period_suggestion RPC — 統合テスト", () => {
 
     expect(error).toBeNull();
     const row = Array.isArray(data) ? data[0] : data;
+    expect(row).not.toBeNull();
     // seed data には GROUP_ID に 2 件の未清算支払い（d4444..., e5555...）
-    expect(row.unsettled_count).toBeGreaterThanOrEqual(2);
+    expect(row!.unsettled_count).toBeGreaterThanOrEqual(2);
   });
 
   it("oldest_unsettled_date が設定されている", async (ctx) => {
@@ -47,7 +48,8 @@ describe("get_settlement_period_suggestion RPC — 統合テスト", () => {
     });
 
     const row = Array.isArray(data) ? data[0] : data;
-    expect(row.oldest_unsettled_date).toBeTruthy();
+    expect(row).not.toBeNull();
+    expect(row!.oldest_unsettled_date).toBeTruthy();
   });
 
   it("suggested_start ≤ suggested_end", async (ctx) => {
@@ -59,8 +61,9 @@ describe("get_settlement_period_suggestion RPC — 統合テスト", () => {
     });
 
     const row = Array.isArray(data) ? data[0] : data;
-    const start = new Date(row.suggested_start);
-    const end = new Date(row.suggested_end);
+    expect(row).not.toBeNull();
+    const start = new Date(row!.suggested_start);
+    const end = new Date(row!.suggested_end);
     expect(start.getTime()).toBeLessThanOrEqual(end.getTime());
   });
 
@@ -87,6 +90,7 @@ describe("get_settlement_period_suggestion RPC — 統合テスト", () => {
     });
 
     const row = Array.isArray(data) ? data[0] : data;
-    expect(row.last_confirmed_end).toBeNull();
+    expect(row).not.toBeNull();
+    expect(row!.last_confirmed_end).toBeNull();
   });
 });
