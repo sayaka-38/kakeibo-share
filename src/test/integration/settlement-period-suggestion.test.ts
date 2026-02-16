@@ -7,7 +7,7 @@
  *   3. 非メンバーエラー
  *   4. 前回清算なし時の last_confirmed_end
  *
- * UUID 範囲: 99990400-04xx
+ * UUID 範囲: なし（seed データのみ使用）
  */
 
 import { describe, it, expect, beforeAll } from "vitest";
