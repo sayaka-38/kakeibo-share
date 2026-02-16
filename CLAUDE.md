@@ -6,7 +6,7 @@
 |---------|------|
 | Frontend | Next.js 16 (App Router), TypeScript, Tailwind CSS v4 |
 | Backend | Supabase (PostgreSQL, Auth, RLS) |
-| Testing | Vitest, React Testing Library |
+| Testing | Vitest, React Testing Library, Playwright (E2E) |
 | Package | npm |
 
 ---
@@ -23,9 +23,8 @@
 ## コマンド
 
 ```bash
-npm run dev / build / lint / test / test:run
+npm run dev / build / lint / test / test:run / test:e2e
 npm run db:start / db:stop / db:reset / db:gen-types
-npm run db:gen-types:linked   # Docker不可時のフォールバック
 ```
 
 ---
@@ -37,16 +36,11 @@ src/
 ├── app/(protected)/  # 認証必須ページ
 ├── app/api/          # API Routes
 ├── components/       # 再利用コンポーネント
-├── lib/api/          # authenticateRequest
-├── lib/auth/         # translateAuthError
-├── lib/format/       # formatCurrency
-├── lib/i18n/         # t() 翻訳関数
-├── lib/settlement/   # consolidateTransfers 等
-├── lib/supabase/     # server / client / middleware / admin
-├── lib/theme/        # ThemeProvider / useTheme
+├── lib/              # api/ auth/ format/ i18n/ settlement/ supabase/ theme/
 ├── locales/          # ja.json, en.json
-├── test/             # テストファイル
+├── test/             # Vitest テスト
 └── types/            # database.ts, database.generated.ts
+tests/e2e/            # Playwright E2E テスト
 ```
 
 ---
@@ -62,57 +56,14 @@ src/
 
 ## DB ルール
 
-- **splits 更新**: RPC `replace_payment_splits` 経由（PostgREST DELETE + RLS バグ回避）
+- **splits 更新**: RPC `replace_payment_splits` 経由
 - **複数テーブル更新**: RPC で原子性担保。変更後 `npm run db:gen-types`
-- **退会**: `anonymize_user` RPC（profiles 物理削除禁止、FK 維持）
-- **支払い認可**: `payer_id === user.id` のみ。オーナー例外なし
+- **退会**: `anonymize_user` RPC（profiles 物理削除禁止）
+- **支払い認可**: `payer_id === user.id` のみ
 - **清算フロー**: `draft` → `confirmed` → `pending_payment` → `settled`
+- **型ファイル**: `database.generated.ts`（自動生成・編集禁止） / `database.ts`（手動編集可）
 
-### RPC 一覧
-
-| RPC | 用途 |
-|-----|------|
-| `generate_settlement_entries` | 期間内エントリ自動生成 |
-| `confirm_settlement` | draft → confirmed |
-| `confirm_settlement_receipt` | pending_payment → settled（一括） |
-| `settle_consolidated_sessions` | 統合済み旧セッション settled 化 |
-| `replace_payment_splits` | splits 原子的置換 |
-| `get_settlement_period_suggestion` | スマート期間提案 |
-| `anonymize_user` | 退会匿名化 + グループ退去 |
-| `create_demo_bot_partner` | デモBot作成 |
-
----
-
-## DB スキーマ辞書
-
-> 最新は `src/types/database.generated.ts`。不整合は `npm run db:gen-types` で解消
-
-| テーブル | 主要カラム |
-|---------|-----------|
-| `profiles` | id, display_name, email?, avatar_url, is_demo |
-| `groups` | id, name, description, owner_id, invite_code |
-| `group_members` | id, group_id, user_id, role |
-| `payments` | id, group_id, payer_id, category_id, amount, description, payment_date |
-| `payment_splits` | id, payment_id, user_id, amount |
-| `categories` | id, name, icon, color, is_default, group_id |
-| `demo_sessions` | id, user_id, group_id, expires_at |
-| `recurring_rules` | id, group_id, description, amount, category_id, day_of_month, default_payer_id |
-| `recurring_rule_splits` | id, rule_id, user_id, amount |
-| `settlement_sessions` | id, group_id, period_start/end, status, net_transfers, is_zero_settlement |
-| `settlement_entries` | id, session_id, entry_type, description, expected/actual_amount, payer_id, status |
-| `settlement_entry_splits` | id, entry_id, user_id, amount |
-
-型ファイル: `database.generated.ts`（自動生成・編集禁止） / `database.ts`（ヘルパー型・手動編集可）
-
----
-
-## 設計ドキュメント
-
-| ドキュメント | パス |
-|-------------|------|
-| 設計書 | `docs/design.md` |
-| UI ガイドライン | `docs/ui-guidelines.md` |
-| 開発記憶 | `docs/MEMORIES.md` |
+> スキーマ詳細は `src/types/database.generated.ts` を参照。不整合は `npm run db:gen-types` で解消
 
 ---
 
@@ -122,13 +73,7 @@ src/
 
 ---
 
-## セッション終了 (`/done`)
+## リモートリリースチェックリスト
 
-1. `docs/MEMORIES.md` 更新 → 2. チェックリスト提示 → 3. テスト・コミット最終確認
-
----
-
-## リモート DB への反映手順（同居人へのリリース時）
-
-- [ ] `npx supabase db push` を実行し、リモート DB を最新にする。
-- [ ] Vercel のプロジェクト設定で、必要な環境変数が同期されているか確認する。
+- [ ] `npx supabase db push` でリモート DB を最新化
+- [ ] Vercel の環境変数が同期されていることを確認
