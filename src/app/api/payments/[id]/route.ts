@@ -14,12 +14,14 @@ type RouteContext = {
 /**
  * DELETE /api/payments/[id]
  *
- * 支払いを削除する。
+ * 支払いをアーカイブ（論理削除）する。
  *
  * 認可:
  *   - 支払者本人のみ (payer_id === user.id)
  *
- * payment_splits は ON DELETE CASCADE で自動削除される。
+ * RPC archive_payment で archived_payments / archived_payment_splits へ
+ * 移動後に payments を物理削除する。
+ * アプリ層の事前チェックは二重防御として残す。
  */
 export async function DELETE(
   _request: Request,
@@ -79,17 +81,36 @@ export async function DELETE(
       );
     }
 
-    // 5. 削除実行（payment_splits は CASCADE で自動削除）
-    const { error: deleteError } = await supabase
-      .from("payments")
-      .delete()
-      .eq("id", id);
+    // 6. アーカイブ実行（RPC: archive_payment）
+    const { data: result, error: rpcError } = await supabase
+      .rpc("archive_payment", { p_payment_id: id, p_user_id: user.id });
 
-    if (deleteError) {
-      console.error("[DELETE /api/payments/[id]] Delete error:", deleteError);
+    if (rpcError) {
+      console.error("[DELETE /api/payments/[id]] RPC archive_payment error:", rpcError);
       return NextResponse.json(
         { error: "削除に失敗しました" },
         { status: 500 }
+      );
+    }
+
+    if (result === -1) {
+      return NextResponse.json(
+        { error: "支払いが見つかりません" },
+        { status: 404 }
+      );
+    }
+
+    if (result === -2) {
+      return NextResponse.json(
+        { error: "この支払いを削除する権限がありません" },
+        { status: 403 }
+      );
+    }
+
+    if (result === -3) {
+      return NextResponse.json(
+        { error: "清算済みの支払いは削除できません" },
+        { status: 403 }
       );
     }
 

@@ -9,6 +9,72 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      archived_payment_splits: {
+        Row: {
+          amount: number
+          archived_at: string
+          id: string
+          payment_id: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          archived_at?: string
+          id: string
+          payment_id: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          archived_at?: string
+          id?: string
+          payment_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      archived_payments: {
+        Row: {
+          amount: number
+          archived_at: string
+          category_id: string | null
+          created_at: string
+          description: string
+          group_id: string
+          id: string
+          payer_id: string
+          payment_date: string
+          settlement_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          archived_at?: string
+          category_id?: string | null
+          created_at: string
+          description: string
+          group_id: string
+          id: string
+          payer_id: string
+          payment_date: string
+          settlement_id?: string | null
+          updated_at: string
+        }
+        Update: {
+          amount?: number
+          archived_at?: string
+          category_id?: string | null
+          created_at?: string
+          description?: string
+          group_id?: string
+          id?: string
+          payer_id?: string
+          payment_date?: string
+          settlement_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           color: string | null
@@ -261,7 +327,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           display_name: string | null
-          email: string
+          email: string | null
           id: string
           is_demo: boolean
           updated_at: string
@@ -270,7 +336,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
-          email: string
+          email?: string | null
           id?: string
           is_demo?: boolean
           updated_at?: string
@@ -279,7 +345,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
-          email?: string
+          email?: string | null
           id?: string
           is_demo?: boolean
           updated_at?: string
@@ -695,6 +761,10 @@ export type Database = {
     }
     Functions: {
       anonymize_user: { Args: { p_user_id: string }; Returns: boolean }
+      archive_payment: {
+        Args: { p_payment_id: string; p_user_id: string }
+        Returns: number
+      }
       calculate_user_balance: {
         Args: { p_group_id: string; p_user_id: string }
         Returns: number

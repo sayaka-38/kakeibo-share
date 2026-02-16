@@ -1,7 +1,7 @@
 /**
  * DELETE /api/payments/[id] API Route テスト
  *
- * 支払い削除機能（TDD Red → Green）
+ * 支払い削除（アーカイブ）機能（TDD Red → Green）
  *
  * 認可ルール:
  *   - 支払者本人 (payer_id === user.id) → 削除可
@@ -10,7 +10,7 @@
  *
  * 二重防御:
  *   - アプリ層: この API Route で明示的に 403 を返す
- *   - DB 層: RLS ポリシー payments_delete_payer
+ *   - DB 層: RLS ポリシー payments_delete_payer + RPC archive_payment
  */
 
 import { describe, it, expect } from "vitest";
@@ -285,5 +285,113 @@ describe("RLS マイグレーション", () => {
     const content = fs.readFileSync(RLS_MIGRATION_PATH, "utf-8");
     expect(content).toContain("DROP POLICY");
     expect(content).toContain("payments_delete_payer_or_owner");
+  });
+});
+
+// =============================================================================
+// アーカイブマイグレーション存在確認テスト
+// =============================================================================
+
+const ARCHIVE_MIGRATION_PATH = path.join(
+  process.cwd(),
+  "supabase/migrations/20260101000029_archive_payments.sql"
+);
+
+describe("アーカイブマイグレーション", () => {
+  it("マイグレーションファイルが存在する", () => {
+    const exists = fs.existsSync(ARCHIVE_MIGRATION_PATH);
+    expect(exists).toBe(true);
+  });
+
+  it("archived_payments テーブルを作成している", () => {
+    const content = fs.readFileSync(ARCHIVE_MIGRATION_PATH, "utf-8");
+    expect(content).toContain("CREATE TABLE archived_payments");
+  });
+
+  it("archived_payment_splits テーブルを作成している", () => {
+    const content = fs.readFileSync(ARCHIVE_MIGRATION_PATH, "utf-8");
+    expect(content).toContain("CREATE TABLE archived_payment_splits");
+  });
+
+  it("archive_payment RPC を作成している", () => {
+    const content = fs.readFileSync(ARCHIVE_MIGRATION_PATH, "utf-8");
+    expect(content).toContain("CREATE OR REPLACE FUNCTION public.archive_payment");
+    expect(content).toContain("SECURITY DEFINER");
+  });
+
+  it("RLS を有効にしている", () => {
+    const content = fs.readFileSync(ARCHIVE_MIGRATION_PATH, "utf-8");
+    expect(content).toContain("ENABLE ROW LEVEL SECURITY");
+  });
+
+  it("SELECT ポリシーのみ設定している（INSERT/UPDATE/DELETE なし）", () => {
+    const content = fs.readFileSync(ARCHIVE_MIGRATION_PATH, "utf-8");
+    expect(content).toContain("FOR SELECT");
+    expect(content).not.toMatch(/FOR\s+INSERT/);
+    expect(content).not.toMatch(/FOR\s+UPDATE/);
+    expect(content).not.toMatch(/FOR\s+DELETE/);
+  });
+});
+
+// =============================================================================
+// API Route アーカイブ RPC 使用確認テスト
+// =============================================================================
+
+describe("DELETE ハンドラがアーカイブ RPC を使用", () => {
+  it("archive_payment RPC を呼び出している", () => {
+    const content = fs.readFileSync(API_ROUTE_PATH, "utf-8");
+    const deleteHandler = content.slice(
+      content.indexOf("export async function DELETE"),
+      content.indexOf("export async function PUT") === -1
+        ? undefined
+        : content.indexOf("export async function PUT")
+    );
+    expect(deleteHandler).toContain('rpc("archive_payment"');
+  });
+
+  it("RPC 戻り値 -1 (not found) で 404 を返す", () => {
+    const content = fs.readFileSync(API_ROUTE_PATH, "utf-8");
+    const deleteHandler = content.slice(
+      content.indexOf("export async function DELETE"),
+      content.indexOf("export async function PUT") === -1
+        ? undefined
+        : content.indexOf("export async function PUT")
+    );
+    expect(deleteHandler).toContain("result === -1");
+    expect(deleteHandler).toContain("404");
+  });
+
+  it("RPC 戻り値 -2 (not payer) で 403 を返す", () => {
+    const content = fs.readFileSync(API_ROUTE_PATH, "utf-8");
+    const deleteHandler = content.slice(
+      content.indexOf("export async function DELETE"),
+      content.indexOf("export async function PUT") === -1
+        ? undefined
+        : content.indexOf("export async function PUT")
+    );
+    expect(deleteHandler).toContain("result === -2");
+    expect(deleteHandler).toContain("403");
+  });
+
+  it("RPC 戻り値 -3 (settled) で 403 を返す", () => {
+    const content = fs.readFileSync(API_ROUTE_PATH, "utf-8");
+    const deleteHandler = content.slice(
+      content.indexOf("export async function DELETE"),
+      content.indexOf("export async function PUT") === -1
+        ? undefined
+        : content.indexOf("export async function PUT")
+    );
+    expect(deleteHandler).toContain("result === -3");
+  });
+
+  it("直接 .from('payments').delete() を使用していない", () => {
+    const content = fs.readFileSync(API_ROUTE_PATH, "utf-8");
+    const deleteHandler = content.slice(
+      content.indexOf("export async function DELETE"),
+      content.indexOf("export async function PUT") === -1
+        ? undefined
+        : content.indexOf("export async function PUT")
+    );
+    expect(deleteHandler).not.toContain('.delete()');
   });
 });
