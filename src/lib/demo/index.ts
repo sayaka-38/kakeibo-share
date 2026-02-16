@@ -37,12 +37,3 @@ export {
   type DemoAuditAction,
   type CreateAuditLogParams,
 } from "./audit-log";
-
-// 個別支払い削除
-export {
-  deletePayment,
-  type DeletePaymentResult,
-  type DeletePaymentError,
-  type DeletePaymentErrorCode,
-  type DeletePaymentTarget,
-} from "./delete-payment";

@@ -23,6 +23,10 @@ export type Database = Omit<GeneratedDatabase, "public"> & {
         Args: { p_user_id: string };
         Returns: boolean;
       };
+      archive_payment: {
+        Args: { p_payment_id: string; p_user_id: string };
+        Returns: number;
+      };
     };
   };
 };

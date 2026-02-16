@@ -93,7 +93,7 @@ src/
 | `groups` | id, name, description, owner_id, invite_code |
 | `group_members` | id, group_id, user_id, role |
 | `payments` | id, group_id, payer_id, category_id, amount, description, payment_date |
-| `payment_splits` | id, payment_id, user_id, amount, is_paid |
+| `payment_splits` | id, payment_id, user_id, amount |
 | `categories` | id, name, icon, color, is_default, group_id |
 | `demo_sessions` | id, user_id, group_id, expires_at |
 | `recurring_rules` | id, group_id, description, amount, category_id, day_of_month, default_payer_id |
