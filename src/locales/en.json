@@ -143,6 +143,20 @@
         "addFailed": "Failed to add member: "
       }
     },
+    "leave": {
+      "button": "Leave Group",
+      "confirm": "Are you sure you want to leave this group?",
+      "destructiveWarning": "The group and all data (payments, settlement history) will be permanently deleted. This action cannot be undone.",
+      "ownerWarning": "Please transfer ownership to another member before leaving.",
+      "success": "You have left the group",
+      "failed": "Failed to leave the group"
+    },
+    "transferOwner": {
+      "button": "Transfer Ownership",
+      "confirm": "Transfer ownership to {name}?",
+      "success": "Ownership transferred successfully",
+      "failed": "Failed to transfer ownership"
+    },
     "errors": {
       "createFailed": "Failed to create group",
       "addOwnerFailed": "Group created but failed to add you as owner: "
@@ -247,6 +261,10 @@
   },
   "settings": {
     "title": "Settings",
+    "language": {
+      "title": "Language",
+      "description": "Select the display language"
+    },
     "profile": {
       "title": "Profile",
       "displayName": "Display Name",

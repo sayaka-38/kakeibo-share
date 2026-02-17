@@ -309,7 +309,7 @@ describe("設定ページ", () => {
 
   it("削除には確認テキスト入力が必要", () => {
     const content = fs.readFileSync(SETTINGS_PAGE_PATH, "utf-8");
-    expect(content).toContain('"削除"');
+    expect(content).toContain("confirmPlaceholder");
     expect(content).toContain("isDeleteConfirmed");
   });
 });

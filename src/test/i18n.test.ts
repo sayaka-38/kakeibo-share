@@ -1,6 +1,12 @@
-import { describe, it, expect } from "vitest";
-import { t } from "@/lib/i18n";
+import { describe, it, expect, afterEach } from "vitest";
+import { t, setCurrentLocale } from "@/lib/i18n";
 import ja from "@/locales/ja.json";
+import en from "@/locales/en.json";
+
+// Always reset to ja after each test
+afterEach(() => {
+  setCurrentLocale("ja");
+});
 
 describe("i18n - t function", () => {
   describe("Login page translations", () => {
@@ -72,6 +78,34 @@ describe("i18n - t function", () => {
       // groups.memberCount uses {count} parameter
       expect(t("groups.memberCount", { count: 5 })).toBe("5人のメンバー");
       expect(t("groups.memberCount", { count: 1 })).toBe("1人のメンバー");
+    });
+  });
+
+  describe("Locale switching", () => {
+    it("should return English translations after switching to en", () => {
+      setCurrentLocale("en");
+      expect(t("auth.login.title")).toBe("Sign In");
+      expect(t("common.appName")).toBe("Kakeibo Share");
+      expect(t("settings.title")).toBe("Settings");
+    });
+
+    it("should return Japanese translations after switching back to ja", () => {
+      setCurrentLocale("en");
+      expect(t("auth.login.title")).toBe("Sign In");
+      setCurrentLocale("ja");
+      expect(t("auth.login.title")).toBe("ログイン");
+    });
+
+    it("should interpolate parameters correctly in English", () => {
+      setCurrentLocale("en");
+      expect(t("groups.memberCount", { count: 3 })).toBe("3 member(s)");
+    });
+
+    it("should return English values matching en.json", () => {
+      setCurrentLocale("en");
+      expect(t("auth.login.title")).toBe(en.auth.login.title);
+      expect(t("settings.title")).toBe(en.settings.title);
+      expect(t("navigation.dashboard")).toBe(en.navigation.dashboard);
     });
   });
 });

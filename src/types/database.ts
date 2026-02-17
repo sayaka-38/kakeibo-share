@@ -27,6 +27,14 @@ export type Database = Omit<GeneratedDatabase, "public"> & {
         Args: { p_payment_id: string; p_user_id: string };
         Returns: number;
       };
+      leave_group: {
+        Args: { p_group_id: string };
+        Returns: boolean;
+      };
+      transfer_group_ownership: {
+        Args: { p_group_id: string; p_new_owner_id: string };
+        Returns: boolean;
+      };
     };
   };
 };

@@ -161,6 +161,20 @@
         "joinFailed": "参加に失敗しました。しばらく経ってからお試しください"
       }
     },
+    "leave": {
+      "button": "グループを退出",
+      "confirm": "このグループから退出しますか？",
+      "destructiveWarning": "グループと全データ（支払い・清算履歴）が完全に削除されます。この操作は取り消せません。",
+      "ownerWarning": "オーナー権限を他のメンバーに譲渡してから退出してください。",
+      "success": "グループから退出しました",
+      "failed": "退出に失敗しました"
+    },
+    "transferOwner": {
+      "button": "オーナー権限を移譲",
+      "confirm": "{name}さんにオーナー権限を移譲しますか？",
+      "success": "オーナー権限を移譲しました",
+      "failed": "移譲に失敗しました"
+    },
     "errors": {
       "createFailed": "グループの作成に失敗しました",
       "addOwnerFailed": "グループは作成されましたが、オーナーとしての追加に失敗しました: "
@@ -265,6 +279,10 @@
   },
   "settings": {
     "title": "設定",
+    "language": {
+      "title": "言語設定",
+      "description": "アプリの表示言語を選択します"
+    },
     "profile": {
       "title": "プロフィール",
       "displayName": "表示名",

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { t } from "@/lib/i18n";
+import { t, useLocale, type Locale } from "@/lib/i18n";
 import { Button } from "@/components/ui/Button";
 
 const LP_URL = "https://kakeibo-share.vercel.app/";
@@ -11,6 +11,7 @@ const LP_URL = "https://kakeibo-share.vercel.app/";
 export default function SettingsPage() {
   const router = useRouter();
   const supabase = createClient();
+  const { locale, setLocale } = useLocale();
 
   // Profile state
   const [displayName, setDisplayName] = useState("");
@@ -128,13 +129,39 @@ export default function SettingsPage() {
     }
   };
 
-  const isDeleteConfirmed = deleteConfirmText === "削除";
+  const isDeleteConfirmed =
+    deleteConfirmText === t("settings.deleteAccount.confirmPlaceholder");
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
       <h1 className="text-2xl font-bold text-theme-headline">
         {t("settings.title")}
       </h1>
+
+      {/* Language Section */}
+      <section className="bg-theme-card-bg rounded-lg shadow p-6">
+        <h2 className="text-lg font-semibold text-theme-headline mb-2">
+          {t("settings.language.title")}
+        </h2>
+        <p className="text-sm text-theme-muted mb-4">
+          {t("settings.language.description")}
+        </p>
+        <div className="flex gap-3">
+          {(["ja", "en"] as Locale[]).map((l) => (
+            <button
+              key={l}
+              onClick={() => setLocale(l)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                locale === l
+                  ? "bg-theme-primary text-white"
+                  : "bg-theme-bg border border-theme-card-border text-theme-text hover:bg-theme-primary/10"
+              }`}
+            >
+              {l === "ja" ? "日本語" : "English"}
+            </button>
+          ))}
+        </div>
+      </section>
 
       {/* Profile Section */}
       <section className="bg-theme-card-bg rounded-lg shadow p-6">
