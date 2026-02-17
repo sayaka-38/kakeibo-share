@@ -45,7 +45,7 @@
 | 設定 | 場所 | 推奨値 | 説明 |
 |------|------|--------|------|
 | JWT Expiry | `config.toml` L154 / Dashboard | `3600`（1時間） | 短いJWT + 長いリフレッシュトークンが推奨 |
-| Refresh Token Expiration | Dashboard: Auth > Settings | `7776000`（90日）以上 | 「数日でログアウト」の主因。延長推奨 |
+| Time-box user sessions | Dashboard: Auth > Sessions | 未設定（無制限） | 設定すると一定時間後に強制ログアウト |
 | Refresh Token Rotation | `config.toml` L160 | `true` | セキュリティのため有効のまま |
 | Session Timebox | `config.toml` L252 | 未設定（無制限） | 設定すると強制ログアウト |
 | Inactivity Timeout | `config.toml` L255 | 未設定（無制限） | 設定すると非アクティブ時ログアウト |
