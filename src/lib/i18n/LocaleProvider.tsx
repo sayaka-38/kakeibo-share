@@ -7,12 +7,13 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { setCurrentLocale, type Locale } from "./index";
-
-const LOCALE_COOKIE_KEY = "kakeibo-locale";
-const LOCALE_STORAGE_KEY = "kakeibo-locale";
-const DEFAULT_LOCALE: Locale = "ja";
-const VALID_LOCALES: Locale[] = ["ja", "en"];
+import {
+  getStoredLocale,
+  setCurrentLocale,
+  LOCALE_COOKIE_KEY,
+  LOCALE_STORAGE_KEY,
+  type Locale,
+} from "./index";
 
 type LocaleContextValue = {
   locale: Locale;
@@ -20,21 +21,6 @@ type LocaleContextValue = {
 };
 
 const LocaleContext = createContext<LocaleContextValue | null>(null);
-
-function getStoredLocale(): Locale {
-  if (typeof window === "undefined") return DEFAULT_LOCALE;
-  try {
-    const match = document.cookie.match(/kakeibo-locale=(ja|en)/);
-    if (match) return match[1] as Locale;
-    const stored = localStorage.getItem(LOCALE_STORAGE_KEY);
-    if (stored && VALID_LOCALES.includes(stored as Locale)) {
-      return stored as Locale;
-    }
-  } catch {
-    // SSR or privacy mode
-  }
-  return DEFAULT_LOCALE;
-}
 
 export function LocaleProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(() => {

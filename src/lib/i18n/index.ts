@@ -8,19 +8,22 @@ const locales = {
   en,
 } as const;
 
-const VALID_LOCALES: Locale[] = ["ja", "en"];
+export const LOCALE_COOKIE_KEY = "kakeibo-locale";
+export const LOCALE_STORAGE_KEY = "kakeibo-locale";
+export const DEFAULT_LOCALE: Locale = "ja";
+export const VALID_LOCALES: Locale[] = ["ja", "en"];
 
-function getStoredLocale(): Locale {
+export function getStoredLocale(): Locale {
   if (typeof window === "undefined") return "ja";
   try {
-    const match = document.cookie.match(/kakeibo-locale=(ja|en)/);
+    const match = document.cookie.match(new RegExp(`${LOCALE_COOKIE_KEY}=(ja|en)`));
     if (match) return match[1] as Locale;
-    const stored = localStorage.getItem("kakeibo-locale");
+    const stored = localStorage.getItem(LOCALE_STORAGE_KEY);
     if (stored && VALID_LOCALES.includes(stored as Locale)) return stored as Locale;
   } catch {
     // SSR or privacy mode
   }
-  return "ja";
+  return DEFAULT_LOCALE;
 }
 
 // Mutable current locale — updated by LocaleProvider

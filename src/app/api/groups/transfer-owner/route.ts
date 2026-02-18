@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/api/authenticate";
+import { translateRpcError } from "@/lib/api/translate-rpc-error";
 
 /**
  * POST /api/groups/transfer-owner
@@ -35,30 +36,8 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error("[API /groups/transfer-owner] RPC error:", error);
-
-      if (error.message.includes("Cannot transfer ownership to yourself")) {
-        return NextResponse.json(
-          { error: "自分自身には移譲できません" },
-          { status: 400 }
-        );
-      }
-      if (error.message.includes("Only the owner")) {
-        return NextResponse.json(
-          { error: "オーナーのみが権限を移譲できます" },
-          { status: 403 }
-        );
-      }
-      if (error.message.includes("not a member")) {
-        return NextResponse.json(
-          { error: "対象ユーザーはこのグループのメンバーではありません" },
-          { status: 404 }
-        );
-      }
-
-      return NextResponse.json(
-        { error: "移譲に失敗しました" },
-        { status: 500 }
-      );
+      const { message, status } = translateRpcError("transfer_group_ownership", error.message);
+      return NextResponse.json({ error: message }, { status });
     }
 
     return NextResponse.json({ success: true });

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/api/authenticate";
+import { translateRpcError } from "@/lib/api/translate-rpc-error";
 
 /**
  * POST /api/groups/leave
@@ -28,24 +29,8 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error("[API /groups/leave] RPC error:", error);
-
-      if (error.message.includes("Must transfer ownership")) {
-        return NextResponse.json(
-          { error: "オーナー権限を他のメンバーに譲渡してから退出してください。" },
-          { status: 409 }
-        );
-      }
-      if (error.message.includes("Not a member")) {
-        return NextResponse.json(
-          { error: "このグループのメンバーではありません" },
-          { status: 404 }
-        );
-      }
-
-      return NextResponse.json(
-        { error: "退出に失敗しました" },
-        { status: 500 }
-      );
+      const { message, status } = translateRpcError("leave_group", error.message);
+      return NextResponse.json({ error: message }, { status });
     }
 
     return NextResponse.json({ success: true });

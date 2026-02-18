@@ -148,12 +148,16 @@
       "confirm": "Are you sure you want to leave this group?",
       "destructiveWarning": "The group and all data (payments, settlement history) will be permanently deleted. This action cannot be undone.",
       "ownerWarning": "Please transfer ownership to another member before leaving.",
+      "notMember": "You are not a member of this group",
       "success": "You have left the group",
       "failed": "Failed to leave the group"
     },
     "transferOwner": {
       "button": "Transfer Ownership",
       "confirm": "Transfer ownership to {name}?",
+      "selfTransfer": "Cannot transfer ownership to yourself",
+      "notOwner": "Only the owner can transfer ownership",
+      "targetNotMember": "Target user is not a member of this group",
       "success": "Ownership transferred successfully",
       "failed": "Failed to transfer ownership"
     },
