@@ -280,36 +280,36 @@ describe("退会時のデータ整合性", () => {
 // =============================================================================
 
 describe("設定ページ", () => {
-  const SETTINGS_PAGE_PATH = path.join(
+  const SETTINGS_DIR = path.join(
     process.cwd(),
-    "src/app/(protected)/settings/page.tsx"
+    "src/app/(protected)/settings"
   );
 
   it("設定ページが存在する", () => {
-    expect(fs.existsSync(SETTINGS_PAGE_PATH)).toBe(true);
+    expect(fs.existsSync(path.join(SETTINGS_DIR, "page.tsx"))).toBe(true);
   });
 
   it("プロフィール更新フォームがある", () => {
-    const content = fs.readFileSync(SETTINGS_PAGE_PATH, "utf-8");
+    const content = fs.readFileSync(path.join(SETTINGS_DIR, "ProfileSection.tsx"), "utf-8");
     expect(content).toContain("displayName");
     expect(content).toContain("/api/profile");
   });
 
   it("パスワード変更フォームがある", () => {
-    const content = fs.readFileSync(SETTINGS_PAGE_PATH, "utf-8");
+    const content = fs.readFileSync(path.join(SETTINGS_DIR, "PasswordSection.tsx"), "utf-8");
     expect(content).toContain("newPassword");
     expect(content).toContain("/api/auth/change-password");
   });
 
   it("アカウント削除セクションがある", () => {
-    const content = fs.readFileSync(SETTINGS_PAGE_PATH, "utf-8");
+    const content = fs.readFileSync(path.join(SETTINGS_DIR, "DeleteAccountSection.tsx"), "utf-8");
     expect(content).toContain("/api/auth/delete-account");
-    expect(content).toContain("deleteConfirmText");
+    expect(content).toContain("confirmText");
   });
 
   it("削除には確認テキスト入力が必要", () => {
-    const content = fs.readFileSync(SETTINGS_PAGE_PATH, "utf-8");
-    expect(content).toContain('"削除"');
-    expect(content).toContain("isDeleteConfirmed");
+    const content = fs.readFileSync(path.join(SETTINGS_DIR, "DeleteAccountSection.tsx"), "utf-8");
+    expect(content).toContain("confirmPlaceholder");
+    expect(content).toContain("isConfirmed");
   });
 });

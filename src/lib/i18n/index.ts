@@ -8,8 +8,34 @@ const locales = {
   en,
 } as const;
 
-// Current locale (fixed to Japanese for now)
-const currentLocale: Locale = "ja";
+export const LOCALE_COOKIE_KEY = "kakeibo-locale";
+export const LOCALE_STORAGE_KEY = "kakeibo-locale";
+export const DEFAULT_LOCALE: Locale = "ja";
+export const VALID_LOCALES: Locale[] = ["ja", "en"];
+
+export function getStoredLocale(): Locale {
+  if (typeof window === "undefined") return "ja";
+  try {
+    const match = document.cookie.match(new RegExp(`${LOCALE_COOKIE_KEY}=(ja|en)`));
+    if (match) return match[1] as Locale;
+    const stored = localStorage.getItem(LOCALE_STORAGE_KEY);
+    if (stored && VALID_LOCALES.includes(stored as Locale)) return stored as Locale;
+  } catch {
+    // SSR or privacy mode
+  }
+  return DEFAULT_LOCALE;
+}
+
+// Mutable current locale — updated by LocaleProvider
+let currentLocale: Locale = getStoredLocale();
+
+export function setCurrentLocale(locale: Locale) {
+  currentLocale = locale;
+}
+
+export function getCurrentLocale(): Locale {
+  return currentLocale;
+}
 
 /**
  * Get a nested value from an object using dot notation
@@ -57,3 +83,6 @@ export type TranslationKeys = typeof ja;
 
 // Export locales for direct access if needed
 export { ja, en };
+
+// Re-export LocaleProvider and useLocale
+export { LocaleProvider, useLocale } from "./LocaleProvider";

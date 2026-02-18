@@ -820,6 +820,7 @@ export type Database = {
         Args: { _payment_id: string; _user_id: string }
         Returns: boolean
       }
+      leave_group: { Args: { p_group_id: string }; Returns: boolean }
       replace_payment_splits: {
         Args: { p_payment_id: string; p_splits: Json; p_user_id: string }
         Returns: number
@@ -835,6 +836,10 @@ export type Database = {
       settle_consolidated_sessions: {
         Args: { p_session_ids: string[]; p_user_id: string }
         Returns: number
+      }
+      transfer_group_ownership: {
+        Args: { p_group_id: string; p_new_owner_id: string }
+        Returns: boolean
       }
       update_settlement_entry: {
         Args: {
