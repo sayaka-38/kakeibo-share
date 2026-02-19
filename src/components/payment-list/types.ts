@@ -15,7 +15,7 @@ export type PaymentRowData = {
   description: string;
   payer_id: string;
   settlement_id: string | null;
-  categories: { name: string; icon: string | null } | null;
+  categories: { name: string; icon: string | null; color: string | null } | null;
   profiles: { display_name: string | null; email: string | null } | null;
   payment_splits: PaymentSplitRow[];
   groups?: { name: string } | null;

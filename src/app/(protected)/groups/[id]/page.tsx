@@ -14,6 +14,7 @@ import type {
   GroupResult,
   GroupMemberDetailResult,
 } from "@/types/query-results";
+import { CategoryManager } from "@/components/CategoryManager";
 import type { Category, Profile } from "@/types/database";
 
 type Props = {
@@ -191,6 +192,18 @@ export default async function GroupDetailPage({ params }: Props) {
             currentUserId={user?.id || ""}
             fixedGroupId={id}
           />
+        </div>
+      </div>
+
+      {/* Category Management */}
+      <div className="bg-theme-card-bg rounded-lg shadow mb-6">
+        <div className="px-4 py-3 border-b border-theme-card-border">
+          <h2 className="text-lg font-medium text-theme-headline">
+            {t("categories.management.title")}
+          </h2>
+        </div>
+        <div className="px-4 py-4">
+          <CategoryManager groupId={id} categories={categories || []} />
         </div>
       </div>
 

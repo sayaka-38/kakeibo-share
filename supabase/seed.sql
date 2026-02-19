@@ -81,7 +81,7 @@ INSERT INTO payments (id, group_id, payer_id, amount, description, category_id, 
   'a1111111-1111-1111-1111-111111111111',
   3000,
   'スーパーで買い物',
-  (SELECT id FROM categories WHERE name = '食費・日用品' AND is_default = true LIMIT 1),
+  (SELECT id FROM categories WHERE name = '食費' AND is_default = true LIMIT 1),
   CURRENT_DATE
 );
 
@@ -129,7 +129,7 @@ INSERT INTO payments (id, group_id, payer_id, amount, description, category_id, 
   'b2222222-2222-2222-2222-222222222222',
   5000,
   'ボードゲーム購入',
-  (SELECT id FROM categories WHERE name = '娯楽費' AND is_default = true LIMIT 1),
+  (SELECT id FROM categories WHERE name = '交際費' AND is_default = true LIMIT 1),
   CURRENT_DATE
 );
 

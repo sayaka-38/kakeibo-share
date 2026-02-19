@@ -37,7 +37,8 @@ export default async function PaymentsPage() {
         ),
         categories (
           name,
-          icon
+          icon,
+          color
         ),
         groups (
           name

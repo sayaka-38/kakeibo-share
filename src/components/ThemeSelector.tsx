@@ -13,11 +13,11 @@ type PaletteOption = {
 };
 
 const palettes: PaletteOption[] = [
-  { id: "14", label: "Sunny", bg: "#fffffe", primary: "#ffd803", text: "#272343" },
-  { id: "12", label: "Night", bg: "#232946", primary: "#eebbc3", text: "#fffffe" },
-  { id: "15", label: "Rose", bg: "#faeee7", primary: "#ff8ba7", text: "#33272a" },
-  { id: "16", label: "Cocoa", bg: "#55423d", primary: "#ffc0ad", text: "#fffffe" },
-  { id: "17", label: "Marine", bg: "#fef6e4", primary: "#f582ae", text: "#001858" },
+  { id: "14", label: "Steel",    bg: "#f1f5f9", primary: "#3b82f6", text: "#0f172a" },
+  { id: "12", label: "Midnight", bg: "#0d1117", primary: "#58a6ff", text: "#e6edf3" },
+  { id: "15", label: "Forest",   bg: "#f0fdf4", primary: "#16a34a", text: "#052e16" },
+  { id: "16", label: "Studio",   bg: "#18181b", primary: "#818cf8", text: "#fafafa" },
+  { id: "17", label: "Slate",    bg: "#f8fafc", primary: "#6366f1", text: "#1e293b" },
 ];
 
 export default function ThemeSelector() {

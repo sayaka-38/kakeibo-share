@@ -329,7 +329,48 @@
     "entertainment": "娯楽費",
     "healthcare": "医療費",
     "other": "その他",
-    "uncategorized": "未分類"
+    "uncategorized": "未分類",
+    "management": {
+      "title": "カテゴリ管理",
+      "add": "カテゴリを追加",
+      "edit": "カテゴリを編集",
+      "deleteConfirm": "このカテゴリを削除しますか？",
+      "name": "カテゴリ名",
+      "namePlaceholder": "例: 食費",
+      "icon": "アイコン",
+      "iconPlaceholder": "絵文字を入力",
+      "color": "カラー",
+      "save": "保存",
+      "saving": "保存中...",
+      "cancel": "キャンセル",
+      "createSuccess": "カテゴリを追加しました",
+      "updateSuccess": "カテゴリを更新しました",
+      "deleteSuccess": "カテゴリを削除しました",
+      "createFailed": "カテゴリの追加に失敗しました",
+      "updateFailed": "カテゴリの更新に失敗しました",
+      "deleteFailed": "カテゴリの削除に失敗しました",
+      "defaultBadge": "デフォルト",
+      "customBadge": "カスタム",
+      "noCustom": "カスタムカテゴリはまだありません"
+    },
+    "validation": {
+      "nameRequired": "カテゴリ名を入力してください",
+      "nameMax": "カテゴリ名は50文字以内で入力してください",
+      "iconInvalid": "アイコンは絵文字1文字で入力してください",
+      "colorInvalid": "カラーは有効なHEX形式で入力してください"
+    },
+    "api": {
+      "invalidBody": "リクエストボディが不正です",
+      "groupIdRequired": "グループIDが必要です",
+      "notMember": "このグループのメンバーではありません",
+      "createFailed": "カテゴリの作成に失敗しました",
+      "notFound": "カテゴリが見つかりません",
+      "defaultNotEditable": "デフォルトカテゴリは編集できません",
+      "updateFailed": "カテゴリの更新に失敗しました",
+      "noFieldsToUpdate": "更新するフィールドがありません",
+      "defaultNotDeletable": "デフォルトカテゴリは削除できません",
+      "deleteFailed": "カテゴリの削除に失敗しました"
+    }
   },
   "settlementSession": {
     "title": "清算準備室",
