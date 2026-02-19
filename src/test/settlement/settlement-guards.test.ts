@@ -118,10 +118,11 @@ describe("フロントエンド清算済みガード", () => {
       expect(content).toContain("清算済");
     });
 
-    it("清算済ラベルがテーマカラー（深緑）を使用している", () => {
+    it("清算済ラベルが getContrastTextColor によるソリッドカラーを使用している", () => {
       const content = fs.readFileSync(PAYMENT_ROW_PATH, "utf-8");
-      // settlement_id バッジ周辺で bg-theme-text/15 を使用
-      expect(content).toContain("bg-theme-text/15 text-theme-text");
+      // SETTLEMENT_BADGE_BG 定数と getContrastTextColor が適用されていること
+      expect(content).toContain("SETTLEMENT_BADGE_BG");
+      expect(content).toContain("SETTLEMENT_BADGE_COLOR");
     });
   });
 

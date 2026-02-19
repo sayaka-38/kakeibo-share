@@ -1,96 +1,96 @@
 @import "tailwindcss";
 
 /* ============================================================
- * Theme System — 5 palettes with [data-theme] switching
+ * Theme System — 5 cool-modern palettes with [data-theme] switching
  * ============================================================ */
 
-/* Palette 14 (default light) */
+/* Palette 14 — Steel (default light: slate blue) */
 :root,
 [data-theme="14"] {
-  --theme-bg: #fffffe;
-  --theme-headline: #272343;
-  --theme-text: #2d334a;
-  --theme-primary: #ffd803;
-  --theme-primary-text: #8b7500;
-  --theme-button-text: #272343;
-  --theme-secondary: #e3f6f5;
-  --theme-accent: #c44040;
-  --theme-card-bg: #fffffe;
-  --theme-card-border: #d9e8e7;
-  --theme-muted: #6e7090;
+  --theme-bg: #f1f5f9;
+  --theme-headline: #0f172a;
+  --theme-text: #334155;
+  --theme-primary: #3b82f6;
+  --theme-primary-text: #1e40af;
+  --theme-button-text: #ffffff;
+  --theme-secondary: #dbeafe;
+  --theme-accent: #ef4444;
+  --theme-card-bg: #ffffff;
+  --theme-card-border: #cbd5e1;
+  --theme-muted: #64748b;
 
   --background: var(--theme-bg);
   --foreground: var(--theme-text);
   --radius-lg: 0.75rem;
 }
 
-/* Palette 12 (dark) */
+/* Palette 12 — Midnight (dark: deep navy) */
 [data-theme="12"] {
-  --theme-bg: #232946;
-  --theme-headline: #fffffe;
-  --theme-text: #b8c1ec;
-  --theme-primary: #eebbc3;
-  --theme-primary-text: #eebbc3;
-  --theme-button-text: #232946;
-  --theme-secondary: #b8c1ec;
-  --theme-accent: #d4939d;
-  --theme-card-bg: #2a3058;
-  --theme-card-border: #3d4470;
-  --theme-muted: #949ab0;
+  --theme-bg: #0d1117;
+  --theme-headline: #e6edf3;
+  --theme-text: #8b949e;
+  --theme-primary: #58a6ff;
+  --theme-primary-text: #58a6ff;
+  --theme-button-text: #0d1117;
+  --theme-secondary: #1c2128;
+  --theme-accent: #ff7b72;
+  --theme-card-bg: #161b22;
+  --theme-card-border: #30363d;
+  --theme-muted: #6e7681;
 
   --background: var(--theme-bg);
   --foreground: var(--theme-text);
 }
 
-/* Palette 15 (light) */
+/* Palette 15 — Forest (light: emerald green) */
 [data-theme="15"] {
-  --theme-bg: #faeee7;
-  --theme-headline: #33272a;
-  --theme-text: #594a4e;
-  --theme-primary: #ff8ba7;
-  --theme-primary-text: #bf3f5e;
-  --theme-button-text: #33272a;
-  --theme-secondary: #ffc6c7;
-  --theme-accent: #c73b2d;
-  --theme-card-bg: #fffffe;
-  --theme-card-border: #e8d6cf;
-  --theme-muted: #7a6871;
+  --theme-bg: #f0fdf4;
+  --theme-headline: #052e16;
+  --theme-text: #166534;
+  --theme-primary: #16a34a;
+  --theme-primary-text: #15803d;
+  --theme-button-text: #ffffff;
+  --theme-secondary: #dcfce7;
+  --theme-accent: #d97706;
+  --theme-card-bg: #ffffff;
+  --theme-card-border: #bbf7d0;
+  --theme-muted: #6b7280;
 
   --background: var(--theme-bg);
   --foreground: var(--theme-text);
 }
 
-/* Palette 16 (dark) */
+/* Palette 16 — Studio (dark: graphite zinc) */
 [data-theme="16"] {
-  --theme-bg: #55423d;
-  --theme-headline: #fffffe;
-  --theme-text: #fff3ec;
-  --theme-primary: #ffc0ad;
-  --theme-primary-text: #ffc0ad;
-  --theme-button-text: #271c19;
-  --theme-secondary: #e78fb3;
-  --theme-accent: #e0a8c0;
-  --theme-card-bg: #4a3833;
-  --theme-card-border: #6d5650;
-  --theme-muted: #d4b5aa;
+  --theme-bg: #18181b;
+  --theme-headline: #fafafa;
+  --theme-text: #d4d4d8;
+  --theme-primary: #818cf8;
+  --theme-primary-text: #818cf8;
+  --theme-button-text: #18181b;
+  --theme-secondary: #27272a;
+  --theme-accent: #f87171;
+  --theme-card-bg: #27272a;
+  --theme-card-border: #3f3f46;
+  --theme-muted: #71717a;
 
   --background: var(--theme-bg);
   --foreground: var(--theme-text);
 }
 
-/* Palette 17 (light) */
+/* Palette 17 — Slate (light: cool indigo-gray) */
 [data-theme="17"] {
-  --theme-bg: #fef6e4;
-  --theme-headline: #001858;
-  --theme-text: #172c66;
-  --theme-primary: #f582ae;
-  --theme-primary-text: #b74d76;
-  --theme-button-text: #001858;
-  --theme-secondary: #8bd3dd;
-  --theme-accent: #ce3d2e;
-  --theme-card-bg: #fffffe;
-  --theme-card-border: #e8dfd5;
-  --theme-muted: #4a5580;
+  --theme-bg: #f8fafc;
+  --theme-headline: #1e293b;
+  --theme-text: #475569;
+  --theme-primary: #6366f1;
+  --theme-primary-text: #4338ca;
+  --theme-button-text: #ffffff;
+  --theme-secondary: #eef2ff;
+  --theme-accent: #ec4899;
+  --theme-card-bg: #ffffff;
+  --theme-card-border: #e2e8f0;
+  --theme-muted: #94a3b8;
 
   --background: var(--theme-bg);
   --foreground: var(--theme-text);

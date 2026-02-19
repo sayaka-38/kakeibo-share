@@ -311,7 +311,48 @@
     "entertainment": "Entertainment",
     "healthcare": "Healthcare",
     "other": "Other",
-    "uncategorized": "Uncategorized"
+    "uncategorized": "Uncategorized",
+    "management": {
+      "title": "Category Management",
+      "add": "Add Category",
+      "edit": "Edit Category",
+      "deleteConfirm": "Are you sure you want to delete this category?",
+      "name": "Category Name",
+      "namePlaceholder": "e.g. Food",
+      "icon": "Icon",
+      "iconPlaceholder": "Enter an emoji",
+      "color": "Color",
+      "save": "Save",
+      "saving": "Saving...",
+      "cancel": "Cancel",
+      "createSuccess": "Category added",
+      "updateSuccess": "Category updated",
+      "deleteSuccess": "Category deleted",
+      "createFailed": "Failed to add category",
+      "updateFailed": "Failed to update category",
+      "deleteFailed": "Failed to delete category",
+      "defaultBadge": "Default",
+      "customBadge": "Custom",
+      "noCustom": "No custom categories yet"
+    },
+    "validation": {
+      "nameRequired": "Please enter a category name",
+      "nameMax": "Category name must be 50 characters or less",
+      "iconInvalid": "Icon must be a single emoji",
+      "colorInvalid": "Color must be a valid HEX format"
+    },
+    "api": {
+      "invalidBody": "Invalid request body",
+      "groupIdRequired": "Group ID is required",
+      "notMember": "You are not a member of this group",
+      "createFailed": "Failed to create category",
+      "notFound": "Category not found",
+      "defaultNotEditable": "Default categories cannot be edited",
+      "updateFailed": "Failed to update category",
+      "noFieldsToUpdate": "No fields to update",
+      "defaultNotDeletable": "Default categories cannot be deleted",
+      "deleteFailed": "Failed to delete category"
+    }
   },
   "settlementSession": {
     "title": "Settlement Room",

@@ -15,7 +15,16 @@ import {
   SplitContent,
   type SplitWithProfile,
 } from "./PaymentSplitAccordion";
+import { getCategoryStyle, getContrastTextColor } from "@/lib/format/color";
 import type { PaymentRowData } from "./types";
+
+/** 全額立替バッジ — Ocean Blue で統一感を持たせる */
+const PROXY_BADGE_BG = "#1A5276";
+const PROXY_BADGE_COLOR = getContrastTextColor(PROXY_BADGE_BG);
+
+/** 清算済バッジ — Teal で「完了」を視覚表現 */
+const SETTLEMENT_BADGE_BG = "#0E7C7B";
+const SETTLEMENT_BADGE_COLOR = getContrastTextColor(SETTLEMENT_BADGE_BG);
 
 type PaymentRowProps = {
   payment: PaymentRowData;
@@ -45,6 +54,8 @@ export function PaymentRow({
   );
 
   const categoryIcon = payment.categories?.icon || "❓";
+  const categoryColor = payment.categories?.color || null;
+  const categoryBadgeStyle = getCategoryStyle(categoryColor);
   const isOwner = userId ? payment.payer_id === userId : false;
   const isSettled = !!payment.settlement_id;
 
@@ -53,7 +64,10 @@ export function PaymentRow({
       <div className="grid grid-cols-[1fr_auto] gap-3 items-start">
         {/* Left: Icon + Title/subtitle (truncatable) */}
         <div className="flex items-start gap-3 min-w-0">
-          <span className="w-9 h-9 rounded-full bg-theme-primary/15 flex items-center justify-center text-base shrink-0">
+          <span
+            className={`w-9 h-9 rounded-full flex items-center justify-center text-base shrink-0${!categoryColor ? " bg-theme-primary/15" : ""}`}
+            style={categoryColor ? { backgroundColor: categoryColor + "26" } : undefined}
+          >
             {categoryIcon}
           </span>
           <div className="min-w-0">
@@ -73,12 +87,18 @@ export function PaymentRow({
                 </>
               )}
               {showCategoryBadge && payment.categories && (
-                <span className="text-[10px] bg-theme-bg text-theme-muted px-1.5 py-0.5 rounded shrink-0">
+                <span
+                  className={`text-[10px] px-1.5 py-0.5 rounded shrink-0${!categoryBadgeStyle ? " bg-theme-bg text-theme-muted" : ""}`}
+                  style={categoryBadgeStyle || undefined}
+                >
                   {payment.categories.name}
                 </span>
               )}
               {isProxy && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-theme-secondary/15 text-theme-secondary shrink-0">
+                <span
+                  className="text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0"
+                  style={{ backgroundColor: PROXY_BADGE_BG, color: PROXY_BADGE_COLOR }}
+                >
                   {t("payments.display.proxyBadge")}
                 </span>
               )}
@@ -95,7 +115,10 @@ export function PaymentRow({
           <div className="flex items-center gap-1.5">
             <div className="w-16 flex items-center justify-end gap-1">
               {isSettled && (
-                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-theme-text/15 text-theme-text">
+                <span
+                  className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium"
+                  style={{ backgroundColor: SETTLEMENT_BADGE_BG, color: SETTLEMENT_BADGE_COLOR }}
+                >
                   <svg
                     className="w-2.5 h-2.5"
                     fill="none"
@@ -164,7 +187,7 @@ export function PaymentRow({
   );
 
   return (
-    <div className="px-4 py-3">
+    <div className="px-4 py-3 hover:bg-theme-primary/5 transition-colors">
       {custom ? (
         <SplitAccordionProvider>{rowContent}</SplitAccordionProvider>
       ) : (

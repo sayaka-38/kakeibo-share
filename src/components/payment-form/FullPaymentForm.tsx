@@ -13,6 +13,7 @@ import {
   calculateCustomSplits,
   calculateProxySplit,
 } from "@/lib/calculation/split";
+import { getCategoryStyle } from "@/lib/format/color";
 import type { Category, Group, Profile } from "@/types/database";
 
 /**
@@ -420,10 +421,26 @@ export default function FullPaymentForm({
           <option value="">{t("payments.form.selectCategory")}</option>
           {categories.map((category) => (
             <option key={category.id} value={category.id}>
-              {category.name}
+              {category.icon ? `${category.icon} ${category.name}` : category.name}
             </option>
           ))}
         </select>
+        {(() => {
+          const selected = categories.find((c) => c.id === categoryId);
+          const style = selected ? getCategoryStyle(selected.color) : null;
+          if (!style || !selected) return null;
+          return (
+            <div className="mt-1.5 flex items-center gap-2">
+              <span
+                className="inline-block w-3 h-3 rounded-full"
+                style={{ backgroundColor: style.backgroundColor }}
+              />
+              <span className="text-xs text-theme-muted">
+                {selected.icon} {selected.name}
+              </span>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Payment Date - 共通コンポーネント使用 */}
@@ -547,7 +564,7 @@ export default function FullPaymentForm({
                     placeholder="0"
                   />
                   {isAutoTarget && (
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-theme-muted/70">
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-theme-muted">
                       {t("payments.form.autoCalculated")}
                     </span>
                   )}
@@ -561,7 +578,7 @@ export default function FullPaymentForm({
       {/* Proxy Beneficiary Selection */}
       {form.splitType === "proxy" && (
         otherMembers.length === 1 ? (
-          <p className="text-sm text-theme-secondary bg-theme-secondary/10 rounded-lg px-3 py-2">
+          <p className="text-sm text-theme-text bg-theme-secondary/20 rounded-lg px-3 py-2">
             {t("payments.form.proxyAutoConfirm", {
               name: otherMembers[0].display_name || otherMembers[0].email || "Unknown",
             })}

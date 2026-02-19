@@ -19,7 +19,7 @@ type RecentPaymentRow = {
   settlement_id: string | null;
   category_id: string | null;
   profiles: { display_name: string | null; email: string | null } | null;
-  categories: { name: string; icon: string | null } | null;
+  categories: { name: string; icon: string | null; color: string | null } | null;
   payment_splits: PaymentSplitRow[];
 };
 
@@ -53,7 +53,8 @@ export async function RecentPaymentList({
       ),
       categories (
         name,
-        icon
+        icon,
+        color
       ),
       payment_splits (
         user_id,

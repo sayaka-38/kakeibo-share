@@ -45,29 +45,29 @@ describe("ThemeSelector", () => {
 
   it("各ボタンにaria-labelがある", async () => {
     await renderWithProvider();
-    expect(screen.getByLabelText("Sunny")).toBeInTheDocument();
-    expect(screen.getByLabelText("Night")).toBeInTheDocument();
-    expect(screen.getByLabelText("Rose")).toBeInTheDocument();
-    expect(screen.getByLabelText("Cocoa")).toBeInTheDocument();
-    expect(screen.getByLabelText("Marine")).toBeInTheDocument();
+    expect(screen.getByLabelText("Steel")).toBeInTheDocument();
+    expect(screen.getByLabelText("Midnight")).toBeInTheDocument();
+    expect(screen.getByLabelText("Forest")).toBeInTheDocument();
+    expect(screen.getByLabelText("Studio")).toBeInTheDocument();
+    expect(screen.getByLabelText("Slate")).toBeInTheDocument();
   });
 
   it("ボタンクリックでテーマが切り替わる", async () => {
     await renderWithProvider();
     act(() => {
-      fireEvent.click(screen.getByLabelText("Night"));
+      fireEvent.click(screen.getByLabelText("Midnight"));
     });
     expect(document.documentElement.getAttribute("data-theme")).toBe("12");
   });
 
   it("選択中のボタンにscale-110クラスが付く", async () => {
     await renderWithProvider();
-    // Default theme "14" = Sunny should have scale-110
-    const sunnyButton = screen.getByLabelText("Sunny");
-    expect(sunnyButton.className).toContain("scale-110");
+    // Default theme "14" = Steel should have scale-110
+    const steelButton = screen.getByLabelText("Steel");
+    expect(steelButton.className).toContain("scale-110");
 
-    // Night should not have scale-110 initially
-    const nightButton = screen.getByLabelText("Night");
-    expect(nightButton.className).not.toContain("scale-110");
+    // Midnight should not have scale-110 initially
+    const midnightButton = screen.getByLabelText("Midnight");
+    expect(midnightButton.className).not.toContain("scale-110");
   });
 });

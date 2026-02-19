@@ -66,7 +66,7 @@ describe("Payment list layout hardening", () => {
 
     it("カテゴリバッジに shrink-0 がある", () => {
       const content = fs.readFileSync(PAYMENT_ROW_PATH, "utf-8");
-      expect(content).toContain("text-[10px] bg-theme-bg text-theme-muted px-1.5 py-0.5 rounded shrink-0");
+      expect(content).toContain("text-[10px] px-1.5 py-0.5 rounded shrink-0");
     });
 
     it("subtitle 行に overflow-hidden がある", () => {

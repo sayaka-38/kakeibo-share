@@ -50,7 +50,6 @@ tests/e2e/            # Playwright E2E テスト
 - **TDD**: Red → Green → Refactor。異常系 → 正常系の順
 - **承認フロー**: 新規ファイル・破壊的変更・アーキテクチャ決定はユーザー承認後に実装
 - **Git**: `feature/xxx` / `fix/xxx`。`main` 直接コミット禁止。PR 経由のみ
-- **記憶**: セッション終了前に `docs/MEMORIES.md` を更新
 
 ---
 
@@ -61,9 +60,7 @@ tests/e2e/            # Playwright E2E テスト
 - **退会**: `anonymize_user` RPC（profiles 物理削除禁止）
 - **支払い認可**: `payer_id === user.id` のみ
 - **清算フロー**: `draft` → `confirmed` → `pending_payment` → `settled`
-- **型ファイル**: `database.generated.ts`（自動生成・編集禁止） / `database.ts`（手動編集可）
-
-> スキーマ詳細は `src/types/database.generated.ts` を参照。不整合は `npm run db:gen-types` で解消
+- **型**: `database.generated.ts` 自動生成（編集禁止）/ `database.ts` 手動オーバーライド可
 
 ---
 
