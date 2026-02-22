@@ -204,6 +204,7 @@
       "amountPlaceholder": "例: 1500",
       "description": "説明",
       "descriptionPlaceholder": "例: スーパーで買い物",
+      "smartChipsLabel": "よく使う説明",
       "category": "カテゴリ",
       "selectCategory": "カテゴリを選択",
       "date": "日付",
@@ -438,6 +439,8 @@
       "reportedBy": "{name}さんが送金完了を報告しました",
       "waitingForRecipient": "相手の受取確認を待っています"
     },
+    "refresh": "最新の状態に更新",
+    "refreshing": "更新中...",
     "errors": {
       "fetchFailed": "セッションの取得に失敗しました",
       "createFailed": "セッションの作成に失敗しました",
@@ -445,7 +448,8 @@
       "confirmFailed": "清算の確定に失敗しました",
       "deleteFailed": "セッションの削除に失敗しました",
       "reportPaymentFailed": "送金報告に失敗しました",
-      "confirmReceiptFailed": "受取確認に失敗しました"
+      "confirmReceiptFailed": "受取確認に失敗しました",
+      "refreshFailed": "最新の状態への更新に失敗しました"
     }
   },
   "theme": {

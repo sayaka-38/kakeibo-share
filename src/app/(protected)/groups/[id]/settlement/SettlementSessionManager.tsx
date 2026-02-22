@@ -98,6 +98,7 @@ export default function SettlementSessionManager({
     handleReportPayment,
     handleConfirmReceipt,
     handleSelectSession,
+    handleRefresh,
   } = useSettlementSession({ groupId, existingSession, pendingSession, suggestion });
 
   // Local draft list — optimistically updated on create / delete
@@ -276,6 +277,7 @@ export default function SettlementSessionManager({
             onEntryUpdated={handleEntryUpdated}
             onConfirm={handleConfirm}
             onDelete={handleDelete}
+            onRefresh={handleRefresh}
           />
         </>
       )}

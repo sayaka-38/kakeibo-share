@@ -808,6 +808,13 @@ export type Database = {
         Args: { p_day_of_month: number; p_month: number; p_year: number }
         Returns: number
       }
+      get_frequent_payments: {
+        Args: { p_group_id: string; p_limit?: number }
+        Returns: {
+          category_id: string
+          description: string
+        }[]
+      }
       get_last_day_of_month: {
         Args: { p_month: number; p_year: number }
         Returns: number

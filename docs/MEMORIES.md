@@ -16,9 +16,11 @@
 | 12 | カスタムカテゴリCRUD・アイコン/カラー選択UI・WCAG対応コントラスト・クールモダン5テーマ | #55, #56 |
 | 13 | 神UX（クイック確定・テンキーOL・スキップバグ修正）・グループナビ改善・GroupSelector | #57–#59 |
 | 13.3–13.6 | 並行清算解禁・FlashMessage・直接グループ遷移・ヘッダー同期・デッドリンク除去・複数draft並行タブUI | #62, #63 |
-| **14** | **デモ防衛強化: Edge Function化・Turnstile CAPTCHA・pg_cron自動クリーンアップ・429ハンドリング** | WIP |
+| 14 | デモ防衛強化: Edge Function化・Turnstile CAPTCHA・pg_cron自動クリーンアップ・429ハンドリング | #64 |
+| **15A** | **スマートチップ: get_frequent_payments RPC・API route・useFrequentPayments hook・常時表示UI** | WIP |
+| **15A'** | **スマート再計算: refreshSettlementEntries・↻ボタン・filled/skipped保護ロジック** | WIP |
 
-**現在**: Vitest **1138件** + Playwright E2E 1件 = **計1139テスト** / ビルド正常 / lint クリーン
+**現在**: Vitest **1168件** + Playwright E2E 1件 = **計1169テスト** / ビルド正常 / lint クリーン
 
 ---
 
@@ -40,7 +42,9 @@
 | **デモ作成** | **`supabase/functions/create-demo/`** | **Edge Function 経由必須。Turnstile検証→service_roleでDB生成→session返却** |
 | **Turnstile** | **`DemoButton.tsx`** | **`getTurnstileSiteKey()` で取得。未設定時はウィジェット非表示** |
 | **pg_cron** | **Migration 038** | **`delete_expired_demo_data()` を3時間おきに実行** |
-| **HTTP エラー** | **`translateHttpError(status)`** | **429 → `common.rateLimited` i18n キー** |
+| **HTTP エラー** | **`translateHttpError(status)`** | **429 → `common.rateLimited`、0/"Failed to fetch" → `common.networkError`** |
+| **スマートチップ** | **`DescriptionField.tsx` + `useFrequentPayments`** | **chips あれば常時表示（focus 不要）。h-8 固定でレイアウトシフト防止。onMouseDown+preventDefault でフォーカス保持** |
+| **スマート再計算** | **`src/lib/settlement/refresh-entries.ts`** | **filled/skipped エントリは絶対保護。pending のみ更新/削除対象。RPC key="rule_id\|YYYY-MM-DD"** |
 
 ---
 
@@ -80,10 +84,9 @@
 
 ## ロードマップ
 
-### Phase 15 候補
-- Dashboard アクションセンター化（未払い・要対応をトップに集約）
-- スマート入力チップ（頻度ベースの店名サジェスト）
+### Phase 15B 候補
 - 連続入力モード（支払い登録後すぐ次の入力へ）
+- Dashboard アクションセンター化（未払い・要対応をトップに集約）
 
 ### 将来構想
 - Capacitor アプリ化（iOS / Android）

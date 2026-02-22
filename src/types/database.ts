@@ -102,3 +102,12 @@ export type NetTransfer = {
   to_name: string;
   amount: number;
 };
+
+// ============================================
+// get_frequent_payments RPC return type
+// (generated type omits nullability of category_id)
+// ============================================
+export type FrequentPaymentRow = {
+  description: string;
+  category_id: string | null;
+};

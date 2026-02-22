@@ -218,6 +218,105 @@ describe("DescriptionField", () => {
       );
     });
   });
+
+  // ============================================
+  // スマートチップテスト（異常系→正常系）
+  // ============================================
+  describe("スマートチップ", () => {
+    const mockChips = [
+      { description: "スーパーで買い物", categoryId: "cat-food" },
+      { description: "コンビニ", categoryId: null },
+      { description: "スーパー銭湯", categoryId: "cat-leisure" },
+    ];
+
+    it("chips 未指定時はチップが表示されない", () => {
+      render(<DescriptionField value="" onChange={vi.fn()} />);
+      expect(screen.queryByText("スーパーで買い物")).not.toBeInTheDocument();
+    });
+
+    it("chips がある場合はフォーカスなしでも常時表示される", () => {
+      render(
+        <DescriptionField
+          value=""
+          onChange={vi.fn()}
+          chips={mockChips}
+          onSelectChip={vi.fn()}
+        />
+      );
+      expect(screen.getByText("スーパーで買い物")).toBeInTheDocument();
+      expect(screen.getByText("コンビニ")).toBeInTheDocument();
+      expect(screen.getByText("スーパー銭湯")).toBeInTheDocument();
+    });
+
+    it("フォーカスが外れてもチップは表示され続ける", async () => {
+      const user = userEvent.setup();
+      render(
+        <DescriptionField
+          value=""
+          onChange={vi.fn()}
+          chips={mockChips}
+          onSelectChip={vi.fn()}
+        />
+      );
+
+      // フォーカス→フォーカスアウト
+      await user.click(screen.getByLabelText(t("payments.form.description")));
+      await user.tab();
+
+      expect(screen.getByText("スーパーで買い物")).toBeInTheDocument();
+    });
+
+    it("入力値に合わせてチップが絞り込まれる", () => {
+      render(
+        <DescriptionField
+          value="スーパー"
+          onChange={vi.fn()}
+          chips={mockChips}
+          onSelectChip={vi.fn()}
+        />
+      );
+
+      expect(screen.getByText("スーパーで買い物")).toBeInTheDocument();
+      expect(screen.getByText("スーパー銭湯")).toBeInTheDocument();
+      expect(screen.queryByText("コンビニ")).not.toBeInTheDocument();
+    });
+
+    it("チップをクリックすると onChange と onSelectChip が呼ばれる", async () => {
+      const user = userEvent.setup();
+      const onChange = vi.fn();
+      const onSelectChip = vi.fn();
+
+      render(
+        <DescriptionField
+          value=""
+          onChange={onChange}
+          chips={mockChips}
+          onSelectChip={onSelectChip}
+        />
+      );
+
+      await user.click(screen.getByText("スーパーで買い物"));
+
+      expect(onChange).toHaveBeenCalledWith("スーパーで買い物");
+      expect(onSelectChip).toHaveBeenCalledWith({
+        description: "スーパーで買い物",
+        categoryId: "cat-food",
+      });
+    });
+
+    it("チップ領域は常にレイアウト上に存在する（レイアウトシフト防止）", () => {
+      const { container } = render(
+        <DescriptionField
+          value=""
+          onChange={vi.fn()}
+          chips={mockChips}
+          onSelectChip={vi.fn()}
+        />
+      );
+      // チップコンテナ（h-8クラス）は常にDOMに存在する
+      expect(container.querySelector(".h-8")).toBeInTheDocument();
+    });
+  });
 });
 
 // ============================================

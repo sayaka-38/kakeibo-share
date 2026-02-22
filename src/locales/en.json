@@ -186,6 +186,7 @@
       "amountPlaceholder": "e.g. 1500",
       "description": "Description",
       "descriptionPlaceholder": "e.g. Groceries from supermarket",
+      "smartChipsLabel": "Recent descriptions",
       "category": "Category",
       "selectCategory": "Select a category",
       "date": "Date",
@@ -420,6 +421,8 @@
       "reportedBy": "{name} reported payment sent",
       "waitingForRecipient": "Waiting for recipient to confirm"
     },
+    "refresh": "Sync latest",
+    "refreshing": "Syncing...",
     "errors": {
       "fetchFailed": "Failed to fetch session",
       "createFailed": "Failed to create session",
@@ -427,7 +430,8 @@
       "confirmFailed": "Failed to confirm settlement",
       "deleteFailed": "Failed to delete session",
       "reportPaymentFailed": "Failed to report payment",
-      "confirmReceiptFailed": "Failed to confirm receipt"
+      "confirmReceiptFailed": "Failed to confirm receipt",
+      "refreshFailed": "Failed to sync latest data"
     }
   },
   "theme": {

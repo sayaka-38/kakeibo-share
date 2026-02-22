@@ -62,6 +62,7 @@ tests/e2e/            # Playwright E2E テスト
 - **支払い認可**: `payer_id === user.id` のみ
 - **清算フロー**: `draft` → `confirmed` → `pending_payment` → `settled`
 - **型**: `database.generated.ts` 自動生成（編集禁止）/ `database.ts` 手動オーバーライド可
+- **スマート再計算**: `status='filled'` / `status='skipped'` のエントリは絶対保護。`pending` のみ更新・削除対象（`src/lib/settlement/refresh-entries.ts`）
 
 ---
 
