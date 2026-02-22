@@ -16,7 +16,8 @@
     "member": "Member",
     "total": "Total",
     "currency": "¥",
-    "confirm": "OK"
+    "confirm": "OK",
+    "rateLimited": "Too many requests. Please wait a moment and try again."
   },
   "landing": {
     "tagline": "Share expenses easily with your housemates or partner. Track who paid what and settle up at the end of each month.",
@@ -39,7 +40,9 @@
     "demo": {
       "button": "Try Demo",
       "subtitle": "Experience the app in about 1 minute",
-      "starting": "Preparing demo..."
+      "starting": "Preparing demo...",
+      "captchaRequired": "Please complete the CAPTCHA verification",
+      "captchaError": "CAPTCHA verification failed. Please try again."
     }
   },
   "demo": {

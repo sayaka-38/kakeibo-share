@@ -26,3 +26,13 @@ export function getSupabaseEnv(): { url: string; anonKey: string } {
 
   return { url, anonKey };
 }
+
+/**
+ * Cloudflare Turnstile のサイトキーを返す
+ *
+ * CAPTCHA はオプション機能のため、未設定時は undefined を返す。
+ * undefined の場合、DemoButton は Turnstile ウィジェットを表示しない。
+ */
+export function getTurnstileSiteKey(): string | undefined {
+  return process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+}

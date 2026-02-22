@@ -22,6 +22,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Generated coverage files
     "coverage/**",
+    // Supabase Edge Functions use Deno runtime (not Node.js / Next.js TS rules)
+    "supabase/functions/**",
   ]),
 ]);
 

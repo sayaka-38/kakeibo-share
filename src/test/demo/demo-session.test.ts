@@ -1,59 +1,54 @@
+/**
+ * デモセッション作成テスト
+ *
+ * create-demo Edge Function ラッパー (`createDemoSession`) の
+ * インターフェースとエラーハンドリングを検証する。
+ */
+
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createDemoSession } from "@/lib/demo/create-demo-session";
 
-// Supabase クライアントのモック型
+// i18n モック
+vi.mock("@/lib/i18n", () => ({
+  t: (key: string) => key,
+}));
+
 type MockSupabaseClient = {
-  auth: {
-    signInAnonymously: ReturnType<typeof vi.fn>;
+  functions: {
+    invoke: ReturnType<typeof vi.fn>;
   };
-  from: ReturnType<typeof vi.fn>;
-  rpc: ReturnType<typeof vi.fn>;
+  auth: {
+    setSession: ReturnType<typeof vi.fn>;
+  };
 };
 
-// モックのヘルパー関数
 function createMockSupabase(): MockSupabaseClient {
   return {
-    auth: {
-      signInAnonymously: vi.fn(),
+    functions: {
+      invoke: vi.fn(),
     },
-    from: vi.fn(),
-    rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
+    auth: {
+      setSession: vi.fn().mockResolvedValue({ error: null }),
+    },
   };
 }
 
-// profiles の update モックを生成するヘルパー（成功）
-function createProfileUpdateMock(userId: string) {
+function makeSuccessResponse(overrides: Record<string, unknown> = {}) {
   return {
-    update: vi.fn().mockReturnValue({
-      eq: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: { id: userId, display_name: "デモユーザー" },
-            error: null,
-          }),
-        }),
-      }),
-    }),
+    data: {
+      success: true,
+      session: { access_token: "token-abc", refresh_token: "refresh-xyz" },
+      sessionId: "demo-session-789",
+      userId: "demo-user-123",
+      groupId: "demo-group-456",
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      ...overrides,
+    },
+    error: null,
   };
 }
 
-// profiles の update モックを生成するヘルパー（失敗）
-function createProfileUpdateErrorMock() {
-  return {
-    update: vi.fn().mockReturnValue({
-      eq: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: null,
-            error: { message: "Update failed" },
-          }),
-        }),
-      }),
-    }),
-  };
-}
-
-describe("Demo Session Creation - デモセッション作成", () => {
+describe("Demo Session Creation - Edge Function ラッパー", () => {
   let mockSupabase: MockSupabaseClient;
 
   beforeEach(() => {
@@ -62,186 +57,199 @@ describe("Demo Session Creation - デモセッション作成", () => {
   });
 
   // ============================================
-  // 異常系：匿名認証の失敗
+  // 異常系：エラーハンドリング
   // ============================================
-  describe("匿名認証の失敗ハンドリング", () => {
-    it("Supabase匿名認証が失敗した場合エラーを返す", async () => {
-      mockSupabase.auth.signInAnonymously.mockResolvedValue({
-        data: { user: null, session: null },
-        error: { message: "Anonymous sign-in is disabled" },
-      });
-
-      const result = await createDemoSession(mockSupabase as never);
-
-      expect(result.success).toBe(false);
-      expect(result.error?.code).toBe("AUTH_FAILED");
-      expect(result.error?.message).toBe(
-        "デモセッションの開始に失敗しました。しばらく経ってからお試しください。"
-      );
-    });
-
-    it("匿名ユーザーのIDが取得できない場合エラーを返す", async () => {
-      mockSupabase.auth.signInAnonymously.mockResolvedValue({
-        data: { user: null, session: {} },
-        error: null,
-      });
-
-      const result = await createDemoSession(mockSupabase as never);
-
-      expect(result.success).toBe(false);
-      expect(result.error?.code).toBe("AUTH_FAILED");
-    });
-  });
-
-  // ============================================
-  // 異常系：プロフィール更新の失敗
-  // ============================================
-  describe("プロフィール更新の失敗ハンドリング", () => {
-    it("プロフィール更新が失敗した場合エラーを返す", async () => {
-      mockSupabase.auth.signInAnonymously.mockResolvedValue({
-        data: {
-          user: { id: "demo-user-123" },
-          session: { access_token: "token" },
-        },
-        error: null,
-      });
-
-      mockSupabase.from.mockReturnValue(createProfileUpdateErrorMock());
-
-      const result = await createDemoSession(mockSupabase as never);
-
-      expect(result.success).toBe(false);
-      expect(result.error?.code).toBe("PROFILE_CREATION_FAILED");
-      expect(result.error?.message).toBe(
-        "デモユーザーの作成に失敗しました。"
-      );
-    });
-  });
-
-  // ============================================
-  // 異常系：グループ作成の失敗
-  // ============================================
-  describe("グループ作成の失敗ハンドリング", () => {
-    it("デモグループ作成が失敗した場合エラーを返す", async () => {
-      mockSupabase.auth.signInAnonymously.mockResolvedValue({
-        data: {
-          user: { id: "demo-user-123" },
-          session: { access_token: "token" },
-        },
-        error: null,
-      });
-
-      mockSupabase.from.mockImplementation((table: string) => {
-        if (table === "profiles") {
-          return createProfileUpdateMock("demo-user-123");
-        }
-        if (table === "groups") {
-          return {
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: null,
-                  error: { message: "Group insert failed" },
-                }),
-              }),
-            }),
-          };
-        }
-        return { insert: vi.fn(), update: vi.fn() };
-      });
-
-      const result = await createDemoSession(mockSupabase as never);
-
-      expect(result.success).toBe(false);
-      expect(result.error?.code).toBe("GROUP_CREATION_FAILED");
-      expect(result.error?.message).toBe(
-        "デモグループの作成に失敗しました。"
-      );
-    });
-  });
-
-  // ============================================
-  // 異常系：デモセッションレコード作成の失敗
-  // ============================================
-  describe("デモセッションレコード作成の失敗ハンドリング", () => {
-    it("demo_sessions テーブルへの登録が失敗した場合エラーを返す", async () => {
-      mockSupabase.auth.signInAnonymously.mockResolvedValue({
-        data: {
-          user: { id: "demo-user-123" },
-          session: { access_token: "token" },
-        },
-        error: null,
-      });
-
-      mockSupabase.from.mockImplementation((table: string) => {
-        if (table === "profiles") {
-          return createProfileUpdateMock("demo-user-123");
-        }
-        if (table === "groups") {
-          return {
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: { id: "demo-group-123" },
-                  error: null,
-                }),
-              }),
-            }),
-          };
-        }
-        if (table === "group_members") {
-          return {
-            insert: vi.fn().mockResolvedValue({
-              data: {},
-              error: null,
-            }),
-          };
-        }
-        if (table === "demo_sessions") {
-          return {
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: null,
-                  error: { message: "Demo session insert failed" },
-                }),
-              }),
-            }),
-          };
-        }
-        return { insert: vi.fn(), update: vi.fn() };
-      });
-
-      const result = await createDemoSession(mockSupabase as never);
-
-      expect(result.success).toBe(false);
-      expect(result.error?.code).toBe("SESSION_CREATION_FAILED");
-      expect(result.error?.message).toBe(
-        "デモセッションの記録に失敗しました。"
-      );
-    });
-  });
-
-  // ============================================
-  // 異常系：ネットワークエラー
-  // ============================================
-  describe("ネットワークエラーのハンドリング", () => {
-    it("Supabase接続がタイムアウトした場合エラーを返す", async () => {
-      mockSupabase.auth.signInAnonymously.mockRejectedValue(
-        new Error("Network timeout")
+  describe("エラーハンドリング", () => {
+    it("functions.invoke が例外を投げた場合 NETWORK_ERROR を返す", async () => {
+      mockSupabase.functions.invoke.mockRejectedValue(
+        new Error("Network error")
       );
 
       const result = await createDemoSession(mockSupabase as never);
 
       expect(result.success).toBe(false);
       expect(result.error?.code).toBe("NETWORK_ERROR");
-      expect(result.error?.message).toBe(
-        "ネットワークエラーが発生しました。接続を確認してください。"
+    });
+
+    it("429 レート制限エラーの場合 RATE_LIMITED を返す", async () => {
+      mockSupabase.functions.invoke.mockResolvedValue({
+        data: null,
+        error: { message: "Too many requests", context: { status: 429 } },
+      });
+
+      const result = await createDemoSession(mockSupabase as never);
+
+      expect(result.success).toBe(false);
+      expect(result.error?.code).toBe("RATE_LIMITED");
+      expect(result.error?.message).toBe("common.rateLimited");
+    });
+
+    it("Edge Function が success:false を返した場合エラーを伝播する", async () => {
+      mockSupabase.functions.invoke.mockResolvedValue({
+        data: {
+          success: false,
+          error: {
+            code: "AUTH_FAILED",
+            message: "デモセッションの開始に失敗しました。しばらく経ってからお試しください。",
+          },
+        },
+        error: null,
+      });
+
+      const result = await createDemoSession(mockSupabase as never);
+
+      expect(result.success).toBe(false);
+      expect(result.error?.code).toBe("AUTH_FAILED");
+      expect(result.error?.message).toContain("デモセッションの開始に失敗");
+    });
+
+    it("Edge Function が PROFILE_CREATION_FAILED を返した場合エラーを伝播する", async () => {
+      mockSupabase.functions.invoke.mockResolvedValue({
+        data: {
+          success: false,
+          error: {
+            code: "PROFILE_CREATION_FAILED",
+            message: "デモユーザーの作成に失敗しました。",
+          },
+        },
+        error: null,
+      });
+
+      const result = await createDemoSession(mockSupabase as never);
+
+      expect(result.success).toBe(false);
+      expect(result.error?.code).toBe("PROFILE_CREATION_FAILED");
+    });
+
+    it("Edge Function が GROUP_CREATION_FAILED を返した場合エラーを伝播する", async () => {
+      mockSupabase.functions.invoke.mockResolvedValue({
+        data: {
+          success: false,
+          error: {
+            code: "GROUP_CREATION_FAILED",
+            message: "デモグループの作成に失敗しました。",
+          },
+        },
+        error: null,
+      });
+
+      const result = await createDemoSession(mockSupabase as never);
+
+      expect(result.success).toBe(false);
+      expect(result.error?.code).toBe("GROUP_CREATION_FAILED");
+    });
+
+    it("Edge Function が SESSION_CREATION_FAILED を返した場合エラーを伝播する", async () => {
+      mockSupabase.functions.invoke.mockResolvedValue({
+        data: {
+          success: false,
+          error: {
+            code: "SESSION_CREATION_FAILED",
+            message: "デモセッションの記録に失敗しました。",
+          },
+        },
+        error: null,
+      });
+
+      const result = await createDemoSession(mockSupabase as never);
+
+      expect(result.success).toBe(false);
+      expect(result.error?.code).toBe("SESSION_CREATION_FAILED");
+    });
+
+    it("data が null でエラーもない場合 NETWORK_ERROR を返す", async () => {
+      mockSupabase.functions.invoke.mockResolvedValue({
+        data: null,
+        error: null,
+      });
+
+      const result = await createDemoSession(mockSupabase as never);
+
+      expect(result.success).toBe(false);
+      expect(result.error?.code).toBe("NETWORK_ERROR");
+    });
+  });
+
+  // ============================================
+  // 正常系：成功ケース
+  // ============================================
+  describe("成功時の動作", () => {
+    it("Edge Function 成功時にセッション情報を返す", async () => {
+      mockSupabase.functions.invoke.mockResolvedValue(makeSuccessResponse());
+
+      const result = await createDemoSession(mockSupabase as never);
+
+      expect(result.success).toBe(true);
+      expect(result.data?.userId).toBe("demo-user-123");
+      expect(result.data?.groupId).toBe("demo-group-456");
+      expect(result.data?.sessionId).toBe("demo-session-789");
+      expect(result.data?.expiresAt).toBeInstanceOf(Date);
+    });
+
+    it("Edge Function 成功後に auth.setSession が呼ばれる", async () => {
+      const mockSession = {
+        access_token: "access-abc",
+        refresh_token: "refresh-xyz",
+      };
+      mockSupabase.functions.invoke.mockResolvedValue(
+        makeSuccessResponse({ session: mockSession })
+      );
+
+      await createDemoSession(mockSupabase as never);
+
+      expect(mockSupabase.auth.setSession).toHaveBeenCalledWith(mockSession);
+    });
+
+    it("session が null の場合は setSession を呼ばない", async () => {
+      mockSupabase.functions.invoke.mockResolvedValue(
+        makeSuccessResponse({ session: null })
+      );
+
+      await createDemoSession(mockSupabase as never);
+
+      expect(mockSupabase.auth.setSession).not.toHaveBeenCalled();
+    });
+  });
+
+  // ============================================
+  // Edge Function 呼び出しの検証
+  // ============================================
+  describe("Edge Function 呼び出し検証", () => {
+    it("create-demo Edge Function を呼び出す", async () => {
+      mockSupabase.functions.invoke.mockResolvedValue(makeSuccessResponse());
+
+      await createDemoSession(mockSupabase as never);
+
+      expect(mockSupabase.functions.invoke).toHaveBeenCalledWith(
+        "create-demo",
+        expect.any(Object)
       );
     });
 
-    it("予期しないエラーが発生した場合汎用エラーを返す", async () => {
-      mockSupabase.auth.signInAnonymously.mockRejectedValue(
+    it("turnstileToken なしの場合 null が body に渡される", async () => {
+      mockSupabase.functions.invoke.mockResolvedValue(makeSuccessResponse());
+
+      await createDemoSession(mockSupabase as never);
+
+      expect(mockSupabase.functions.invoke).toHaveBeenCalledWith(
+        "create-demo",
+        { body: { turnstileToken: null } }
+      );
+    });
+
+    it("turnstileToken ありの場合トークンが body に渡される", async () => {
+      mockSupabase.functions.invoke.mockResolvedValue(makeSuccessResponse());
+
+      await createDemoSession(mockSupabase as never, "cf-turnstile-token-xyz");
+
+      expect(mockSupabase.functions.invoke).toHaveBeenCalledWith(
+        "create-demo",
+        { body: { turnstileToken: "cf-turnstile-token-xyz" } }
+      );
+    });
+
+    it("予期しない例外が発生した場合 NETWORK_ERROR を返す", async () => {
+      mockSupabase.functions.invoke.mockRejectedValue(
         new Error("Unexpected error")
       );
 
@@ -249,308 +257,6 @@ describe("Demo Session Creation - デモセッション作成", () => {
 
       expect(result.success).toBe(false);
       expect(result.error?.code).toBe("NETWORK_ERROR");
-    });
-  });
-
-  // ============================================
-  // 正常系：デモセッション作成成功
-  // ============================================
-  describe("デモセッション作成成功", () => {
-    it("全ての処理が成功した場合セッション情報を返す", async () => {
-      const mockUserId = "demo-user-123";
-      const mockGroupId = "demo-group-456";
-      const mockSessionId = "demo-session-789";
-
-      mockSupabase.auth.signInAnonymously.mockResolvedValue({
-        data: {
-          user: { id: mockUserId },
-          session: { access_token: "token" },
-        },
-        error: null,
-      });
-
-      mockSupabase.from.mockImplementation((table: string) => {
-        if (table === "profiles") {
-          return createProfileUpdateMock(mockUserId);
-        }
-        if (table === "groups") {
-          return {
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: {
-                    id: mockGroupId,
-                    name: "デモ用シェアハウス",
-                  },
-                  error: null,
-                }),
-              }),
-            }),
-          };
-        }
-        if (table === "group_members") {
-          return {
-            insert: vi.fn().mockResolvedValue({
-              data: {},
-              error: null,
-            }),
-          };
-        }
-        if (table === "demo_sessions") {
-          return {
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: {
-                    id: mockSessionId,
-                    user_id: mockUserId,
-                    group_id: mockGroupId,
-                    expires_at: new Date(
-                      Date.now() + 24 * 60 * 60 * 1000
-                    ).toISOString(),
-                  },
-                  error: null,
-                }),
-              }),
-            }),
-          };
-        }
-        return { insert: vi.fn(), update: vi.fn() };
-      });
-
-      const result = await createDemoSession(mockSupabase as never);
-
-      expect(result.success).toBe(true);
-      expect(result.data?.userId).toBe(mockUserId);
-      expect(result.data?.groupId).toBe(mockGroupId);
-      expect(result.data?.sessionId).toBe(mockSessionId);
-      expect(result.data?.expiresAt).toBeDefined();
-    });
-
-    it("プロフィールにis_demoフラグがtrueで設定される", async () => {
-      const mockUserId = "demo-user-123";
-
-      mockSupabase.auth.signInAnonymously.mockResolvedValue({
-        data: {
-          user: { id: mockUserId },
-          session: { access_token: "token" },
-        },
-        error: null,
-      });
-
-      let capturedProfileUpdate: { display_name?: string; is_demo?: boolean } = {};
-      mockSupabase.from.mockImplementation((table: string) => {
-        if (table === "profiles") {
-          return {
-            update: vi.fn().mockImplementation((data: { display_name?: string; is_demo?: boolean }) => {
-              capturedProfileUpdate = data;
-              return {
-                eq: vi.fn().mockReturnValue({
-                  select: vi.fn().mockReturnValue({
-                    single: vi.fn().mockResolvedValue({
-                      data: { id: mockUserId, ...data },
-                      error: null,
-                    }),
-                  }),
-                }),
-              };
-            }),
-          };
-        }
-        if (table === "groups") {
-          return {
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: { id: "group-123", name: "デモ用シェアハウス" },
-                  error: null,
-                }),
-              }),
-            }),
-          };
-        }
-        if (table === "group_members") {
-          return {
-            insert: vi.fn().mockResolvedValue({ data: {}, error: null }),
-          };
-        }
-        if (table === "demo_sessions") {
-          return {
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: { id: "session-123", expires_at: new Date().toISOString() },
-                  error: null,
-                }),
-              }),
-            }),
-          };
-        }
-        return { insert: vi.fn(), update: vi.fn() };
-      });
-
-      await createDemoSession(mockSupabase as never);
-
-      expect(capturedProfileUpdate.is_demo).toBe(true);
-      expect(capturedProfileUpdate.display_name).toBe("デモユーザー");
-    });
-
-    it("成功後にBot RPCを呼び出す", async () => {
-      const mockUserId = "demo-user-123";
-      const mockGroupId = "demo-group-456";
-
-      mockSupabase.auth.signInAnonymously.mockResolvedValue({
-        data: {
-          user: { id: mockUserId },
-          session: { access_token: "token" },
-        },
-        error: null,
-      });
-
-      mockSupabase.rpc.mockResolvedValue({
-        data: { bot_id: "bot-123", bot_name: "さくら（パートナー）", payments_created: 4 },
-        error: null,
-      });
-
-      mockSupabase.from.mockImplementation((table: string) => {
-        if (table === "profiles") return createProfileUpdateMock(mockUserId);
-        if (table === "groups") {
-          return {
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: { id: mockGroupId }, error: null,
-                }),
-              }),
-            }),
-          };
-        }
-        if (table === "group_members") return { insert: vi.fn().mockResolvedValue({ data: {}, error: null }) };
-        if (table === "demo_sessions") {
-          return {
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: { id: "session-123", expires_at: new Date().toISOString() }, error: null,
-                }),
-              }),
-            }),
-          };
-        }
-        return { insert: vi.fn(), update: vi.fn() };
-      });
-
-      const result = await createDemoSession(mockSupabase as never);
-
-      expect(result.success).toBe(true);
-      expect(mockSupabase.rpc).toHaveBeenCalledWith("create_demo_bot_partner", {
-        p_group_id: mockGroupId,
-        p_demo_user_id: mockUserId,
-      });
-    });
-
-    it("Bot RPC失敗でもセッション作成は成功する", async () => {
-      const mockUserId = "demo-user-123";
-
-      mockSupabase.auth.signInAnonymously.mockResolvedValue({
-        data: {
-          user: { id: mockUserId },
-          session: { access_token: "token" },
-        },
-        error: null,
-      });
-
-      mockSupabase.rpc.mockResolvedValue({
-        data: null,
-        error: { message: "function create_demo_bot_partner does not exist" },
-      });
-
-      mockSupabase.from.mockImplementation((table: string) => {
-        if (table === "profiles") return createProfileUpdateMock(mockUserId);
-        if (table === "groups") {
-          return {
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: { id: "group-123" }, error: null,
-                }),
-              }),
-            }),
-          };
-        }
-        if (table === "group_members") return { insert: vi.fn().mockResolvedValue({ data: {}, error: null }) };
-        if (table === "demo_sessions") {
-          return {
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: { id: "session-123", expires_at: new Date().toISOString() }, error: null,
-                }),
-              }),
-            }),
-          };
-        }
-        return { insert: vi.fn(), update: vi.fn() };
-      });
-
-      const result = await createDemoSession(mockSupabase as never);
-      expect(result.success).toBe(true);
-    });
-
-    it("作成されたデモグループに適切な名前が設定されている", async () => {
-      const mockUserId = "demo-user-123";
-
-      mockSupabase.auth.signInAnonymously.mockResolvedValue({
-        data: {
-          user: { id: mockUserId },
-          session: { access_token: "token" },
-        },
-        error: null,
-      });
-
-      let capturedGroupName = "";
-      mockSupabase.from.mockImplementation((table: string) => {
-        if (table === "profiles") {
-          return createProfileUpdateMock(mockUserId);
-        }
-        if (table === "groups") {
-          return {
-            insert: vi.fn().mockImplementation((data: { name: string }) => {
-              capturedGroupName = data.name;
-              return {
-                select: vi.fn().mockReturnValue({
-                  single: vi.fn().mockResolvedValue({
-                    data: { id: "group-123", name: data.name },
-                    error: null,
-                  }),
-                }),
-              };
-            }),
-          };
-        }
-        if (table === "group_members") {
-          return {
-            insert: vi.fn().mockResolvedValue({ data: {}, error: null }),
-          };
-        }
-        if (table === "demo_sessions") {
-          return {
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: { id: "session-123", expires_at: new Date().toISOString() },
-                  error: null,
-                }),
-              }),
-            }),
-          };
-        }
-        return { insert: vi.fn(), update: vi.fn() };
-      });
-
-      await createDemoSession(mockSupabase as never);
-
-      expect(capturedGroupName).toBe("デモ用シェアハウス");
     });
   });
 });
