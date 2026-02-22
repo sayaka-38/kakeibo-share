@@ -110,9 +110,9 @@ export const AmountFieldWithKeypad = memo(function AmountFieldWithKeypad({
         </p>
       )}
 
-      {/* NumericKeypad — オーバーレイ表示（レイアウトシフトなし） */}
+      {/* NumericKeypad — オーバーレイ表示（レイアウトシフトなし・不透明パネル） */}
       {showKeypad && (
-        <div className="absolute z-50 left-0 right-0 top-full mt-1 shadow-xl rounded-lg overflow-hidden border border-theme-card-border">
+        <div className="absolute z-50 left-0 right-0 top-full mt-1 bg-theme-card-bg shadow-2xl rounded-lg overflow-hidden border border-theme-card-border">
           <NumericKeypad
             value={value}
             onChange={handleKeypadChange}
