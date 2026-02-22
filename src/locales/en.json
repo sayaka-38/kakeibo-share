@@ -379,6 +379,7 @@
     "multipleDrafts": "Multiple sessions in progress",
     "selectDraft": "Select a session to work on",
     "draftPeriod": "{start} – {end}",
+    "newPeriod": "+ New period",
     "creating": "Creating...",
     "existingDraft": "You have an existing draft session",
     "resumeDraft": "Resume",

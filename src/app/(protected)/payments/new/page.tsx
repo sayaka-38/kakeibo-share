@@ -30,12 +30,14 @@ export default async function NewPaymentPage({ searchParams }: PageProps) {
       groups (*)
     `
     )
-    .eq("user_id", user?.id || "")) as { data: GroupMembershipWithGroupResult<Group>[] | null };
+    .eq("user_id", user?.id || "")
+    .order("created_at", { referencedTable: "groups", ascending: true })) as { data: GroupMembershipWithGroupResult<Group>[] | null };
 
-  const groups =
+  const groups = (
     groupMemberships
       ?.map((m) => m.groups)
-      .filter((g): g is NonNullable<typeof g> => g !== null) || [];
+      .filter((g): g is NonNullable<typeof g> => g !== null) || []
+  ).sort((a, b) => a.created_at.localeCompare(b.created_at));
 
   // Get categories
   const groupIds = groups.map((g) => g.id);
