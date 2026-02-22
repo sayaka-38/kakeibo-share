@@ -11,35 +11,9 @@ export type { Json } from "./database.generated";
 import type { Database as GeneratedDatabase } from "./database.generated";
 import type { Json } from "./database.generated";
 
-// Override Database to add columns/RPCs not yet in generated types
-export type Database = Omit<GeneratedDatabase, "public"> & {
-  public: Omit<GeneratedDatabase["public"], "Tables" | "Functions"> & {
-    Tables: GeneratedDatabase["public"]["Tables"] & {
-      recurring_rules: {
-        Row: GeneratedDatabase["public"]["Tables"]["recurring_rules"]["Row"] & {
-          start_date: string;
-          end_date: string | null;
-        };
-        Insert: GeneratedDatabase["public"]["Tables"]["recurring_rules"]["Insert"] & {
-          start_date: string;
-          end_date?: string | null;
-        };
-        Update: GeneratedDatabase["public"]["Tables"]["recurring_rules"]["Update"] & {
-          start_date?: string;
-          end_date?: string | null;
-        };
-        Relationships: GeneratedDatabase["public"]["Tables"]["recurring_rules"]["Relationships"];
-      };
-    };
-    // archive_payment の Returns を number → boolean に変更するため Omit で上書き
-    Functions: Omit<GeneratedDatabase["public"]["Functions"], "archive_payment"> & {
-      archive_payment: {
-        Args: { p_payment_id: string; p_user_id: string };
-        Returns: boolean;
-      };
-    };
-  };
-};
+// generated types が gen-types で最新化済みのため、手動オーバーライドは不要
+// (start_date/end_date, archive_payment Returns:boolean など全て自動生成に含まれる)
+export type Database = GeneratedDatabase;
 
 // ============================================
 // Role literal type override
