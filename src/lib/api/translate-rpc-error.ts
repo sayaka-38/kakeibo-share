@@ -53,12 +53,29 @@ export function translateRpcError(
  * Supabase のレート制限 (429) など、RPC 以外の HTTP エラーを
  * 共通フォーマットで処理するためのユーティリティ。
  *
- * @param status - HTTP ステータスコード
+ * @param status - HTTP ステータスコード (0 = ネットワーク到達不能)
  * @returns ユーザー向けメッセージ
  */
 export function translateHttpError(status: number): string {
-  if (status === 429) {
-    return t("common.rateLimited");
+  if (status === 0) return t("common.networkError");
+  if (status === 429) return t("common.rateLimited");
+  return t("common.error");
+}
+
+/**
+ * fetch の catch エラーを i18n メッセージに変換する
+ *
+ * "Failed to fetch" / "NetworkError" 等はネットワーク到達不能として扱う。
+ *
+ * @param error - catch した unknown エラー
+ * @returns ユーザー向けメッセージ
+ */
+export function translateFetchError(error: unknown): string {
+  if (
+    error instanceof TypeError &&
+    /fetch|network/i.test(error.message)
+  ) {
+    return t("common.networkError");
   }
   return t("common.error");
 }

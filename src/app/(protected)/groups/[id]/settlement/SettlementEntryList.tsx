@@ -31,6 +31,7 @@ type SettlementEntryListProps = {
   onEntryUpdated: (entry: EntryData) => void;
   onConfirm: () => Promise<void>;
   onDelete: () => Promise<void>;
+  onRefresh?: () => Promise<void>;
 };
 
 export default function SettlementEntryList({
@@ -46,6 +47,7 @@ export default function SettlementEntryList({
   onEntryUpdated,
   onConfirm,
   onDelete,
+  onRefresh,
 }: SettlementEntryListProps) {
   const [editingEntry, setEditingEntry] = useState<EntryData | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -73,36 +75,68 @@ export default function SettlementEntryList({
               {t("settlementSession.checklist")}
             </p>
           </div>
-          {showDeleteConfirm ? (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-theme-muted">削除しますか？</span>
-              <Button
-                variant="danger"
-                size="sm"
-                onClick={onDelete}
-                loading={isLoading}
-              >
-                {t("common.delete")}
-              </Button>
+          <div className="flex items-center gap-2">
+            {/* リフレッシュボタン */}
+            {onRefresh && !showDeleteConfirm && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setShowDeleteConfirm(false)}
-                disabled={isLoading}
+                onClick={onRefresh}
+                loading={isLoading}
+                title={t("settlementSession.refresh")}
+                aria-label={t("settlementSession.refresh")}
               >
-                {t("common.cancel")}
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+                <span className="ml-1 hidden sm:inline">
+                  {t("settlementSession.refresh")}
+                </span>
               </Button>
-            </div>
-          ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowDeleteConfirm(true)}
-              className="text-theme-accent hover:text-theme-accent/80"
-            >
-              {t("settlementSession.deleteDraft")}
-            </Button>
-          )}
+            )}
+
+            {showDeleteConfirm ? (
+              <>
+                <span className="text-xs text-theme-muted">削除しますか？</span>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={onDelete}
+                  loading={isLoading}
+                >
+                  {t("common.delete")}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={isLoading}
+                >
+                  {t("common.cancel")}
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowDeleteConfirm(true)}
+                className="text-theme-accent hover:text-theme-accent/80"
+              >
+                {t("settlementSession.deleteDraft")}
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 

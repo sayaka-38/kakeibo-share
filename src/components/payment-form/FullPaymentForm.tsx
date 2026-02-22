@@ -7,7 +7,9 @@ import { t } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format/currency";
 import { usePaymentForm } from "./hooks/usePaymentForm";
 import type { PaymentFormInitialData } from "./hooks/usePaymentForm";
+import { useFrequentPayments } from "./hooks/useFrequentPayments";
 import { AmountField, DescriptionField, DateField } from "./fields";
+import type { SmartChip } from "./fields/DescriptionField";
 import {
   calculateEqualSplit,
   calculateCustomSplits,
@@ -92,6 +94,13 @@ export default function FullPaymentForm({
   // グループ状態: fixedGroupId があればそれを使用
   const [groupId, setGroupId] = useState(fixedGroupId || prefill?.groupId || groups[0]?.id || "");
   const [categoryId, setCategoryId] = useState(prefill?.categoryId ?? "");
+
+  // スマートチップ: グループの頻出支払い履歴
+  const { filter: filterChips } = useFrequentPayments(groupId || undefined);
+  const smartChips: SmartChip[] = filterChips(form.description).map((s) => ({
+    description: s.description,
+    categoryId: s.category_id,
+  }));
   const [customSplits, setCustomSplits] = useState<{ [userId: string]: string }>(
     prefill?.customSplits ?? {}
   );
@@ -396,12 +405,17 @@ export default function FullPaymentForm({
         error={form.errors.amount}
       />
 
-      {/* Description - 共通コンポーネント使用 */}
+      {/* Description - スマートチップ付き */}
       <DescriptionField
         id="description"
         value={form.description}
         onChange={form.setDescription}
         error={form.errors.description}
+        chips={smartChips}
+        onSelectChip={(chip) => {
+          form.setDescription(chip.description);
+          if (chip.categoryId) setCategoryId(chip.categoryId);
+        }}
       />
 
       {/* Category */}

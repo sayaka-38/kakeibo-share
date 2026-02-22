@@ -1,7 +1,9 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, forwardRef, memo } from "react";
 import { usePaymentForm, type PaymentFormData } from "./hooks/usePaymentForm";
+import { useFrequentPayments } from "./hooks/useFrequentPayments";
+import type { SmartChip } from "./fields/DescriptionField";
 import { AmountFieldWithKeypad } from "./fields";
 import { Button } from "@/components/ui/Button";
 import { t } from "@/lib/i18n";
@@ -19,6 +21,7 @@ type InlinePaymentFormProps = {
   categories?: Category[];
   currentUserId?: string;
   otherMembers?: MemberInfo[];
+  groupId?: string;
 };
 
 /**
@@ -37,8 +40,14 @@ export function InlinePaymentForm({
   categories = [],
   currentUserId,
   otherMembers = [],
+  groupId,
 }: InlinePaymentFormProps) {
   const form = usePaymentForm();
+  const { filter: filterChips } = useFrequentPayments(groupId);
+  const smartChips: SmartChip[] = filterChips(form.description).map((s) => ({
+    description: s.description,
+    categoryId: s.category_id,
+  }));
 
   // フィールドへのref（エラー時フォーカス用）
   const descriptionRef = useRef<HTMLInputElement>(null);
@@ -122,6 +131,11 @@ export function InlinePaymentForm({
         value={form.description}
         onChange={form.setDescription}
         error={form.errors.description}
+        chips={smartChips}
+        onSelectChip={(chip) => {
+          form.setDescription(chip.description);
+          if (chip.categoryId) form.setCategoryId(chip.categoryId);
+        }}
       />
 
       <DateFieldWithRef
@@ -255,18 +269,30 @@ export function InlinePaymentForm({
 // ref対応ラッパーコンポーネント
 // ============================================
 
-import { forwardRef, memo } from "react";
 
 type DescriptionFieldWithRefProps = {
   value: string;
   onChange: (value: string) => void;
   error?: string;
+  chips?: SmartChip[];
+  onSelectChip?: (chip: SmartChip) => void;
 };
 
 const DescriptionFieldWithRef = memo(
   forwardRef<HTMLInputElement, DescriptionFieldWithRefProps>(
-    function DescriptionFieldWithRef({ value, onChange, error }, ref) {
+    function DescriptionFieldWithRef(
+      { value, onChange, error, chips = [], onSelectChip },
+      ref
+    ) {
       const errorId = "payment-description-error";
+
+      const visibleChips = chips.length > 0
+        ? chips.filter(
+            (c) =>
+              !value ||
+              c.description.toLowerCase().includes(value.toLowerCase())
+          )
+        : [];
 
       return (
         <div>
@@ -276,6 +302,25 @@ const DescriptionFieldWithRef = memo(
           >
             {t("payments.form.description")}
           </label>
+
+          {/* スマートチップ領域 — 常に h-8 を確保してレイアウトシフトを防ぐ */}
+          <div className="h-8 flex items-center gap-1.5 overflow-x-auto scrollbar-none mb-1">
+            {visibleChips.map((chip) => (
+              <button
+                key={chip.description}
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  onChange(chip.description);
+                  onSelectChip?.(chip);
+                }}
+                className="flex-shrink-0 px-2.5 py-0.5 text-xs rounded-full border border-theme-primary/40 bg-theme-primary/10 text-theme-primary hover:bg-theme-primary/20 transition-colors whitespace-nowrap"
+              >
+                {chip.description}
+              </button>
+            ))}
+          </div>
+
           <input
             ref={ref}
             id="payment-description"

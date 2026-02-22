@@ -229,6 +229,29 @@ export function useSettlementSession({
     await fetchSessionDetails(targetSession.id);
   }, [fetchSessionDetails]);
 
+  const handleRefresh = useCallback(async () => {
+    if (!session) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(
+        `/api/settlement-sessions/${session.id}/refresh`,
+        { method: "POST" }
+      );
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || t("settlementSession.errors.refreshFailed"));
+        return;
+      }
+      // 成功後: エントリを再取得
+      await fetchSessionDetails(session.id);
+    } catch {
+      setError(t("settlementSession.errors.refreshFailed"));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [session, fetchSessionDetails]);
+
   const handleConfirmReceipt = useCallback(async () => {
     if (!pendingSessionState) return;
     setPendingIsLoading(true);
@@ -275,5 +298,6 @@ export function useSettlementSession({
     handleReportPayment,
     handleConfirmReceipt,
     handleSelectSession,
+    handleRefresh,
   };
 }
