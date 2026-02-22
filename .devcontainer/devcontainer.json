@@ -2,7 +2,7 @@
   "forwardPorts": [3000, 54321, 54322, 54323, 54324],
   "portsAttributes": {
     "3000":  { "label": "Next.js Dev",     "onAutoForward": "notify" },
-    "54321": { "label": "Supabase API",    "onAutoForward": "silent" },
+    "54321": { "label": "Supabase API",    "onAutoForward": "silent", "visibility": "public" },
     "54322": { "label": "Supabase DB",     "onAutoForward": "silent" },
     "54323": { "label": "Supabase Studio", "onAutoForward": "notify" },
     "54324": { "label": "Supabase Email",  "onAutoForward": "silent" }
