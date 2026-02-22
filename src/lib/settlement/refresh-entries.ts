@@ -110,7 +110,7 @@ async function reconcileExistingEntries(
             .update({
               description: (rule as { description: string }).description,
               expected_amount: (rule as { default_amount: number | null }).default_amount,
-              payer_id: (rule as { default_payer_id: string | null }).default_payer_id,
+              payer_id: (rule as { default_payer_id: string }).default_payer_id,
               category_id: (rule as { category_id: string | null }).category_id,
             })
             .eq("id", entry.id);
@@ -146,7 +146,7 @@ async function insertNewRuleEntries(
       description: string;
       category_id: string | null;
       default_amount: number | null;
-      default_payer_id: string | null;
+      default_payer_id: string;
       split_type: string;
       splits: { user_id: string; amount: number | null; percentage: number | null }[];
     };
