@@ -10,6 +10,7 @@ import { InviteLinkButton } from "@/components/InviteLinkButton";
 import { RecentPaymentList } from "@/components/payment-list/RecentPaymentList";
 import { PaymentListSkeleton } from "@/components/payment-list/PaymentListSkeleton";
 import { DeleteGroupButton } from "@/components/DeleteGroupButton";
+import { FlashMessage } from "@/components/FlashMessage";
 import type {
   GroupResult,
   GroupMemberDetailResult,
@@ -100,12 +101,16 @@ export default async function GroupDetailPage({ params }: Props) {
     <div className="max-w-4xl mx-auto">
       <div className="mb-6">
         <Link
-          href="/groups"
+          href="/dashboard"
           className="text-sm text-theme-primary-text hover:text-theme-primary-text/80"
         >
-          &larr; {t("groups.backToGroups")}
+          &larr; {t("dashboard.title")}
         </Link>
       </div>
+
+      <Suspense>
+        <FlashMessage messages={{ groupCreated: t("groups.createSuccess") }} />
+      </Suspense>
 
       <div className="bg-theme-card-bg rounded-lg shadow mb-6">
         <div className="px-4 py-5 sm:p-6">

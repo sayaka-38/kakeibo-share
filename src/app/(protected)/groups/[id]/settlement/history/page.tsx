@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/format/currency";
+import { t } from "@/lib/i18n";
 type PageProps = {
   params: Promise<{ id: string }>;
 };
@@ -126,10 +127,23 @@ export default async function SettlementHistoryPage({ params }: PageProps) {
       {/* Session List */}
       {sessionsWithStats.length === 0 ? (
         <div className="bg-theme-card-bg rounded-lg shadow p-8 text-center">
-          <p className="text-theme-muted">まだ確定した清算がありません</p>
+          <div className="w-16 h-16 bg-theme-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-theme-primary-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+          </div>
+          <h2 className="text-lg font-semibold text-theme-headline mb-2">
+            {t("settlementSession.empty.title")}
+          </h2>
+          <p className="text-sm text-theme-muted mb-3">
+            {t("settlementSession.empty.description")}
+          </p>
+          <p className="text-xs text-theme-muted/70 mb-5 max-w-xs mx-auto">
+            {t("settlementSession.empty.howItWorks")}
+          </p>
           <Link
             href={`/groups/${groupId}/settlement`}
-            className="mt-4 inline-block text-theme-primary-text hover:text-theme-primary-text/80"
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-theme-button-text bg-theme-primary rounded-lg hover:bg-theme-primary/80 transition-colors"
           >
             清算を開始する
           </Link>

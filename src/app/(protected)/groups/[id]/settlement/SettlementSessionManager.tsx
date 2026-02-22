@@ -63,6 +63,7 @@ type SettlementSessionManagerProps = {
   members: Profile[];
   categories: Category[];
   existingSession: SessionData | null;
+  allDraftSessions?: SessionData[];
   pendingSession?: SessionData | null;
   suggestion: SuggestionData | null;
 };
@@ -73,6 +74,7 @@ export default function SettlementSessionManager({
   members,
   categories,
   existingSession,
+  allDraftSessions = [],
   pendingSession,
   suggestion,
 }: SettlementSessionManagerProps) {
@@ -94,10 +96,48 @@ export default function SettlementSessionManager({
     handleConfirm,
     handleReportPayment,
     handleConfirmReceipt,
+    handleSelectSession,
   } = useSettlementSession({ groupId, existingSession, pendingSession, suggestion });
+
+  const hasMultipleDrafts = allDraftSessions.length > 1;
 
   return (
     <>
+      {/* 複数draft: セッション選択UI */}
+      {hasMultipleDrafts && (
+        <div className="bg-theme-card-bg rounded-lg shadow p-4 mb-4">
+          <div className="flex items-center gap-2 mb-3">
+            <svg className="w-4 h-4 text-theme-primary-text shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <h3 className="text-sm font-semibold text-theme-headline">
+              {t("settlementSession.multipleDrafts")}
+            </h3>
+          </div>
+          <p className="text-xs text-theme-muted mb-3">
+            {t("settlementSession.selectDraft")}
+          </p>
+          <div className="space-y-2">
+            {allDraftSessions.map((draft) => (
+              <button
+                key={draft.id}
+                onClick={() => handleSelectSession(draft)}
+                className={`w-full text-left px-3 py-2.5 rounded-lg border transition-colors text-sm ${
+                  session?.id === draft.id
+                    ? "bg-theme-primary/15 border-theme-primary/50 text-theme-headline font-medium"
+                    : "bg-theme-bg border-theme-card-border text-theme-text hover:bg-theme-primary/5 hover:border-theme-primary/30"
+                }`}
+              >
+                {t("settlementSession.draftPeriod", {
+                  start: draft.period_start,
+                  end: draft.period_end,
+                })}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Scenario 2: pending + draft → compact consolidation banner */}
       {pendingSessionState && session && pendingTransfers.length > 0 && (
         <div className="bg-theme-primary/10 border border-theme-primary/30 rounded-lg p-4 mb-4">

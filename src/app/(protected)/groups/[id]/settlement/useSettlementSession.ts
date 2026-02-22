@@ -122,9 +122,6 @@ export function useSettlementSession({
         return;
       }
       const data = await res.json();
-      if (data.rpcError || data.rpcErrorCode) {
-        console.warn("[handleCreateSession] RPC error:", data.rpcError || data.rpcErrorMessage);
-      }
       setSession(data.session);
       await fetchSessionDetails(data.session.id);
     } catch {
@@ -225,6 +222,13 @@ export function useSettlementSession({
     }
   }, [pendingSessionState, fetchPendingSessionDetails]);
 
+  const handleSelectSession = useCallback(async (targetSession: SessionData) => {
+    setSession(targetSession);
+    setEntries([]);
+    setStats(emptyStats);
+    await fetchSessionDetails(targetSession.id);
+  }, [fetchSessionDetails]);
+
   const handleConfirmReceipt = useCallback(async () => {
     if (!pendingSessionState) return;
     setPendingIsLoading(true);
@@ -270,5 +274,6 @@ export function useSettlementSession({
     handleConfirm,
     handleReportPayment,
     handleConfirmReceipt,
+    handleSelectSession,
   };
 }

@@ -9,7 +9,6 @@
 export type { Json } from "./database.generated";
 
 import type { Database as GeneratedDatabase } from "./database.generated";
-import type { Json } from "./database.generated";
 
 // generated types が gen-types で最新化済みのため、手動オーバーライドは不要
 // (start_date/end_date, archive_payment Returns:boolean など全て自動生成に含まれる)

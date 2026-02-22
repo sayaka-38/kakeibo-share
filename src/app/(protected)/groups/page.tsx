@@ -60,8 +60,11 @@ export default async function GroupsPage({ searchParams }: PageProps) {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-theme-headline">{t("groups.title")}</h1>
+      <div className="flex justify-between items-center mb-2">
+        <div>
+          <h1 className="text-2xl font-bold text-theme-headline">{t("groups.title")}</h1>
+          <p className="text-xs text-theme-muted mt-0.5">管理者用 — ?noRedirect=true で表示中</p>
+        </div>
         <Link
           href="/groups/new"
           className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-theme-button-text bg-theme-primary hover:bg-theme-primary/80"
@@ -69,6 +72,7 @@ export default async function GroupsPage({ searchParams }: PageProps) {
           {t("groups.createGroup")}
         </Link>
       </div>
+      <div className="mb-4" />
 
       {groupsWithCounts.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2">
