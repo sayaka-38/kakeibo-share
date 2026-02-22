@@ -165,6 +165,16 @@ export default function PeriodSelector({
           >
             提案を適用
           </Button>
+
+          {/* ヒント: 支払い忘れても次回に合算 */}
+          <div className="mt-3 pt-3 border-t border-theme-primary/20 flex items-start gap-2">
+            <svg className="w-4 h-4 text-theme-primary-text shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-xs text-theme-muted">
+              {t("settlementSession.help.forgotten")}
+            </p>
+          </div>
         </div>
       )}
 

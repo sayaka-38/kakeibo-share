@@ -116,17 +116,19 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 既存のdraftセッションがないか確認
-  const { data: existingDraft } = await supabase
+  // 期間が重複するdraftセッションがないか確認
+  // 異なる期間なら並行して複数のdraftを持てる（例: 1月と2月を同時に準備）
+  const { data: overlappingDrafts } = await supabase
     .from("settlement_sessions")
-    .select("id")
+    .select("id, period_start, period_end")
     .eq("group_id", groupId)
     .eq("status", "draft")
-    .single();
+    .lte("period_start", periodEnd)   // draft.period_start <= new.period_end
+    .gte("period_end", periodStart);  // draft.period_end >= new.period_start
 
-  if (existingDraft) {
+  if (overlappingDrafts && overlappingDrafts.length > 0) {
     return NextResponse.json(
-      { error: "このグループには作成中のセッションが既にあります", existingSessionId: existingDraft.id },
+      { error: "この期間と重複する作成中のセッションが既にあります", existingSessionId: overlappingDrafts[0].id },
       { status: 409 }
     );
   }

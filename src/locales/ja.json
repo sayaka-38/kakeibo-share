@@ -182,7 +182,8 @@
     "errors": {
       "createFailed": "グループの作成に失敗しました",
       "addOwnerFailed": "グループは作成されましたが、オーナーとしての追加に失敗しました: "
-    }
+    },
+    "createSuccess": "グループを作成しました！"
   },
   "payments": {
     "title": "支払い",
@@ -384,6 +385,18 @@
     "unsettledPayments": "未清算の支払いが{count}件あります",
     "lastSettled": "前回清算: {date}まで",
     "createSession": "清算準備を開始",
+    "help": {
+      "forgotten": "確定後に支払い忘れが見つかっても、次回の清算に自動で合算されるので安心してください。",
+      "howItWorks": "清算の仕組みについて"
+    },
+    "empty": {
+      "title": "まだ清算履歴がありません",
+      "description": "清算を確定すると、ここに履歴が表示されます。",
+      "howItWorks": "まず「清算準備室」で期間を選び、固定費・支払いを確認してから清算を確定しましょう。"
+    },
+    "multipleDrafts": "作業中の清算が複数あります",
+    "selectDraft": "作業するセッションを選んでください",
+    "draftPeriod": "{start} 〜 {end}",
     "creating": "準備中...",
     "existingDraft": "作成中のセッションがあります",
     "resumeDraft": "続きから",

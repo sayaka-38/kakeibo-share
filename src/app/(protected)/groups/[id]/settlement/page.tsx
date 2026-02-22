@@ -65,15 +65,15 @@ export default async function SettlementPage({ params }: PageProps) {
     .select("*")
     .or(`is_default.eq.true,group_id.eq.${groupId}`);
 
-  // 既存のdraftセッションを確認
-  const { data: existingDraft } = await supabase
+  // 既存のdraftセッションを全件確認（並行清算のため複数あり得る）
+  const { data: allDrafts } = await supabase
     .from("settlement_sessions")
     .select("*")
     .eq("group_id", groupId)
     .eq("status", "draft")
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .order("period_start", { ascending: true });
+
+  const existingDraft = allDrafts?.[0] ?? null;
 
   // pending_paymentセッションを確認（送金待ち中の清算）
   const { data: pendingSession } = await supabase
@@ -131,6 +131,7 @@ export default async function SettlementPage({ params }: PageProps) {
         members={members}
         categories={(categories as Category[]) || []}
         existingSession={mapSession(existingDraft)}
+        allDraftSessions={(allDrafts ?? []).map(mapSession).filter((s): s is SessionData => s !== null)}
         pendingSession={mapSession(pendingSession)}
         suggestion={suggestionData ? {
           suggestedStart: suggestionData.suggested_start,

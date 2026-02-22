@@ -60,8 +60,8 @@ export default function NewGroupPage() {
       return;
     }
 
-    router.push("/groups");
     router.refresh();
+    router.push(`/groups/${group.id}?flash=groupCreated`);
   };
 
   return (

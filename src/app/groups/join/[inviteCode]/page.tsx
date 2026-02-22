@@ -213,10 +213,10 @@ export default function JoinGroupPage({ params }: Props) {
             </div>
           ) : (
             <Link
-              href="/groups"
+              href="/dashboard"
               className="inline-flex items-center justify-center w-full px-4 py-3 bg-theme-bg text-theme-text font-medium rounded-lg hover:bg-theme-card-border transition-colors"
             >
-              {t("groups.backToGroups")}
+              {t("navigation.dashboard")}
             </Link>
           )}
         </div>

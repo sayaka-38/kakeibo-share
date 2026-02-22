@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useSyncExternalStore } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 const LAST_GROUP_KEY = "kakeibo_last_group_id";
@@ -20,6 +20,7 @@ type GroupItem = { id: string; name: string };
 
 export default function GroupSelector() {
   const router = useRouter();
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [groups, setGroups] = useState<GroupItem[] | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -30,30 +31,31 @@ export default function GroupSelector() {
     () => null
   );
 
-  // グループ一覧を取得（重複除去付き）
+  // グループ一覧を取得（重複除去・作成日昇順）。pathname が変わるたびに再取得してリストを最新化
   useEffect(() => {
     const fetchGroups = async () => {
       const supabase = createClient();
       const { data } = await supabase
         .from("group_members")
-        .select("group_id, groups(id, name)");
+        .select("group_id, groups(id, name, created_at)");
 
       if (data) {
-        // group_id で重複除去
+        // group_id で重複除去 → 作成日時昇順でソート
         const seenIds = new Set<string>();
-        const items: GroupItem[] = [];
+        const items: Array<GroupItem & { created_at: string }> = [];
         for (const m of data) {
-          const g = m.groups as { id: string; name: string } | null;
+          const g = m.groups as { id: string; name: string; created_at: string } | null;
           if (g && !seenIds.has(g.id)) {
             seenIds.add(g.id);
-            items.push({ id: g.id, name: g.name });
+            items.push({ id: g.id, name: g.name, created_at: g.created_at });
           }
         }
-        setGroups(items);
+        items.sort((a, b) => a.created_at.localeCompare(b.created_at));
+        setGroups(items.map(({ id, name }) => ({ id, name })));
       }
     };
     fetchGroups();
-  }, []);
+  }, [pathname]);
 
   // 外部クリックで閉じる
   useEffect(() => {

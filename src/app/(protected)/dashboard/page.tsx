@@ -106,7 +106,7 @@ export default async function DashboardPage() {
               </span>
             </Link>
             <Link
-              href="/groups"
+              href={groups[0]?.id ? `/groups/${groups[0].id}` : "/groups/new"}
               className="bg-theme-card-bg border border-theme-card-border rounded-lg p-4 text-center hover:bg-theme-bg transition-colors"
             >
               <span className="block text-2xl mb-1 text-theme-muted">👥</span>
