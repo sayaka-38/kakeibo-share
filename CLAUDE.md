@@ -17,6 +17,7 @@
 2. **認証**: `authenticateRequest()` (`src/lib/api/authenticate.ts`)
 3. **通貨**: `formatCurrency()` (`src/lib/format/currency.ts`)。清算は `showSign: true`
 4. **環境変数**: `getSupabaseEnv()` (`src/lib/env.ts`)。`process.env.XXX!` 禁止
+5. **デモ作成**: 必ず `create-demo` Edge Function 経由 (`supabase.functions.invoke`)。クライアントからの直接 DB 操作禁止。Turnstile トークン検証・service_role による最小権限実行を担保する
 
 ---
 
@@ -73,4 +74,8 @@ tests/e2e/            # Playwright E2E テスト
 ## リモートリリースチェックリスト
 
 - [ ] `npx supabase db push` でリモート DB を最新化
+- [ ] `npx supabase functions deploy create-demo` で Edge Function をデプロイ
 - [ ] Vercel の環境変数が同期されていることを確認
+- [ ] Supabase ダッシュボードで Edge Function の環境変数を設定:
+  - `TURNSTILE_SECRET_KEY` (Cloudflare Turnstile ダッシュボードから取得)
+- [ ] Vercel に `NEXT_PUBLIC_TURNSTILE_SITE_KEY` を追加

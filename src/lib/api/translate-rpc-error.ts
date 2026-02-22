@@ -46,3 +46,19 @@ export function translateRpcError(
 
   return { message: t(config.fallbackKey), status: 500 };
 }
+
+/**
+ * HTTP ステータスコードを i18n メッセージに変換する
+ *
+ * Supabase のレート制限 (429) など、RPC 以外の HTTP エラーを
+ * 共通フォーマットで処理するためのユーティリティ。
+ *
+ * @param status - HTTP ステータスコード
+ * @returns ユーザー向けメッセージ
+ */
+export function translateHttpError(status: number): string {
+  if (status === 429) {
+    return t("common.rateLimited");
+  }
+  return t("common.error");
+}
