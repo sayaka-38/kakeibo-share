@@ -30,7 +30,7 @@ export default function GroupSelector() {
     () => null
   );
 
-  // グループ一覧を取得
+  // グループ一覧を取得（重複除去付き）
   useEffect(() => {
     const fetchGroups = async () => {
       const supabase = createClient();
@@ -39,12 +39,16 @@ export default function GroupSelector() {
         .select("group_id, groups(id, name)");
 
       if (data) {
-        const items = data
-          .map((m) => {
-            const g = m.groups as { id: string; name: string } | null;
-            return g ? { id: g.id, name: g.name } : null;
-          })
-          .filter((g): g is GroupItem => g !== null);
+        // group_id で重複除去
+        const seenIds = new Set<string>();
+        const items: GroupItem[] = [];
+        for (const m of data) {
+          const g = m.groups as { id: string; name: string } | null;
+          if (g && !seenIds.has(g.id)) {
+            seenIds.add(g.id);
+            items.push({ id: g.id, name: g.name });
+          }
+        }
         setGroups(items);
       }
     };
@@ -73,8 +77,13 @@ export default function GroupSelector() {
     [router]
   );
 
-  // 2グループ以上の場合のみ表示
-  if (!groups || groups.length <= 1) return null;
+  const handleCreate = useCallback(() => {
+    setIsOpen(false);
+    router.push("/groups/new");
+  }, [router]);
+
+  // ロード中は非表示
+  if (groups === null) return null;
 
   const currentGroup = lastGroupId ? groups.find((g) => g.id === lastGroupId) : null;
 
@@ -87,7 +96,10 @@ export default function GroupSelector() {
         title="グループを切替"
       >
         <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
             d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
           />
         </svg>
@@ -100,21 +112,52 @@ export default function GroupSelector() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-1 w-52 bg-theme-card-bg border border-theme-card-border rounded-lg shadow-lg z-50 overflow-hidden">
-          {groups.map((group) => (
+        <div className="absolute right-0 top-full mt-1 w-56 bg-theme-card-bg border border-theme-card-border rounded-lg shadow-lg z-50 overflow-hidden">
+          {/* グループ一覧 */}
+          {groups.length > 0 ? (
+            <>
+              {groups.map((group) => (
+                <button
+                  key={group.id}
+                  type="button"
+                  onClick={() => handleSelect(group.id)}
+                  className={`w-full text-left px-4 py-2.5 text-sm hover:bg-theme-bg transition-colors ${
+                    group.id === lastGroupId
+                      ? "text-theme-primary-text font-medium bg-theme-primary/10"
+                      : "text-theme-text"
+                  }`}
+                >
+                  {group.name}
+                </button>
+              ))}
+              <div className="border-t border-theme-card-border" />
+            </>
+          ) : (
+            <p className="px-4 py-3 text-sm text-theme-muted">グループがありません</p>
+          )}
+
+          {/* 新規グループ作成 */}
+          <button
+            type="button"
+            onClick={handleCreate}
+            className="w-full text-left px-4 py-2.5 text-sm text-theme-primary-text hover:bg-theme-primary/10 transition-colors flex items-center gap-2"
+          >
+            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            新規グループ作成
+          </button>
+
+          {/* すべてのグループを見る（デバッグ用一覧へ） */}
+          {groups.length > 1 && (
             <button
-              key={group.id}
               type="button"
-              onClick={() => handleSelect(group.id)}
-              className={`w-full text-left px-4 py-2.5 text-sm hover:bg-theme-bg transition-colors ${
-                group.id === lastGroupId
-                  ? "text-theme-primary-text font-medium bg-theme-primary/10"
-                  : "text-theme-text"
-              }`}
+              onClick={() => { setIsOpen(false); router.push("/groups?noRedirect=true"); }}
+              className="w-full text-left px-4 py-2.5 text-xs text-theme-muted hover:bg-theme-bg transition-colors border-t border-theme-card-border"
             >
-              {group.name}
+              すべてのグループを見る
             </button>
-          ))}
+          )}
         </div>
       )}
     </div>

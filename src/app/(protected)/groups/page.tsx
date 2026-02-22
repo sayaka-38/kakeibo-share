@@ -4,7 +4,12 @@ import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
 import type { GroupMembershipFullResult } from "@/types/query-results";
 
-export default async function GroupsPage() {
+type PageProps = {
+  searchParams: Promise<{ noRedirect?: string }>;
+};
+
+export default async function GroupsPage({ searchParams }: PageProps) {
+  const { noRedirect } = await searchParams;
   const supabase = await createClient();
 
   const {
@@ -47,8 +52,9 @@ export default async function GroupsPage() {
     })
   );
 
-  // 所属グループが1つのみなら直接その詳細ページへ
-  if (groupsWithCounts.length === 1) {
+  // グループが1つ以上あれば先頭グループの詳細へ自動遷移
+  // ?noRedirect=true の場合のみ一覧を表示（デバッグ用）
+  if (groupsWithCounts.length >= 1 && noRedirect !== "true") {
     redirect(`/groups/${groupsWithCounts[0].id}`);
   }
 
