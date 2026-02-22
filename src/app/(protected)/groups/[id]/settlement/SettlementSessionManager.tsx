@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect, useCallback } from "react";
 import { t } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format/currency";
 import { Button } from "@/components/ui/Button";
@@ -99,42 +100,92 @@ export default function SettlementSessionManager({
     handleSelectSession,
   } = useSettlementSession({ groupId, existingSession, pendingSession, suggestion });
 
-  const hasMultipleDrafts = allDraftSessions.length > 1;
+  // Local draft list — optimistically updated on create / delete
+  const [localDraftSessions, setLocalDraftSessions] = useState<SessionData[]>(allDraftSessions);
+  // true while the user wants to create a new period (shows PeriodSelector even if a draft is active)
+  const [isCreating, setIsCreating] = useState(false);
+
+  // Keep local list in sync with SSR prop (e.g. after router.refresh)
+  useEffect(() => {
+    setLocalDraftSessions(allDraftSessions);
+  }, [allDraftSessions]);
+
+  // When a session is created, append it to the local list (if not already present)
+  const sessionId = session?.id;
+  useEffect(() => {
+    if (!session || !sessionId) return;
+    setLocalDraftSessions((prev) => {
+      if (prev.some((d) => d.id === sessionId)) return prev;
+      return [...prev, session].sort((a, b) =>
+        a.period_start.localeCompare(b.period_start)
+      );
+    });
+  }, [session, sessionId]);
+
+  // Wrapper: create new session, then exit creating mode
+  const handleCreate = useCallback(
+    async (periodStart: string, periodEnd: string) => {
+      await handleCreateSession(periodStart, periodEnd);
+      setIsCreating(false);
+    },
+    [handleCreateSession]
+  );
+
+  // Wrapper: select an existing draft tab
+  const handleSelect = useCallback(
+    (draft: SessionData) => {
+      setIsCreating(false);
+      handleSelectSession(draft);
+    },
+    [handleSelectSession]
+  );
+
+  // Wrapper: delete current draft, then auto-select the next remaining draft
+  const handleDelete = useCallback(async () => {
+    const deletedId = session?.id;
+    const remaining = localDraftSessions.filter((d) => d.id !== deletedId);
+    await handleDeleteSession();
+    setLocalDraftSessions(remaining);
+    if (remaining.length > 0) {
+      handleSelectSession(remaining[0]);
+    }
+  }, [session, handleDeleteSession, localDraftSessions, handleSelectSession]);
 
   return (
     <>
-      {/* 複数draft: セッション選択UI */}
-      {hasMultipleDrafts && (
-        <div className="bg-theme-card-bg rounded-lg shadow p-4 mb-4">
-          <div className="flex items-center gap-2 mb-3">
-            <svg className="w-4 h-4 text-theme-primary-text shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <h3 className="text-sm font-semibold text-theme-headline">
-              {t("settlementSession.multipleDrafts")}
-            </h3>
-          </div>
-          <p className="text-xs text-theme-muted mb-3">
-            {t("settlementSession.selectDraft")}
-          </p>
-          <div className="space-y-2">
-            {allDraftSessions.map((draft) => (
-              <button
-                key={draft.id}
-                onClick={() => handleSelectSession(draft)}
-                className={`w-full text-left px-3 py-2.5 rounded-lg border transition-colors text-sm ${
-                  session?.id === draft.id
-                    ? "bg-theme-primary/15 border-theme-primary/50 text-theme-headline font-medium"
-                    : "bg-theme-bg border-theme-card-border text-theme-text hover:bg-theme-primary/5 hover:border-theme-primary/30"
-                }`}
-              >
-                {t("settlementSession.draftPeriod", {
-                  start: draft.period_start,
-                  end: draft.period_end,
-                })}
-              </button>
-            ))}
-          </div>
+      {/* Tab bar — shown whenever at least one draft exists */}
+      {localDraftSessions.length >= 1 && (
+        <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1">
+          {localDraftSessions.map((draft) => (
+            <button
+              key={draft.id}
+              type="button"
+              onClick={() => handleSelect(draft)}
+              className={`shrink-0 px-3 py-1.5 text-sm rounded-full border transition-colors whitespace-nowrap ${
+                !isCreating && session?.id === draft.id
+                  ? "bg-theme-primary text-theme-button-text border-theme-primary font-medium"
+                  : "bg-theme-card-bg text-theme-text border-theme-card-border hover:border-theme-primary/50 hover:bg-theme-primary/5"
+              }`}
+            >
+              {t("settlementSession.draftPeriod", {
+                start: draft.period_start,
+                end: draft.period_end,
+              })}
+            </button>
+          ))}
+
+          {/* "＋ 新しい期間" tab */}
+          <button
+            type="button"
+            onClick={() => setIsCreating(true)}
+            className={`shrink-0 px-3 py-1.5 text-sm rounded-full border border-dashed transition-colors whitespace-nowrap ${
+              isCreating
+                ? "border-theme-primary bg-theme-primary/10 text-theme-primary-text font-medium"
+                : "border-theme-card-border text-theme-muted hover:border-theme-primary/50 hover:text-theme-text"
+            }`}
+          >
+            {t("settlementSession.newPeriod")}
+          </button>
         </div>
       )}
 
@@ -162,8 +213,8 @@ export default function SettlementSessionManager({
         </div>
       )}
 
-      {/* Scenario 1: pending のみ (no draft) */}
-      {pendingSessionState && !session && (
+      {/* Scenario 1: pending only (no draft, not creating) */}
+      {pendingSessionState && !session && !isCreating && (
         <div className="mb-6">
           <PendingPaymentView
             session={pendingSessionState}
@@ -191,8 +242,15 @@ export default function SettlementSessionManager({
         </div>
       )}
 
-      {/* Draft session or PeriodSelector */}
-      {session ? (
+      {/* Main content: PeriodSelector or SettlementEntryList */}
+      {isCreating || !session ? (
+        <PeriodSelector
+          suggestion={suggestion}
+          onSubmit={handleCreate}
+          isLoading={isLoading}
+          error={error}
+        />
+      ) : (
         <>
           {hasStalePeriod && (
             <div className="bg-theme-primary/10 border border-theme-primary/30 rounded-lg p-4 mb-4">
@@ -217,16 +275,9 @@ export default function SettlementSessionManager({
             pendingTransfers={pendingTransfers.length > 0 ? pendingTransfers : undefined}
             onEntryUpdated={handleEntryUpdated}
             onConfirm={handleConfirm}
-            onDelete={handleDeleteSession}
+            onDelete={handleDelete}
           />
         </>
-      ) : (
-        <PeriodSelector
-          suggestion={suggestion}
-          onSubmit={handleCreateSession}
-          isLoading={isLoading}
-          error={error}
-        />
       )}
 
       {/* Scenario 2: pending + draft → bottom controls */}

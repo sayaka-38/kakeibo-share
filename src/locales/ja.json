@@ -397,6 +397,7 @@
     "multipleDrafts": "作業中の清算が複数あります",
     "selectDraft": "作業するセッションを選んでください",
     "draftPeriod": "{start} 〜 {end}",
+    "newPeriod": "＋ 新しい期間",
     "creating": "準備中...",
     "existingDraft": "作成中のセッションがあります",
     "resumeDraft": "続きから",

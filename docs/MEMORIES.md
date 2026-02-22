@@ -15,7 +15,7 @@
 | 11.5 | 多言語切替(ja/en)・グループ退出/オーナー譲渡RPC・i18n DRY・RPC共通エラー翻訳・設定画面分割 | #54 |
 | 12 | カスタムカテゴリCRUD・アイコン/カラー選択UI・WCAG対応コントラスト・クールモダン5テーマ | #55, #56 |
 | 13 | 神UX（クイック確定・テンキーOL・スキップバグ修正）・グループナビ改善・GroupSelector | #57–#59, WIP |
-| 13.3–13.5 | 並行清算解禁・FlashMessage・直接グループ遷移・ヘッダー同期・デッドリンク除去 | WIP |
+| 13.3–13.6 | 並行清算解禁・FlashMessage・直接グループ遷移・ヘッダー同期・デッドリンク除去・複数draft並行タブUI | WIP |
 
 **現在**: Vitest **1132件** + Playwright E2E 1件 = **計1133テスト** / ビルド正常 / lint クリーン
 
@@ -33,7 +33,7 @@
 | FlashMessage | `src/components/FlashMessage.tsx` | `?flash=xxx` URLパラムを読み4秒表示。`<Suspense>` 必須 |
 | GroupSelector | `src/components/GroupSelector.tsx` | `pathname` useEffect 依存 → ページ遷移ごとに再取得・作成日昇順 |
 | 並行清算 | `api/settlement-sessions` POST | 期間重複 draft のみブロック（同期間のみ 409） |
-| 複数 draft UI | `SettlementSessionManager` | `allDraftSessions` prop、2件以上でセッション選択リスト表示 |
+| 複数 draft UI | `SettlementSessionManager` | `localDraftSessions` + `isCreating` ステート。pill タブバー（active=bg-primary）＋「＋ 新しい期間」(border-dashed)。削除時 auto-select |
 | グループ作成後 | `groups/new/page.tsx` | `/groups/${id}?flash=groupCreated` に直接 push |
 | groups/page.tsx | 自動リダイレクト | `groups >= 1` で `redirect(/groups/${id})`、`?noRedirect=true` でデバッグ一覧 |
 | i18n 定数 | `src/lib/i18n/index.ts` | `LOCALE_COOKIE_KEY` / `DEFAULT_LOCALE` 等 |
