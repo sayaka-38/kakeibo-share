@@ -61,22 +61,24 @@ export default function RecurringRuleForm({
   );
   const [endDate, setEndDate] = useState(editingRule?.end_date || "");
 
-  // カスタム分割: パーセンテージ
+  // カスタム分割: パーセンテージ（整数のみ）
   const [percentages, setPercentages] = useState<{ [userId: string]: string }>(() => {
     if (editingRule?.split_type === "custom" && editingRule.splits.length > 0) {
       const initial: { [userId: string]: string } = {};
       editingRule.splits.forEach((s) => {
         if (s.percentage !== null) {
-          initial[s.user_id] = String(s.percentage);
+          initial[s.user_id] = String(Math.round(Number(s.percentage)));
         }
       });
       return initial;
     }
-    // デフォルト: 均等割り
-    const equalPercent = members.length > 0 ? (100 / members.length).toFixed(1) : "0";
+    // デフォルト: 均等割り（整数・端数は最後の人に加算）
+    if (members.length === 0) return {};
+    const perPerson = Math.floor(100 / members.length);
+    const remainder = 100 - perPerson * members.length;
     const initial: { [userId: string]: string } = {};
-    members.forEach((m) => {
-      initial[m.id] = equalPercent;
+    members.forEach((m, i) => {
+      initial[m.id] = String(i === members.length - 1 ? perPerson + remainder : perPerson);
     });
     return initial;
   });
@@ -86,15 +88,39 @@ export default function RecurringRuleForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // パーセンテージ合計
+  // パーセンテージ合計（整数）
   const percentageTotal = Object.values(percentages).reduce((sum, val) => {
-    const parsed = parseFloat(val);
+    const parsed = parseInt(val);
     return sum + (isNaN(parsed) ? 0 : parsed);
   }, 0);
 
+  // 1人の％を変えたら残りを他のメンバーに均等配分（案Aロジック）
   const handlePercentageChange = useCallback((userId: string, value: string) => {
-    setPercentages((prev) => ({ ...prev, [userId]: value }));
-  }, []);
+    // 整数のみ許可（0〜100 にクランプ）
+    const raw = parseInt(value);
+    const newVal = isNaN(raw) ? 0 : Math.min(100, Math.max(0, raw));
+    const newValStr = value === "" ? "" : String(newVal);
+
+    setPercentages((prev) => {
+      const updated = { ...prev, [userId]: newValStr };
+      const otherIds = members.filter((m) => m.id !== userId).map((m) => m.id);
+      if (otherIds.length === 0) return updated;
+
+      const remaining = 100 - newVal;
+      const perPerson = Math.floor(remaining / otherIds.length);
+      let distributed = 0;
+      otherIds.forEach((uid, i) => {
+        if (i === otherIds.length - 1) {
+          // 最後の人: 端数調整
+          updated[uid] = String(remaining - distributed);
+        } else {
+          updated[uid] = String(perPerson);
+          distributed += perPerson;
+        }
+      });
+      return updated;
+    });
+  }, [members]);
 
   // Validation (shared with API)
   const validate = (): boolean => {
@@ -142,7 +168,7 @@ export default function RecurringRuleForm({
           splitType === "custom"
             ? members.map((m) => ({
                 userId: m.id,
-                percentage: parseFloat(percentages[m.id] || "0"),
+                percentage: parseInt(percentages[m.id] || "0"),
               }))
             : undefined,
       };
@@ -185,7 +211,7 @@ export default function RecurringRuleForm({
                 id: `temp-${m.id}`,
                 user_id: m.id,
                 amount: null,
-                percentage: parseFloat(percentages[m.id] || "0"),
+                percentage: parseInt(percentages[m.id] || "0"),
                 user: m,
               }))
             : [],
@@ -497,15 +523,15 @@ export default function RecurringRuleForm({
                 </label>
                 <span
                   className={`text-xs font-medium ${
-                    Math.abs(percentageTotal - 100) < 0.1
+                    percentageTotal === 100
                       ? "text-theme-text"
                       : "text-theme-primary-text"
                   }`}
                 >
                   {t("recurringRules.percentageTotal", {
-                    total: percentageTotal.toFixed(1),
+                    total: String(percentageTotal),
                   })}
-                  {Math.abs(percentageTotal - 100) < 0.1 && " ✓"}
+                  {percentageTotal === 100 && " ✓"}
                 </span>
               </div>
               {members.map((member) => (
@@ -522,7 +548,7 @@ export default function RecurringRuleForm({
                       }
                       min="0"
                       max="100"
-                      step="0.1"
+                      step="1"
                       className="w-full px-3 py-2 border border-theme-card-border rounded-lg shadow-sm text-theme-headline placeholder:text-theme-muted/50 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
                       placeholder="0"
                     />

@@ -20,6 +20,27 @@ function getLocalDateString(date: Date = new Date()): string {
   return `${year}-${month}-${day}`;
 }
 
+// 先月（1日〜末日）を計算
+function getLastMonthPeriod(): { start: string; end: string } {
+  const today = new Date();
+  const firstOfLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+  const lastOfLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+  return {
+    start: getLocalDateString(firstOfLastMonth),
+    end: getLocalDateString(lastOfLastMonth),
+  };
+}
+
+// 今月（1日〜今日）を計算
+function getThisMonthPeriod(): { start: string; end: string } {
+  const today = new Date();
+  const firstOfThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  return {
+    start: getLocalDateString(firstOfThisMonth),
+    end: getLocalDateString(today),
+  };
+}
+
 // デフォルト期間を計算
 function getDefaultPeriod(suggestion: SuggestionData | null): { start: string; end: string } {
   const today = getLocalDateString();
@@ -152,6 +173,32 @@ export default function PeriodSelector({
           {error}
         </div>
       )}
+
+      {/* クイック期間選択ボタン */}
+      <div className="flex gap-2 mb-4">
+        <button
+          type="button"
+          onClick={() => {
+            const p = getLastMonthPeriod();
+            setPeriodStart(p.start);
+            setPeriodEnd(p.end);
+          }}
+          className="px-3 py-1.5 text-sm bg-theme-bg border border-theme-card-border rounded-lg hover:bg-theme-primary/10 hover:border-theme-primary/30 transition-colors text-theme-text"
+        >
+          先月
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            const p = getThisMonthPeriod();
+            setPeriodStart(p.start);
+            setPeriodEnd(p.end);
+          }}
+          className="px-3 py-1.5 text-sm bg-theme-bg border border-theme-card-border rounded-lg hover:bg-theme-primary/10 hover:border-theme-primary/30 transition-colors text-theme-text"
+        >
+          今月
+        </button>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Period Start */}

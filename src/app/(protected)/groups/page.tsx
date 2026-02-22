@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
 import type { GroupMembershipFullResult } from "@/types/query-results";
@@ -45,6 +46,11 @@ export default async function GroupsPage() {
       };
     })
   );
+
+  // 所属グループが1つのみなら直接その詳細ページへ
+  if (groupsWithCounts.length === 1) {
+    redirect(`/groups/${groupsWithCounts[0].id}`);
+  }
 
   return (
     <div className="max-w-4xl mx-auto">

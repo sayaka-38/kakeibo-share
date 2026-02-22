@@ -23,6 +23,7 @@ export default function EntryCard({
   currentUserId,
 }: EntryCardProps) {
   const [isSkipping, setIsSkipping] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // エントリタイプのラベル
@@ -56,7 +57,43 @@ export default function EntryCard({
     : null;
   const filledByName = filledByMember?.display_name || filledByMember?.email;
 
-  // スキップ処理
+  // クイック確定: expected_amount をそのまま actual_amount として保存
+  const handleQuickConfirm = async () => {
+    if (!entry.expected_amount) return;
+    setIsConfirming(true);
+    setError(null);
+
+    try {
+      const res = await fetch(`/api/settlement-entries/${entry.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          actualAmount: entry.expected_amount,
+          status: "filled",
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || t("settlementSession.errors.updateFailed"));
+        return;
+      }
+
+      onUpdated({
+        ...entry,
+        status: "filled",
+        actual_amount: entry.expected_amount,
+        filled_by: currentUserId,
+        filled_at: new Date().toISOString(),
+      });
+    } catch {
+      setError(t("settlementSession.errors.updateFailed"));
+    } finally {
+      setIsConfirming(false);
+    }
+  };
+
+  // スキップ処理 — actual_amount は null（DB constraint: actual_amount > 0 の制約回避）
   const handleSkip = async () => {
     setIsSkipping(true);
     setError(null);
@@ -66,7 +103,6 @@ export default function EntryCard({
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          actualAmount: entry.expected_amount || 0,
           status: "skipped",
         }),
       });
@@ -81,7 +117,7 @@ export default function EntryCard({
       onUpdated({
         ...entry,
         status: "skipped",
-        actual_amount: entry.expected_amount || 0,
+        actual_amount: null,
         filled_by: currentUserId,
         filled_at: new Date().toISOString(),
       });
@@ -137,9 +173,34 @@ export default function EntryCard({
               {t("settlementSession.statusSkipped")}
             </div>
           ) : entry.expected_amount ? (
-            <div className="text-lg font-semibold text-theme-muted/70">
-              {formatCurrency(entry.expected_amount)}
-              <span className="text-xs ml-1">予定</span>
+            /* pending + 予定金額あり: 金額 + クイック確定ボタン */
+            <div className="flex items-center justify-end gap-2">
+              <div>
+                <div className="text-lg font-semibold text-theme-muted/70">
+                  {formatCurrency(entry.expected_amount)}
+                </div>
+                <div className="text-xs text-theme-muted text-right">予定</div>
+              </div>
+              {isOwner && (
+                <button
+                  type="button"
+                  onClick={handleQuickConfirm}
+                  disabled={isConfirming}
+                  title="この金額で確定"
+                  className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-full bg-theme-primary text-theme-button-text hover:bg-theme-primary/80 disabled:opacity-50 transition-colors shadow-sm"
+                >
+                  {isConfirming ? (
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </button>
+              )}
             </div>
           ) : (
             <div className="text-sm text-theme-primary-text">

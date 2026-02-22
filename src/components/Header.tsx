@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { t } from "@/lib/i18n";
 import type { Profile } from "@/types/database";
 import ThemeSelector from "./ThemeSelector";
+import GroupSelector from "./GroupSelector";
 
 const LP_URL = "https://kakeibo-share.vercel.app/";
 
@@ -39,6 +40,7 @@ export default function Header({ user }: HeaderProps) {
 
           <div className="flex items-center gap-3">
             <ThemeSelector />
+            {user && <GroupSelector />}
             {user && (
               <div className="flex items-center gap-2">
                 <Link

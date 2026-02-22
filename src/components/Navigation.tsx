@@ -26,11 +26,12 @@ function getNavItems(lastGroupId: string | null) {
   const settlementHref = lastGroupId
     ? `/groups/${lastGroupId}/settlement`
     : "/groups";
+  const groupsHref = lastGroupId ? `/groups/${lastGroupId}` : "/groups";
   return [
     { href: "/dashboard", labelKey: "navigation.dashboard", icon: "home" },
     { href: "/payments", labelKey: "navigation.payments", icon: "receipt" },
     { href: settlementHref, labelKey: "navigation.settlement", icon: "calculator" },
-    { href: "/groups", labelKey: "navigation.groups", icon: "users" },
+    { href: groupsHref, labelKey: "navigation.groups", icon: "users" },
     { href: "/settings", labelKey: "navigation.settings", icon: "settings" },
   ];
 }

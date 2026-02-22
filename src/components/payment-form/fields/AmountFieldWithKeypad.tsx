@@ -76,7 +76,7 @@ export const AmountFieldWithKeypad = memo(function AmountFieldWithKeypad({
   }, []);
 
   return (
-    <div ref={containerRef}>
+    <div ref={containerRef} className="relative">
       <label
         htmlFor={id}
         className="block text-sm font-medium text-theme-text mb-1"
@@ -110,9 +110,9 @@ export const AmountFieldWithKeypad = memo(function AmountFieldWithKeypad({
         </p>
       )}
 
-      {/* NumericKeypad */}
+      {/* NumericKeypad — オーバーレイ表示（レイアウトシフトなし） */}
       {showKeypad && (
-        <div className="mt-3">
+        <div className="absolute z-50 left-0 right-0 top-full mt-1 shadow-xl rounded-lg overflow-hidden border border-theme-card-border">
           <NumericKeypad
             value={value}
             onChange={handleKeypadChange}

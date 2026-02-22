@@ -34,18 +34,21 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     );
   }
 
-  if (actualAmount !== undefined && actualAmount < 0) {
+  if (actualAmount !== undefined && actualAmount !== null && actualAmount < 0) {
     return NextResponse.json(
       { error: "金額は0以上で入力してください" },
       { status: 400 }
     );
   }
 
+  // スキップ時は actual_amount を null にして DB constraint (> 0) を回避
+  const resolvedAmount = status === "skipped" ? null : (actualAmount ?? null);
+
   // RPC でエントリを更新
   const { data: result, error } = await supabase.rpc("update_settlement_entry", {
     p_entry_id: id,
     p_user_id: user.id,
-    p_actual_amount: actualAmount,
+    p_actual_amount: resolvedAmount,
     p_payer_id: payerId || null,
     p_payment_date: paymentDate || null,
     p_status: status || "filled",
