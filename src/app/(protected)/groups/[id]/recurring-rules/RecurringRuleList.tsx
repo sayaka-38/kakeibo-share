@@ -20,6 +20,8 @@ type RuleWithRelations = {
   split_type: string;
   is_active: boolean;
   interval_months: number;
+  start_date: string;
+  end_date: string | null;
   created_at: string;
   updated_at: string;
   category: { id: string; name: string; icon: string | null; color: string | null } | null;

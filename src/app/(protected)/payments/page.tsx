@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
 import PaymentListWithFilter from "./PaymentListWithFilter";
-import type { PaymentWithRelations } from "@/components/payment-list/types";
+import type { PaymentWithRelations } from "@/types/query-results";
 
 export default async function PaymentsPage() {
   const supabase = await createClient();

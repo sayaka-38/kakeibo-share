@@ -11,28 +11,30 @@ export type { Json } from "./database.generated";
 import type { Database as GeneratedDatabase } from "./database.generated";
 import type { Json } from "./database.generated";
 
-// Override Database to add RPCs not yet in generated types
+// Override Database to add columns/RPCs not yet in generated types
 export type Database = Omit<GeneratedDatabase, "public"> & {
-  public: Omit<GeneratedDatabase["public"], "Functions"> & {
-    Functions: GeneratedDatabase["public"]["Functions"] & {
-      create_demo_bot_partner: {
-        Args: { p_group_id: string; p_demo_user_id: string };
-        Returns: Json;
+  public: Omit<GeneratedDatabase["public"], "Tables" | "Functions"> & {
+    Tables: GeneratedDatabase["public"]["Tables"] & {
+      recurring_rules: {
+        Row: GeneratedDatabase["public"]["Tables"]["recurring_rules"]["Row"] & {
+          start_date: string;
+          end_date: string | null;
+        };
+        Insert: GeneratedDatabase["public"]["Tables"]["recurring_rules"]["Insert"] & {
+          start_date: string;
+          end_date?: string | null;
+        };
+        Update: GeneratedDatabase["public"]["Tables"]["recurring_rules"]["Update"] & {
+          start_date?: string;
+          end_date?: string | null;
+        };
+        Relationships: GeneratedDatabase["public"]["Tables"]["recurring_rules"]["Relationships"];
       };
-      anonymize_user: {
-        Args: { p_user_id: string };
-        Returns: boolean;
-      };
+    };
+    // archive_payment の Returns を number → boolean に変更するため Omit で上書き
+    Functions: Omit<GeneratedDatabase["public"]["Functions"], "archive_payment"> & {
       archive_payment: {
         Args: { p_payment_id: string; p_user_id: string };
-        Returns: number;
-      };
-      leave_group: {
-        Args: { p_group_id: string };
-        Returns: boolean;
-      };
-      transfer_group_ownership: {
-        Args: { p_group_id: string; p_new_owner_id: string };
         Returns: boolean;
       };
     };

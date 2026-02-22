@@ -65,7 +65,8 @@ export async function generateSettlementEntries(
     for (const rule of rules) {
       const dates = computeRuleDatesInPeriod(
         {
-          created_at: rule.created_at,
+          start_date: rule.start_date,
+          end_date: rule.end_date,
           interval_months: rule.interval_months,
           day_of_month: rule.day_of_month,
         },

@@ -17,9 +17,16 @@ const TRANSFER_OWNERSHIP_ERRORS: RpcErrorRule[] = [
   { pattern: /not a member/i, key: "groups.transferOwner.targetNotMember", status: 404 },
 ];
 
+const ARCHIVE_PAYMENT_ERRORS: RpcErrorRule[] = [
+  { pattern: /not_found/i, key: "payments.errors.paymentNotFound", status: 404 },
+  { pattern: /not_payer/i, key: "payments.errors.deleteNotAuthorized", status: 403 },
+  { pattern: /settled/i, key: "payments.errors.deleteSettled", status: 403 },
+];
+
 const RPC_ERROR_MAP: Record<string, { rules: RpcErrorRule[]; fallbackKey: string }> = {
   leave_group: { rules: LEAVE_GROUP_ERRORS, fallbackKey: "groups.leave.failed" },
   transfer_group_ownership: { rules: TRANSFER_OWNERSHIP_ERRORS, fallbackKey: "groups.transferOwner.failed" },
+  archive_payment: { rules: ARCHIVE_PAYMENT_ERRORS, fallbackKey: "payments.errors.deleteFailed" },
 };
 
 export function translateRpcError(

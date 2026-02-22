@@ -141,3 +141,36 @@ export type SettlementSuggestion = {
   toName: string;
   amount: number;
 };
+
+// ============================================================
+// 支払い一覧コンポーネント用型（旧 payment-list/types.ts から移行）
+// ============================================================
+
+export type PaymentSplitRow = {
+  user_id: string;
+  amount: number;
+  profiles: { display_name: string | null; email: string | null } | null;
+};
+
+/** PaymentRow コンポーネントが要求する基本型 */
+export type PaymentRowData = {
+  id: string;
+  amount: number;
+  description: string;
+  payer_id: string;
+  settlement_id: string | null;
+  categories: { name: string; icon: string | null; color: string | null } | null;
+  profiles: { display_name: string | null; email: string | null } | null;
+  payment_splits: PaymentSplitRow[];
+  groups?: { name: string } | null;
+};
+
+/** /payments ページで使用する拡張型（group_id・タイムスタンプ含む） */
+export type PaymentWithRelations = PaymentRowData & {
+  group_id: string;
+  category_id: string | null;
+  payment_date: string;
+  created_at: string;
+  updated_at: string;
+  groups: { name: string } | null;
+};

@@ -6,7 +6,7 @@ import { t } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format/currency";
 import { formatDateHeader, groupPaymentsByDate, groupPaymentsByMonth } from "@/lib/format/date-group";
 import { PaymentRow } from "@/components/payment-list/PaymentRow";
-import type { PaymentWithRelations } from "@/components/payment-list/types";
+import type { PaymentWithRelations } from "@/types/query-results";
 
 type PaymentListWithFilterProps = {
   payments: PaymentWithRelations[];

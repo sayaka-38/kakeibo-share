@@ -66,7 +66,7 @@ const makePayment = (overrides: Record<string, unknown> = {}) => ({
   updated_at: "2026-01-15T00:00:00Z",
   settlement_id: null,
   profiles: { display_name: "Alice", email: "alice@test.com" },
-  categories: { name: "食費", icon: "🍽" },
+  categories: { name: "食費", icon: "🍽", color: null },
   groups: { name: "テスト共同生活" },
   payment_splits: [],
   ...overrides,

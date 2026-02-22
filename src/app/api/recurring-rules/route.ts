@@ -94,6 +94,8 @@ export async function POST(request: NextRequest) {
     splitType,
     splits,
     intervalMonths,
+    startDate,
+    endDate,
   } = body;
 
   if (!groupId) {
@@ -138,6 +140,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // start_date のデフォルト: 現在の月の1日
+  const resolvedStartDate = startDate || (() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+  })();
+
   // ルールを作成
   const { data: rule, error } = await supabase
     .from("recurring_rules")
@@ -152,6 +160,8 @@ export async function POST(request: NextRequest) {
       split_type: splitType || "equal",
       is_active: true,
       interval_months: interval,
+      start_date: resolvedStartDate,
+      end_date: endDate || null,
     })
     .select()
     .single();

@@ -124,6 +124,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     isActive,
     splits,
     intervalMonths,
+    startDate,
+    endDate,
   } = body;
 
   // 共通バリデーション（部分更新: 提供されたフィールドのみ検証）
@@ -162,6 +164,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   if (splitType !== undefined) updateData.split_type = splitType;
   if (isActive !== undefined) updateData.is_active = isActive;
   if (intervalMonths !== undefined) updateData.interval_months = Number(intervalMonths);
+  if (startDate !== undefined) updateData.start_date = startDate;
+  if (endDate !== undefined) updateData.end_date = endDate || null;
 
   // ルールを更新
   const { data: rule, error } = await supabase

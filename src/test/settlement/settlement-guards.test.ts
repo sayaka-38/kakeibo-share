@@ -127,11 +127,11 @@ describe("フロントエンド清算済みガード", () => {
   });
 
   describe("支払い一覧ページ (/payments) — 清算済みガード", () => {
-    it("settlement_id を型定義に含んでいる (types.ts)", () => {
-      // PaymentRowData の settlement_id は共通型ファイルで定義
+    it("settlement_id を型定義に含んでいる (query-results.ts)", () => {
+      // PaymentRowData の settlement_id は src/types/query-results.ts で一元管理
       const typesPath = path.join(
         process.cwd(),
-        "src/components/payment-list/types.ts"
+        "src/types/query-results.ts"
       );
       const content = fs.readFileSync(typesPath, "utf-8");
       expect(content).toContain("settlement_id: string | null");

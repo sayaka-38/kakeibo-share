@@ -31,6 +31,12 @@ export default function RecurringRuleForm({
 }: RecurringRuleFormProps) {
   const isEditMode = !!editingRule;
 
+  // 新規作成時のデフォルト開始日：現在の月の1日
+  const defaultStartDate = (() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+  })();
+
   // Form state
   const [description, setDescription] = useState(editingRule?.description || "");
   const [categoryId, setCategoryId] = useState(editingRule?.category_id || "");
@@ -50,6 +56,10 @@ export default function RecurringRuleForm({
   const [intervalMonths, setIntervalMonths] = useState(
     String(editingRule?.interval_months ?? 1)
   );
+  const [startDate, setStartDate] = useState(
+    editingRule?.start_date || defaultStartDate
+  );
+  const [endDate, setEndDate] = useState(editingRule?.end_date || "");
 
   // カスタム分割: パーセンテージ
   const [percentages, setPercentages] = useState<{ [userId: string]: string }>(() => {
@@ -126,6 +136,8 @@ export default function RecurringRuleForm({
         defaultPayerId,
         splitType,
         intervalMonths: parseInt(intervalMonths),
+        startDate,
+        endDate: endDate || null,
         splits:
           splitType === "custom"
             ? members.map((m) => ({
@@ -376,6 +388,43 @@ export default function RecurringRuleForm({
               <option value="6">{t("recurringRules.intervalEveryNMonths", { n: "6" })}</option>
               <option value="12">{t("recurringRules.intervalEveryNMonths", { n: "12" })}</option>
             </select>
+          </div>
+
+          {/* Start Date */}
+          <div>
+            <label
+              htmlFor="rule-start-date"
+              className="block text-sm font-medium text-theme-text mb-1"
+            >
+              {t("recurringRules.form.startDate")}
+            </label>
+            <input
+              id="rule-start-date"
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="block w-full px-3 py-2 border border-theme-card-border rounded-lg shadow-sm text-theme-headline focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
+            />
+          </div>
+
+          {/* End Date */}
+          <div>
+            <label
+              htmlFor="rule-end-date"
+              className="block text-sm font-medium text-theme-text mb-1"
+            >
+              {t("recurringRules.form.endDate")}
+            </label>
+            <input
+              id="rule-end-date"
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="block w-full px-3 py-2 border border-theme-card-border rounded-lg shadow-sm text-theme-headline focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
+            />
+            <p className="mt-1 text-xs text-theme-muted">
+              {t("recurringRules.form.endDateHint")}
+            </p>
           </div>
 
           {/* Default Payer */}

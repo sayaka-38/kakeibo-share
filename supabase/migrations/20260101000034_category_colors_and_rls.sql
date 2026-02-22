@@ -23,16 +23,25 @@ INSERT INTO categories (name, icon, color, is_default) VALUES
   ('その他', '📦', '#2F3E46', true);
 
 -- ============================================
--- 2. group_id FK 制約追加
+-- 2. group_id FK 制約追加（既存の場合はスキップ）
 -- ============================================
-ALTER TABLE categories
-  ADD CONSTRAINT categories_group_id_fkey
-  FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE;
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'categories_group_id_fkey'
+      AND conrelid = 'categories'::regclass
+  ) THEN
+    ALTER TABLE categories
+      ADD CONSTRAINT categories_group_id_fkey
+      FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE;
+  END IF;
+END $$;
 
 -- ============================================
 -- 3. RLS ポリシー（INSERT / UPDATE / DELETE）
 -- ============================================
 -- INSERT: カスタムカテゴリのみ（group_id 必須 + グループメンバーチェック）
+DROP POLICY IF EXISTS "categories_insert_member" ON categories;
 CREATE POLICY "categories_insert_member" ON categories
   FOR INSERT
   TO authenticated
@@ -46,6 +55,7 @@ CREATE POLICY "categories_insert_member" ON categories
   );
 
 -- UPDATE: カスタムカテゴリのみ（is_default = false + グループメンバーチェック）
+DROP POLICY IF EXISTS "categories_update_member" ON categories;
 CREATE POLICY "categories_update_member" ON categories
   FOR UPDATE
   TO authenticated
@@ -69,6 +79,7 @@ CREATE POLICY "categories_update_member" ON categories
   );
 
 -- DELETE: カスタムカテゴリのみ（is_default = false + グループメンバーチェック）
+DROP POLICY IF EXISTS "categories_delete_member" ON categories;
 CREATE POLICY "categories_delete_member" ON categories
   FOR DELETE
   TO authenticated

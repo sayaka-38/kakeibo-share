@@ -16,7 +16,7 @@ import {
   type SplitWithProfile,
 } from "./PaymentSplitAccordion";
 import { getCategoryStyle, getContrastTextColor } from "@/lib/format/color";
-import type { PaymentRowData } from "./types";
+import type { PaymentRowData } from "@/types/query-results";
 
 /** 全額立替バッジ — Ocean Blue で統一感を持たせる */
 const PROXY_BADGE_BG = "#1A5276";

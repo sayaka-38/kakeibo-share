@@ -23,6 +23,8 @@ function createMockSupabase(options: {
     interval_months: number;
     split_type: string;
     is_active: boolean;
+    start_date: string;
+    end_date?: string | null;
     created_at: string;
     splits: Array<{ user_id: string; amount: number | null; percentage: number | null }>;
   }>;
@@ -192,6 +194,8 @@ describe("generateSettlementEntries", () => {
             interval_months: 1,
             split_type: "equal",
             is_active: true,
+            start_date: "2026-01-01",
+            end_date: null,
             created_at: "2026-01-01T00:00:00Z",
             splits: [],
           },
@@ -227,6 +231,8 @@ describe("generateSettlementEntries", () => {
             interval_months: 2,
             split_type: "equal",
             is_active: true,
+            start_date: "2026-01-01",
+            end_date: null,
             created_at: "2026-01-01T00:00:00Z",
             splits: [],
           },
@@ -300,6 +306,8 @@ describe("generateSettlementEntries", () => {
             interval_months: 1,
             split_type: "equal",
             is_active: true,
+            start_date: "2026-01-01",
+            end_date: null,
             created_at: "2026-01-01T00:00:00Z",
             splits: [],
           },
