@@ -37,7 +37,8 @@ export default function GroupSelector() {
       const supabase = createClient();
       const { data } = await supabase
         .from("group_members")
-        .select("group_id, groups(id, name, created_at)");
+        .select("group_id, groups(id, name, created_at)")
+        .order("created_at", { referencedTable: "groups", ascending: true });
 
       if (data) {
         // group_id で重複除去 → 作成日時昇順でソート
