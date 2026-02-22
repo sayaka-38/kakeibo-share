@@ -8,27 +8,43 @@
 /**
  * ルールが指定月に発生するか判定
  *
- * ルールの created_at をアンカー月として、interval_months 周期で発生するか判定。
- * monthsDiff = (targetYear - anchorYear) * 12 + (targetMonth - anchorMonth)
- * → monthsDiff >= 0 && monthsDiff % interval_months === 0
+ * start_date をアンカー月として、interval_months 周期で発生するか判定。
+ * 条件:
+ *   1. start_date の月 <= 対象月
+ *   2. end_date IS NULL または 対象月 <= end_date の月
+ *   3. (対象月 - start_date月) % interval_months === 0
  */
 export function shouldRuleFireInMonth(
-  ruleCreatedAt: string,
+  ruleStartDate: string,
   intervalMonths: number,
   targetYear: number,
-  targetMonth: number
+  targetMonth: number,
+  ruleEndDate?: string | null
 ): boolean {
   if (intervalMonths < 1) return false;
   if (targetMonth < 1 || targetMonth > 12) return false;
 
-  const anchor = new Date(ruleCreatedAt);
-  const anchorYear = anchor.getFullYear();
-  const anchorMonth = anchor.getMonth() + 1; // 1-12
+  const start = new Date(ruleStartDate);
+  const startYear = start.getFullYear();
+  const startMonth = start.getMonth() + 1; // 1-12
 
   const monthsDiff =
-    (targetYear - anchorYear) * 12 + (targetMonth - anchorMonth);
+    (targetYear - startYear) * 12 + (targetMonth - startMonth);
 
-  return monthsDiff >= 0 && monthsDiff % intervalMonths === 0;
+  // start_date より前の月には発生しない
+  if (monthsDiff < 0) return false;
+
+  // end_date チェック: 対象月が end_date の月を超えてはならない
+  if (ruleEndDate) {
+    const end = new Date(ruleEndDate);
+    const endYear = end.getFullYear();
+    const endMonth = end.getMonth() + 1;
+    const monthsAfterEnd =
+      (targetYear - endYear) * 12 + (targetMonth - endMonth);
+    if (monthsAfterEnd > 0) return false;
+  }
+
+  return monthsDiff % intervalMonths === 0;
 }
 
 /**
@@ -55,7 +71,8 @@ export function getActualDayOfMonth(
  */
 export function computeRuleDatesInPeriod(
   rule: {
-    created_at: string;
+    start_date: string;
+    end_date?: string | null;
     interval_months: number;
     day_of_month: number;
   },
@@ -76,10 +93,11 @@ export function computeRuleDatesInPeriod(
   while (year < endYear || (year === endYear && month <= endMonth)) {
     if (
       shouldRuleFireInMonth(
-        rule.created_at,
+        rule.start_date,
         rule.interval_months,
         year,
-        month
+        month,
+        rule.end_date
       )
     ) {
       const day = getActualDayOfMonth(rule.day_of_month, year, month);

@@ -11,33 +11,9 @@ export type { Json } from "./database.generated";
 import type { Database as GeneratedDatabase } from "./database.generated";
 import type { Json } from "./database.generated";
 
-// Override Database to add RPCs not yet in generated types
-export type Database = Omit<GeneratedDatabase, "public"> & {
-  public: Omit<GeneratedDatabase["public"], "Functions"> & {
-    Functions: GeneratedDatabase["public"]["Functions"] & {
-      create_demo_bot_partner: {
-        Args: { p_group_id: string; p_demo_user_id: string };
-        Returns: Json;
-      };
-      anonymize_user: {
-        Args: { p_user_id: string };
-        Returns: boolean;
-      };
-      archive_payment: {
-        Args: { p_payment_id: string; p_user_id: string };
-        Returns: number;
-      };
-      leave_group: {
-        Args: { p_group_id: string };
-        Returns: boolean;
-      };
-      transfer_group_ownership: {
-        Args: { p_group_id: string; p_new_owner_id: string };
-        Returns: boolean;
-      };
-    };
-  };
-};
+// generated types が gen-types で最新化済みのため、手動オーバーライドは不要
+// (start_date/end_date, archive_payment Returns:boolean など全て自動生成に含まれる)
+export type Database = GeneratedDatabase;
 
 // ============================================
 // Role literal type override

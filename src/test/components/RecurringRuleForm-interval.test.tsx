@@ -171,6 +171,8 @@ describe("RecurringRuleForm - interval_months", () => {
       split_type: "equal",
       is_active: true,
       interval_months: 2,
+      start_date: "2026-01-01",
+      end_date: null,
       created_at: "2026-01-01T00:00:00Z",
       updated_at: "2026-01-01T00:00:00Z",
       category: { id: "cat-1", name: "食費", icon: "🍽", color: null },

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/api/authenticate";
 import { validatePayment } from "@/lib/validation/payment";
+import { translateRpcError } from "@/lib/api/translate-rpc-error";
 import type { Json } from "@/types/database.generated";
 
 // UUID v4 フォーマット検証
@@ -82,36 +83,15 @@ export async function DELETE(
     }
 
     // 6. アーカイブ実行（RPC: archive_payment）
-    const { data: result, error: rpcError } = await supabase
+    // アプリ層の事前チェック（手順 3〜5）が通常ケースを処理するため、
+    // rpcError は競合状態や直接 RPC 呼び出し時のみ発生する。
+    const { error: rpcError } = await supabase
       .rpc("archive_payment", { p_payment_id: id, p_user_id: user.id });
 
     if (rpcError) {
       console.error("[DELETE /api/payments/[id]] RPC archive_payment error:", rpcError);
-      return NextResponse.json(
-        { error: "削除に失敗しました" },
-        { status: 500 }
-      );
-    }
-
-    if (result === -1) {
-      return NextResponse.json(
-        { error: "支払いが見つかりません" },
-        { status: 404 }
-      );
-    }
-
-    if (result === -2) {
-      return NextResponse.json(
-        { error: "この支払いを削除する権限がありません" },
-        { status: 403 }
-      );
-    }
-
-    if (result === -3) {
-      return NextResponse.json(
-        { error: "清算済みの支払いは削除できません" },
-        { status: 403 }
-      );
+      const { message, status } = translateRpcError("archive_payment", rpcError.message);
+      return NextResponse.json({ error: message }, { status });
     }
 
     return NextResponse.json({ success: true });

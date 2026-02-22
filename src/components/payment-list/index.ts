@@ -6,4 +6,4 @@ export type {
   PaymentSplitRow,
   PaymentRowData,
   PaymentWithRelations,
-} from "./types";
+} from "@/types/query-results";

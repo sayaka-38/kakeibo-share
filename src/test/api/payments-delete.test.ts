@@ -349,7 +349,7 @@ describe("DELETE ハンドラがアーカイブ RPC を使用", () => {
     expect(deleteHandler).toContain('rpc("archive_payment"');
   });
 
-  it("RPC 戻り値 -1 (not found) で 404 を返す", () => {
+  it("RPC エラーを translateRpcError で処理している", () => {
     const content = fs.readFileSync(API_ROUTE_PATH, "utf-8");
     const deleteHandler = content.slice(
       content.indexOf("export async function DELETE"),
@@ -357,11 +357,16 @@ describe("DELETE ハンドラがアーカイブ RPC を使用", () => {
         ? undefined
         : content.indexOf("export async function PUT")
     );
-    expect(deleteHandler).toContain("result === -1");
-    expect(deleteHandler).toContain("404");
+    // RAISE EXCEPTION 形式に統一済み: 数値コードではなく translateRpcError で処理
+    expect(deleteHandler).toContain("translateRpcError");
+    expect(deleteHandler).toContain('"archive_payment"');
+    // 旧形式の数値コードチェックが除去されていることを確認
+    expect(deleteHandler).not.toContain("result === -1");
+    expect(deleteHandler).not.toContain("result === -2");
+    expect(deleteHandler).not.toContain("result === -3");
   });
 
-  it("RPC 戻り値 -2 (not payer) で 403 を返す", () => {
+  it("アプリ層の事前チェックで 404 / 403 を返す", () => {
     const content = fs.readFileSync(API_ROUTE_PATH, "utf-8");
     const deleteHandler = content.slice(
       content.indexOf("export async function DELETE"),
@@ -369,19 +374,19 @@ describe("DELETE ハンドラがアーカイブ RPC を使用", () => {
         ? undefined
         : content.indexOf("export async function PUT")
     );
-    expect(deleteHandler).toContain("result === -2");
+    // 事前チェック（404: 存在しない、403: 清算済み・権限なし）
+    expect(deleteHandler).toContain("404");
     expect(deleteHandler).toContain("403");
   });
 
-  it("RPC 戻り値 -3 (settled) で 403 を返す", () => {
-    const content = fs.readFileSync(API_ROUTE_PATH, "utf-8");
-    const deleteHandler = content.slice(
-      content.indexOf("export async function DELETE"),
-      content.indexOf("export async function PUT") === -1
-        ? undefined
-        : content.indexOf("export async function PUT")
-    );
-    expect(deleteHandler).toContain("result === -3");
+  it("translate-rpc-error.ts に archive_payment のルールが定義されている", () => {
+    const translatePath = path.join(process.cwd(), "src/lib/api/translate-rpc-error.ts");
+    const content = fs.readFileSync(translatePath, "utf-8");
+    expect(content).toContain("archive_payment");
+    // 3つのエラーパターン（not_found / not_payer / settled）が登録されている
+    expect(content).toMatch(/not_found/i);
+    expect(content).toMatch(/not_payer/i);
+    expect(content).toMatch(/settled/i);
   });
 
   it("直接 .from('payments').delete() を使用していない", () => {

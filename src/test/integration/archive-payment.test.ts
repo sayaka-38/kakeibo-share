@@ -104,11 +104,11 @@ describe("archive_payment RPC — 統合テスト (ローカル DB)", () => {
   });
 
   // ===========================================================================
-  // RPC 戻り値テスト
+  // RPC エラー（RAISE EXCEPTION 形式）テスト
   // ===========================================================================
 
-  describe("RPC 戻り値", () => {
-    it("-1: 存在しない支払い ID", async (ctx) => {
+  describe("RPC エラー（RAISE EXCEPTION）", () => {
+    it("not_found: 存在しない支払い ID で例外が発生する", async (ctx) => {
       if (!dbAvailable) return ctx.skip();
 
       const { data, error } = await admin.rpc("archive_payment", {
@@ -116,11 +116,12 @@ describe("archive_payment RPC — 統合テスト (ローカル DB)", () => {
         p_user_id: SEED.ALICE_ID,
       });
 
-      expect(error).toBeNull();
-      expect(data).toBe(-1);
+      expect(data).toBeNull();
+      expect(error).not.toBeNull();
+      expect(error!.message).toMatch(/not_found/i);
     });
 
-    it("-2: 支払者以外（Bob が Alice の支払いをアーカイブ試行）", async (ctx) => {
+    it("not_payer: 支払者以外がアーカイブ試行すると例外が発生する", async (ctx) => {
       if (!dbAvailable) return ctx.skip();
 
       const { data, error } = await admin.rpc("archive_payment", {
@@ -128,8 +129,9 @@ describe("archive_payment RPC — 統合テスト (ローカル DB)", () => {
         p_user_id: SEED.BOB_ID,
       });
 
-      expect(error).toBeNull();
-      expect(data).toBe(-2);
+      expect(data).toBeNull();
+      expect(error).not.toBeNull();
+      expect(error!.message).toMatch(/not_payer/i);
 
       // データが変更されていないことを確認
       const { data: payment } = await admin
@@ -140,7 +142,7 @@ describe("archive_payment RPC — 統合テスト (ローカル DB)", () => {
       expect(payment).not.toBeNull();
     });
 
-    it("-3: 清算済み支払い", async (ctx) => {
+    it("settled: 清算済み支払いのアーカイブ試行で例外が発生する", async (ctx) => {
       if (!dbAvailable) return ctx.skip();
 
       const { data, error } = await admin.rpc("archive_payment", {
@@ -148,8 +150,9 @@ describe("archive_payment RPC — 統合テスト (ローカル DB)", () => {
         p_user_id: SEED.ALICE_ID,
       });
 
-      expect(error).toBeNull();
-      expect(data).toBe(-3);
+      expect(data).toBeNull();
+      expect(error).not.toBeNull();
+      expect(error!.message).toMatch(/settled/i);
 
       // データが変更されていないことを確認
       const { data: payment } = await admin
@@ -166,7 +169,7 @@ describe("archive_payment RPC — 統合テスト (ローカル DB)", () => {
   // ===========================================================================
 
   describe("トランザクション整合性", () => {
-    let archiveResult: number | null = null;
+    let archiveResult: boolean | null = null;
 
     beforeAll(async () => {
       if (!dbAvailable) return;
@@ -178,9 +181,9 @@ describe("archive_payment RPC — 統合テスト (ローカル DB)", () => {
       archiveResult = data;
     });
 
-    it("RPC が 1（成功）を返す", (ctx) => {
+    it("RPC が true（成功）を返す", (ctx) => {
       if (!dbAvailable) return ctx.skip();
-      expect(archiveResult).toBe(1);
+      expect(archiveResult).toBe(true);
     });
 
     it("payments テーブルから削除されている", async (ctx) => {

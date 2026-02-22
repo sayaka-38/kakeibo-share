@@ -410,12 +410,14 @@ export type Database = {
           default_amount: number | null
           default_payer_id: string
           description: string
+          end_date: string | null
           group_id: string
           id: string
           interval_months: number
           is_active: boolean
           is_variable: boolean
           split_type: string
+          start_date: string
           updated_at: string
         }
         Insert: {
@@ -425,12 +427,14 @@ export type Database = {
           default_amount?: number | null
           default_payer_id: string
           description: string
+          end_date?: string | null
           group_id: string
           id?: string
           interval_months?: number
           is_active?: boolean
           is_variable?: boolean
           split_type?: string
+          start_date: string
           updated_at?: string
         }
         Update: {
@@ -440,12 +444,14 @@ export type Database = {
           default_amount?: number | null
           default_payer_id?: string
           description?: string
+          end_date?: string | null
           group_id?: string
           id?: string
           interval_months?: number
           is_active?: boolean
           is_variable?: boolean
           split_type?: string
+          start_date?: string
           updated_at?: string
         }
         Relationships: [
@@ -771,7 +777,7 @@ export type Database = {
       anonymize_user: { Args: { p_user_id: string }; Returns: boolean }
       archive_payment: {
         Args: { p_payment_id: string; p_user_id: string }
-        Returns: number
+        Returns: boolean
       }
       calculate_user_balance: {
         Args: { p_group_id: string; p_user_id: string }

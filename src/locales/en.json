@@ -233,7 +233,9 @@
       "deleteFailed": "Failed to delete payment",
       "paymentNotFound": "This payment was not found",
       "splitFailed": "Payment created but failed to add splits: ",
-      "noGroup": "You need to join or create a group before adding payments."
+      "noGroup": "You need to join or create a group before adding payments.",
+      "deleteNotAuthorized": "You do not have permission to delete this payment",
+      "deleteSettled": "Cannot delete a payment that has been settled"
     }
   },
   "settlement": {
@@ -451,6 +453,9 @@
       "selectCategory": "Select a category",
       "selectPayer": "Select payer",
       "selectDay": "Select day",
+      "startDate": "Start Date",
+      "endDate": "End Date (optional)",
+      "endDateHint": "Leave blank for no end date",
       "save": "Save",
       "saving": "Saving...",
       "cancel": "Cancel"

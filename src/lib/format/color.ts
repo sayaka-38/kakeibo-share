@@ -3,6 +3,9 @@
  *
  * Provides a modern color palette for categories and
  * WCAG-compliant contrast text color calculation.
+ *
+ * Results are memoized to avoid repeated WCAG luminance calculations
+ * for the same hex values across renders.
  */
 
 export type CategoryColor = {
@@ -61,30 +64,45 @@ export function getRelativeLuminance(hex: string): number {
   return 0.2126 * toLinear(rgb.r) + 0.7152 * toLinear(rgb.g) + 0.0722 * toLinear(rgb.b);
 }
 
+// Memoize contrast text color results (finite palette of category colors)
+const contrastCache = new Map<string, "#ffffff" | "#1a1a1a">();
+
 /**
  * Get contrast text color (white or near-black) that ensures
  * at least 4.5:1 contrast ratio against the given background.
+ * Results are memoized by hex value.
  */
 export function getContrastTextColor(bgHex: string): "#ffffff" | "#1a1a1a" {
+  const cached = contrastCache.get(bgHex);
+  if (cached !== undefined) return cached;
+
   const bgLum = getRelativeLuminance(bgHex);
   // Contrast ratio = (L1 + 0.05) / (L2 + 0.05) where L1 > L2
   // White luminance = 1.0, near-black (#1a1a1a) luminance ≈ 0.01
   const whiteContrast = (1.0 + 0.05) / (bgLum + 0.05);
   const darkContrast = (bgLum + 0.05) / (getRelativeLuminance("#1a1a1a") + 0.05);
-  return whiteContrast >= darkContrast ? "#ffffff" : "#1a1a1a";
+  const result: "#ffffff" | "#1a1a1a" = whiteContrast >= darkContrast ? "#ffffff" : "#1a1a1a";
+  contrastCache.set(bgHex, result);
+  return result;
 }
+
+// Memoize category style objects (keyed by hex color string)
+const categoryStyleCache = new Map<string, { backgroundColor: string; color: string } | null>();
 
 /**
  * Get inline style object for a category badge.
  * Returns colored style if color is provided, neutral fallback otherwise.
+ * Results are memoized by color value.
  */
 export function getCategoryStyle(color: string | null): {
   backgroundColor: string;
   color: string;
 } | null {
-  if (!color || !parseHex(color)) return null;
-  return {
-    backgroundColor: color,
-    color: getContrastTextColor(color),
-  };
+  if (!color) return null;
+  if (categoryStyleCache.has(color)) return categoryStyleCache.get(color)!;
+  const result = parseHex(color)
+    ? { backgroundColor: color, color: getContrastTextColor(color) }
+    : null;
+  categoryStyleCache.set(color, result);
+  return result;
 }

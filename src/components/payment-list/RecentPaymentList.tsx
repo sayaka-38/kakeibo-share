@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
 import { formatDateHeader, groupPaymentsByDate } from "@/lib/format/date-group";
 import { PaymentRow } from "./PaymentRow";
-import type { PaymentSplitRow } from "./types";
+import type { PaymentSplitRow } from "@/types/query-results";
 
 type RecentPaymentRow = {
   id: string;
