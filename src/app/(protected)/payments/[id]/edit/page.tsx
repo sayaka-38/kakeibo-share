@@ -63,7 +63,8 @@ export default async function EditPaymentPage({ params }: PageProps) {
       groups (*)
     `
     )
-    .eq("user_id", user.id)) as {
+    .eq("user_id", user.id)
+    .order("created_at", { referencedTable: "groups", ascending: true })) as {
     data: GroupMembershipWithGroupResult<Group>[] | null;
   };
 

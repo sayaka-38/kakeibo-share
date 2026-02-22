@@ -30,7 +30,8 @@ export default async function NewPaymentPage({ searchParams }: PageProps) {
       groups (*)
     `
     )
-    .eq("user_id", user?.id || "")) as { data: GroupMembershipWithGroupResult<Group>[] | null };
+    .eq("user_id", user?.id || "")
+    .order("created_at", { referencedTable: "groups", ascending: true })) as { data: GroupMembershipWithGroupResult<Group>[] | null };
 
   const groups =
     groupMemberships
