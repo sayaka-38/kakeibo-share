@@ -186,7 +186,7 @@ export default async function SettlementHistoryPage({ params }: PageProps) {
                     {session.entry_count}件の支払い
                   </p>
                   <p className="text-xs text-theme-muted/70 mt-1">
-                    {new Date(session.confirmed_at).toLocaleDateString("ja-JP")} 確定
+                    {formatDateSmart(session.confirmed_at.slice(0, 10))} 確定
                     {session.confirmer && (
                       <span>
                         （{session.confirmer.display_name || session.confirmer.email}）

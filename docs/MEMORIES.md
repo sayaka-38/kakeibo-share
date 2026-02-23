@@ -2,7 +2,7 @@
 
 セッション間の文脈保持用。アーキテクチャ規約・DBスキーマは **CLAUDE.md** を参照。
 
-最終更新: 2026-02-23 (Phase 15B''')
+最終更新: 2026-02-23 (Phase 15B'''')
 
 ---
 
@@ -19,7 +19,8 @@
 | 15B | 連続入力モード: 2ボタン形式（保存して次へ/保存）・resetForNext・成功通知グリーン化 | #68, #69 |
 | 15B' | 填記即時登録・ActionSheet・清算内容の調整へ改称・チップトグル・モーダル改善 | #70 |
 | 15B'' | アーキテクチャ洗練: withErrorHandler・Zod統合・domain.ts型集約・useTimedMessage・UI最終調整 | #72 |
-| **15B'''** | **コード简洁化: formatDateSmart全展開・Zodスキーマ集約・withErrorHandler全ルート統一・デッドコード除去** | WIP |
+| 15B''' | コード简洁化: formatDateSmart全展開・Zodスキーマ集約・withErrorHandler全ルート統一・デッドコード除去 | #73 |
+| **15B''''** | **清算ロジック端数修正・日付日本仕様化（M/D形式）・schema.sql全マイグ反映・全画面formatDateSmart統一** | WIP |
 
 **現在**: Vitest **1166件** + Playwright E2E 1件 = **計1167テスト** / ビルド正常 / lint クリーン
 
@@ -40,20 +41,20 @@
 | RPC エラー翻訳 | `src/lib/api/translate-rpc-error.ts` | `translateRpcError(rpcName, msg)` / `translateHttpError(status)` |
 | デモ作成 | `supabase/functions/create-demo/` | Edge Function 経由必須。Turnstile検証→service_roleでDB生成→session返却 |
 | pg_cron | Migration 038 | `delete_expired_demo_data()` を3時間おきに実行 |
-| スマートチップ | `DescriptionField.tsx` + `useFrequentPayments` | chips あれば常時表示（focus 不要）。h-9 + overflow-y-hidden。onMouseDown+preventDefault でフォーカス保持。**再タップで × トグル（クリア）** |
+| スマートチップ | `DescriptionField.tsx` + `useFrequentPayments` | chips あれば常時表示。h-9 固定。onMouseDown+preventDefault でフォーカス保持。再タップで × トグル（クリア） |
 | スマート再計算 | `src/lib/settlement/refresh-entries.ts` | filled/skipped エントリは絶対保護。pending のみ更新/削除対象 |
 | 連続入力 | `usePaymentForm` + `FullPaymentForm` / `InlinePaymentForm` | `resetForNext()` で amount/description/errors のみクリア。日付・splitType 等は維持 |
-| 成功通知 | `src/components/ui/SuccessBanner.tsx` | `bg-green-500/10 border-green-500/30 text-green-700` + SVG チェックマーク。FullPaymentForm/InlinePaymentForm で共用 |
+| 成功通知 | `src/components/ui/SuccessBanner.tsx` | グリーン系バナー。FullPaymentForm/InlinePaymentForm で共用 |
 | ActionSheet | `src/components/ui/ActionSheet.tsx` | ボトムドロワー（`fixed bottom-0`）。PaymentRow 三点リーダーから呼出し（編集/複製/削除） |
-| **填記即時登録** | `fill_settlement_entry_with_payment` RPC (Migration 041) | `rule_id IS NOT NULL` エントリ填記 → payments 即時作成。スキップ時は payment 削除。API Route が rule_id で RPC を振り分け |
-| **confirm_settlement 冪等性** | `confirm_settlement` RPC (Migration 041) | `source_payment_id IS NOT NULL` のエントリは二重作成しない |
-| モーダル閉じ | `RecurringRuleForm` / `EntryEditModal` | 背景クリック（`onClick={() => onClose()}`）+ ヘッダー × ボタン（44px タップターゲット） |
-| 清算内容の調整 | 旧称「清算準備室」 | UI表示・i18n キー `settlementSession.title` は「清算内容の調整」に統一済み |
-| **withErrorHandler** | `src/lib/api/with-error-handler.ts` | `export const DELETE = withErrorHandler<Ctx>(async (req, ctx) => {...}, "名前")` — ZodError → 400、予期せぬ例外 → 500。**全 API Route に適用済み（例外なし）** |
-| **Zod スキーマ** | `src/lib/validation/schemas.ts` | API Route body parsing 用。`paymentRequestSchema` / `recurringRuleRequestSchema` / `categoryRequestSchema` / `groupIdRequestSchema` / `joinGroupRequestSchema` / `transferOwnerRequestSchema` / `changePasswordRequestSchema`。フロントエンド側 i18n バリデーター（`validation/*.ts`）は別途保持 |
-| **formatDateSmart** | `src/lib/format/date.ts` | 当年 → `MM-DD`、他年 → `YYYY-MM-DD`。**全画面の日付表示で使用済み**（dashboard / groups / settlement / history / PendingPayment / EntryEditModal） |
+| 填記即時登録 | `fill_settlement_entry_with_payment` RPC (Migration 041) | `rule_id IS NOT NULL` エントリ填記 → payments 即時作成。スキップ時は payment 削除。API Route が rule_id で RPC を振り分け |
+| confirm_settlement 冪等性 | `confirm_settlement` RPC (Migration 041) | `source_payment_id IS NOT NULL` のエントリは二重作成しない |
+| モーダル閉じ | `RecurringRuleForm` / `EntryEditModal` | 背景クリック + ヘッダー × ボタン（44px タップターゲット） |
+| **withErrorHandler** | `src/lib/api/with-error-handler.ts` | `export const DELETE = withErrorHandler<Ctx>(async (req, ctx) => {...}, "名前")` — 全 API Route に適用済み |
+| **Zod スキーマ** | `src/lib/validation/schemas.ts` | API Route body parsing 用。`paymentRequestSchema` / `recurringRuleRequestSchema` / `categoryRequestSchema` 等 |
+| **formatDateSmart** | `src/lib/format/date.ts` | 当年 → `M/D`、他年 → `YYYY/M/D`（日本仕様・先頭ゼロなし）。全画面の日付表示で統一済み |
 | **domain.ts** | `src/types/domain.ts` | `SessionData` / `EntryData` / `SuggestionData` / `RuleWithRelations` を集約。全 consumer は `@/types/domain` から直接 import |
-| **useTimedMessage** | `src/hooks/useTimedMessage.ts` | 5秒自動消去メッセージ hook。FullPaymentForm / InlinePaymentForm の成功バナー表示に使用 |
+| **useTimedMessage** | `src/hooks/useTimedMessage.ts` | 5秒自動消去メッセージ hook。成功バナー表示に使用 |
+| **端数計算** | `SettlementResultCard.tsx` / `calculate-balances.ts` | splits なしは合計してから1回割る（エントリ毎の切り捨て→payer偏りを解消） |
 
 ---
 

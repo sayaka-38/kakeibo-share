@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format/currency";
+import { formatDateSmart } from "@/lib/format/date";
 import { isProxySplit, getProxyBeneficiaryId } from "@/lib/calculation/split";
 import {
   calculateBalances,
@@ -370,9 +371,7 @@ export default async function SettlementPage() {
                                   className="border-b border-theme-card-border hover:bg-theme-bg"
                                 >
                                   <td className="py-2 px-2 text-theme-muted">
-                                    {new Date(
-                                      payment.payment_date
-                                    ).toLocaleDateString("ja-JP")}
+                                    {formatDateSmart(payment.payment_date)}
                                   </td>
                                   <td className="py-2 px-2 text-theme-headline">
                                     <span>{payment.description}</span>

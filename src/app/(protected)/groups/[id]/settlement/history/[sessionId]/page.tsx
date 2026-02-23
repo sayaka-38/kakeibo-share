@@ -257,7 +257,7 @@ export default async function SettlementHistoryDetailPage({ params }: PageProps)
           {session.confirmed_at && (
             <p>
               <span className="text-theme-muted/70">清算開始日:</span>{" "}
-              {new Date(session.confirmed_at).toLocaleDateString("ja-JP")}
+              {formatDateSmart(session.confirmed_at.slice(0, 10))}
               {confirmer && (
                 <span className="text-theme-muted">
                   （{confirmer.display_name || confirmer.email}）
@@ -268,7 +268,7 @@ export default async function SettlementHistoryDetailPage({ params }: PageProps)
           {session.status === "settled" && session.settled_at && (
             <p>
               <span className="text-theme-muted/70">受取完了日:</span>{" "}
-              {new Date(session.settled_at).toLocaleDateString("ja-JP")}
+              {formatDateSmart(session.settled_at.slice(0, 10))}
             </p>
           )}
         </div>

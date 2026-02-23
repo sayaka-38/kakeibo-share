@@ -75,6 +75,12 @@ tests/e2e/            # Playwright E2E テスト
 
 ---
 
+## 将来的な優先課題
+
+- **支払い更新（PUT）の原子性**: 現在 `payments/[id]` の PUT は `payments` テーブル更新 → `replace_payment_splits` RPC の2ステップで実行しており、途中失敗時に不整合が生じる可能性がある。将来的には単一 RPC `update_payment_with_splits` にまとめて原子性を担保すること。
+
+---
+
 ## セキュリティポリシー
 
 ユーザー承認なしの実行禁止: `sudo`, `rm`, `.env*`, SSH鍵, `curl/wget`, `npm uninstall`, `psql`

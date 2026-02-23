@@ -35,27 +35,27 @@ export default function SettlementResultCard({
 
   // 各メンバーの支払い・負担を計算
   const balances: MemberBalance[] = useMemo(() => {
+    // splits なしエントリの合計（一度だけ割ることで端数累積を防ぐ）
+    const noSplitTotal = filledEntries
+      .filter((e) => !e.splits || e.splits.length === 0)
+      .reduce((sum, e) => sum + (e.actual_amount || 0), 0);
+    const noSplitPerPerson = Math.floor(noSplitTotal / members.length);
+
     return members.map((member) => {
       const paid = filledEntries
         .filter((e) => e.payer_id === member.id)
         .reduce((sum, e) => sum + (e.actual_amount || 0), 0);
 
-      let owed = 0;
-      filledEntries.forEach((entry) => {
-        const splits = entry.splits || [];
-        const mySplit = splits.find((s) => s.user_id === member.id);
+      // splits ありのエントリ: splits の金額を参照
+      const owedFromSplits = filledEntries
+        .filter((e) => e.splits && e.splits.length > 0)
+        .reduce((sum, e) => {
+          const mySplit = e.splits!.find((s) => s.user_id === member.id);
+          return sum + (mySplit ? mySplit.amount : 0);
+        }, 0);
 
-        if (mySplit) {
-          owed += mySplit.amount;
-        } else if (splits.length === 0) {
-          const amount = entry.actual_amount || 0;
-          const share = Math.floor(amount / members.length);
-          owed += share;
-          if (entry.payer_id === member.id) {
-            owed += amount - share * members.length;
-          }
-        }
-      });
+      // splits なしのエントリ: 合計を人数で割った均等額
+      const owed = owedFromSplits + noSplitPerPerson;
 
       return {
         id: member.id,

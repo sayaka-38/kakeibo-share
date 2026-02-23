@@ -233,7 +233,7 @@ export default async function GroupDetailPage({ params }: Props) {
                   </p>
                   <p className="text-sm text-theme-text">
                     {t("groups.detail.joined")}{" "}
-                    {member.created_at.split("T")[0].replace(/-/g, "/")}
+                    {formatDateSmart(member.created_at.slice(0, 10))}
                   </p>
                 </div>
                 {member.role === "owner" && (
