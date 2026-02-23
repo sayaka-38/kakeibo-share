@@ -43,14 +43,18 @@ export type UsePaymentFormReturn = {
 
   // アクション
   validate: (options?: { currentUserId?: string }) => boolean;
+  /** amount・description・errors のみクリア。日付・splitType 等は維持（連続入力モード用） */
+  resetForNext: () => void;
+  /** フルリセット（resetForNext + 日付・カテゴリ・split 設定をデフォルトに戻す） */
   reset: () => void;
   getFormData: () => PaymentFormData;
+  /** 送信後フルリセット */
   handleSubmit: (onSubmit: (data: PaymentFormData) => Promise<void>) => Promise<void>;
+  /** 送信後に resetForNext（「保存して次へ」用） */
+  handleSubmitAndNext: (onSubmit: (data: PaymentFormData) => Promise<void>) => Promise<void>;
 };
 
-/**
- * 今日の日付を YYYY-MM-DD 形式で取得
- */
+/** 今日の日付を YYYY-MM-DD 形式で取得 */
 function getTodayString(): string {
   return new Date().toISOString().split("T")[0];
 }
@@ -87,7 +91,6 @@ export type PaymentFormInitialData = {
  * ```
  */
 export function usePaymentForm(initialData?: PaymentFormInitialData): UsePaymentFormReturn {
-  // 状態
   const [amount, setAmountRaw] = useState(initialData?.amount ?? "");
   const [description, setDescription] = useState(initialData?.description ?? "");
   const [paymentDate, setPaymentDate] = useState(initialData?.paymentDate ?? getTodayString());
@@ -111,10 +114,8 @@ export function usePaymentForm(initialData?: PaymentFormInitialData): UsePayment
     };
 
     const result = validatePayment(input);
-
     const allErrors: ValidationErrors = result.success ? {} : { ...result.errors };
 
-    // 代理購入時の追加バリデーション
     if (splitType === "proxy") {
       if (!proxyBeneficiaryId) {
         allErrors.proxyBeneficiaryId = t("payments.validation.beneficiaryRequired");
@@ -132,16 +133,21 @@ export function usePaymentForm(initialData?: PaymentFormInitialData): UsePayment
     return true;
   }, [amount, description, paymentDate, splitType, proxyBeneficiaryId]);
 
-  // リセット
-  const reset = useCallback(() => {
+  // 連続入力モード用部分リセット: amount・description・errors のみクリア
+  const resetForNext = useCallback(() => {
     setAmountRaw("");
     setDescription("");
+    setErrors({});
+  }, []);
+
+  // フルリセット: resetForNext + 残りのフィールドをデフォルトに戻す
+  const reset = useCallback(() => {
+    resetForNext();
     setPaymentDate(getTodayString());
     setCategoryId("");
     setSplitType("equal");
     setProxyBeneficiaryId("");
-    setErrors({});
-  }, []);
+  }, [resetForNext]);
 
   // フォームデータ取得
   const getFormData = useCallback((): PaymentFormData => {
@@ -155,32 +161,38 @@ export function usePaymentForm(initialData?: PaymentFormInitialData): UsePayment
     };
   }, [amount, description, paymentDate, categoryId, splitType, proxyBeneficiaryId]);
 
-  // 送信ハンドラ
-  const handleSubmit = useCallback(
-    async (onSubmit: (data: PaymentFormData) => Promise<void>): Promise<void> => {
-      // バリデーション
-      if (!validate()) {
-        return;
-      }
+  // 送信の共通ロジック（afterSuccess で reset/resetForNext を切り替える）
+  const runSubmit = useCallback(
+    async (
+      onSubmit: (data: PaymentFormData) => Promise<void>,
+      afterSuccess: () => void
+    ): Promise<void> => {
+      if (!validate()) return;
 
       setIsSubmitting(true);
-
       try {
         await onSubmit(getFormData());
-        // 成功時のみリセット
-        reset();
+        afterSuccess();
       } catch (error) {
-        // エラー時はリセットしない、再スロー
         throw error;
       } finally {
         setIsSubmitting(false);
       }
     },
-    [validate, getFormData, reset]
+    [validate, getFormData]
+  );
+
+  const handleSubmit = useCallback(
+    (onSubmit: (data: PaymentFormData) => Promise<void>) => runSubmit(onSubmit, reset),
+    [runSubmit, reset]
+  );
+
+  const handleSubmitAndNext = useCallback(
+    (onSubmit: (data: PaymentFormData) => Promise<void>) => runSubmit(onSubmit, resetForNext),
+    [runSubmit, resetForNext]
   );
 
   return {
-    // 状態
     amount,
     description,
     paymentDate,
@@ -190,7 +202,6 @@ export function usePaymentForm(initialData?: PaymentFormInitialData): UsePayment
     errors,
     isSubmitting,
 
-    // セッター
     setAmount,
     setDescription,
     setPaymentDate,
@@ -198,10 +209,11 @@ export function usePaymentForm(initialData?: PaymentFormInitialData): UsePayment
     setSplitType,
     setProxyBeneficiaryId,
 
-    // アクション
     validate,
+    resetForNext,
     reset,
     getFormData,
     handleSubmit,
+    handleSubmitAndNext,
   };
 }

@@ -397,6 +397,110 @@ describe("usePaymentForm", () => {
   });
 
   // ============================================
+  // resetForNext テスト
+  // ============================================
+  describe("resetForNext", () => {
+    it("金額と説明のみクリアし、他の項目は維持する", () => {
+      const { result } = renderHook(() => usePaymentForm());
+
+      act(() => {
+        result.current.setAmount("1500");
+        result.current.setDescription("スーパーで買い物");
+        result.current.setPaymentDate("2024-06-15");
+        result.current.setSplitType("proxy");
+        result.current.setProxyBeneficiaryId("user-2");
+        result.current.setCategoryId("cat-1");
+      });
+
+      act(() => {
+        result.current.resetForNext();
+      });
+
+      expect(result.current.amount).toBe("");
+      expect(result.current.description).toBe("");
+      expect(result.current.paymentDate).toBe("2024-06-15");      // 維持
+      expect(result.current.splitType).toBe("proxy");              // 維持
+      expect(result.current.proxyBeneficiaryId).toBe("user-2");   // 維持
+      expect(result.current.categoryId).toBe("cat-1");            // 維持
+    });
+
+    it("エラーもクリアされる", () => {
+      const { result } = renderHook(() => usePaymentForm());
+
+      act(() => {
+        result.current.validate(); // エラーを発生させる
+      });
+      expect(Object.keys(result.current.errors).length).toBeGreaterThan(0);
+
+      act(() => {
+        result.current.resetForNext();
+      });
+
+      expect(result.current.errors).toEqual({});
+    });
+  });
+
+  // ============================================
+  // handleSubmitAndNext テスト
+  // ============================================
+  describe("handleSubmitAndNext", () => {
+    it("バリデーション失敗時はコールバックを呼ばない", async () => {
+      const { result } = renderHook(() => usePaymentForm());
+      const onSubmit = vi.fn();
+
+      await act(async () => {
+        await result.current.handleSubmitAndNext(onSubmit);
+      });
+
+      expect(onSubmit).not.toHaveBeenCalled();
+    });
+
+    it("成功後は金額と説明のみクリアされ、日付・splitType は維持される", async () => {
+      const { result } = renderHook(() => usePaymentForm());
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+      // 1ヶ月前の日付（バリデーションを通過する範囲）
+      const recentDate = new Date();
+      recentDate.setMonth(recentDate.getMonth() - 1);
+      const recentDateStr = recentDate.toISOString().split("T")[0];
+
+      act(() => {
+        result.current.setAmount("1500");
+        result.current.setDescription("テスト");
+        result.current.setPaymentDate(recentDateStr);
+        result.current.setSplitType("proxy");
+        result.current.setProxyBeneficiaryId("user-2");
+      });
+
+      await act(async () => {
+        await result.current.handleSubmitAndNext(onSubmit);
+      });
+
+      expect(result.current.amount).toBe("");
+      expect(result.current.description).toBe("");
+      expect(result.current.paymentDate).toBe(recentDateStr);   // 維持
+      expect(result.current.splitType).toBe("proxy");            // 維持
+      expect(result.current.proxyBeneficiaryId).toBe("user-2"); // 維持
+    });
+
+    it("成功後も isSubmitting が false に戻る", async () => {
+      const { result } = renderHook(() => usePaymentForm());
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+      act(() => {
+        result.current.setAmount("1500");
+        result.current.setDescription("テスト");
+      });
+
+      await act(async () => {
+        await result.current.handleSubmitAndNext(onSubmit);
+      });
+
+      expect(result.current.isSubmitting).toBe(false);
+    });
+  });
+
+  // ============================================
   // handleSubmit テスト
   // ============================================
   describe("handleSubmit", () => {

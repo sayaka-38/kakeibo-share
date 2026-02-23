@@ -9,6 +9,7 @@
 "use client";
 
 import { memo, useState, useRef, useEffect, useCallback } from "react";
+import type { RefObject } from "react";
 import { NumericKeypad } from "@/components/ui/NumericKeypad";
 import { t } from "@/lib/i18n";
 
@@ -17,6 +18,8 @@ export type AmountFieldWithKeypadProps = {
   onChange: (value: string) => void;
   error?: string;
   id?: string;
+  /** 外部から input 要素を参照するための ref（フォーカス制御等に使用） */
+  inputRef?: RefObject<HTMLInputElement | null>;
 };
 
 export const AmountFieldWithKeypad = memo(function AmountFieldWithKeypad({
@@ -24,10 +27,13 @@ export const AmountFieldWithKeypad = memo(function AmountFieldWithKeypad({
   onChange,
   error,
   id = "payment-amount",
+  inputRef: externalInputRef,
 }: AmountFieldWithKeypadProps) {
   const [showKeypad, setShowKeypad] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const ownRef = useRef<HTMLInputElement>(null);
+  // 外部 ref が渡された場合はそちらを優先し、なければ内部 ref を使用
+  const resolvedRef = externalInputRef ?? ownRef;
   const errorId = `${id}-error`;
 
   // キーパッド外クリックで閉じる
@@ -88,7 +94,7 @@ export const AmountFieldWithKeypad = memo(function AmountFieldWithKeypad({
           {t("common.currency")}
         </span>
         <input
-          ref={inputRef}
+          ref={resolvedRef}
           id={id}
           type="text"
           inputMode="numeric"

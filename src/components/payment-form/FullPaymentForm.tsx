@@ -10,6 +10,7 @@ import type { PaymentFormInitialData } from "./hooks/usePaymentForm";
 import { useFrequentPayments } from "./hooks/useFrequentPayments";
 import { AmountField, DescriptionField, DateField } from "./fields";
 import type { SmartChip } from "./fields/DescriptionField";
+import { Button } from "@/components/ui/Button";
 import {
   calculateEqualSplit,
   calculateCustomSplits,
@@ -80,6 +81,7 @@ export default function FullPaymentForm({
     : undefined;
 
   const form = usePaymentForm(initialData);
+  const amountRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -203,15 +205,15 @@ export default function FullPaymentForm({
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isSubmitting) return; // 二重送信防止
+  /**
+   * フォームの送信コアロジック。成功時は true を返す。
+   * バリデーション失敗・エラー時は false を返す。
+   */
+  const executeSubmit = async (): Promise<boolean> => {
+    if (isSubmitting) return false;
     setError(null);
 
-    // 共通バリデーション（代理購入チェック含む）
-    if (!form.validate({ currentUserId })) {
-      return;
-    }
+    if (!form.validate({ currentUserId })) return false;
 
     // カスタム割り勘: 合計金額バリデーション
     const formData = form.getFormData();
@@ -227,14 +229,13 @@ export default function FullPaymentForm({
             total: formatCurrency(formData.amount),
           })
         );
-        return;
+        return false;
       }
     }
 
     setIsSubmitting(true);
 
     try {
-      // splits を計算（create / edit 共通）
       const paymentId = editData?.paymentId ?? "temp";
       let splits;
       if (formData.splitType === "proxy" && formData.proxyBeneficiaryId) {
@@ -260,7 +261,6 @@ export default function FullPaymentForm({
       }
 
       if (isEditMode) {
-        // --- 編集モード: PUT API Route ---
         const res = await fetch(`/api/payments/${editData.paymentId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -279,10 +279,9 @@ export default function FullPaymentForm({
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
           setError(data.error || t("payments.errors.updateFailed"));
-          return;
+          return false;
         }
       } else {
-        // --- 新規作成モード: Supabase 直接 INSERT ---
         const supabase = createClient();
 
         const { data: payment, error: paymentError } = await supabase
@@ -300,10 +299,9 @@ export default function FullPaymentForm({
 
         if (paymentError || !payment) {
           setError(paymentError?.message || t("payments.errors.createFailed"));
-          return;
+          return false;
         }
 
-        // splits の paymentId を実際の ID に置き換え
         const splitsToInsert = splits.map((s) => ({
           ...s,
           payment_id: payment.id,
@@ -314,20 +312,41 @@ export default function FullPaymentForm({
         }
       }
 
-      if (isInlineMode) {
-        form.reset();
-        setCategoryId("");
-        setCustomSplits({});
-        setShowSuccess(true);
-        router.refresh();
-      } else {
-        router.push("/payments");
-        router.refresh();
-      }
+      return true;
     } catch {
       setError(t("payments.errors.updateFailed"));
+      return false;
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  /** 「保存して次へ」: 送信成功後、amount・description のみクリアして amount にフォーカス */
+  const handleSubmitAndNext = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const ok = await executeSubmit();
+    if (!ok) return;
+    form.resetForNext();
+    setShowSuccess(true);
+    router.refresh();
+    amountRef.current?.focus();
+  };
+
+  /** 「保存」/ 編集保存: 送信成功後に前の画面へ遷移 */
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const ok = await executeSubmit();
+    if (!ok) return;
+
+    if (isInlineMode) {
+      // インラインモードでは遷移せずリセット＋成功表示
+      form.resetForNext();
+      setShowSuccess(true);
+      router.refresh();
+      amountRef.current?.focus();
+    } else {
+      router.push("/payments");
+      router.refresh();
     }
   };
 
@@ -340,7 +359,7 @@ export default function FullPaymentForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmitAndNext} className="space-y-6">
       {isDuplicateMode && (
         <div className="flex items-center gap-2 px-3 py-2 bg-theme-secondary/20 border border-theme-secondary/40 rounded-lg text-xs text-theme-text">
           <span className="shrink-0">📋</span>
@@ -403,6 +422,7 @@ export default function FullPaymentForm({
         value={form.amount}
         onChange={handleAmountChange}
         error={form.errors.amount}
+        inputRef={amountRef}
       />
 
       {/* Description - スマートチップ付き */}
@@ -643,16 +663,37 @@ export default function FullPaymentForm({
         )
       )}
 
-      {/* Submit Button */}
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-theme-button-text bg-theme-primary hover:bg-theme-primary/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {isSubmitting
-          ? t(isEditMode ? "payments.form.updating" : isDuplicateMode ? "payments.form.duplicateSubmitting" : "payments.form.submitting")
-          : t(isEditMode ? "payments.form.update" : isDuplicateMode ? "payments.form.duplicateSubmit" : "payments.form.submit")}
-      </button>
+      {/* Submit Buttons */}
+      {isEditMode || isDuplicateMode ? (
+        /* 編集・複製モード: 単一ボタン */
+        <Button type="submit" variant="primary" size="md" fullWidth loading={isSubmitting}>
+          {isSubmitting
+            ? t(isEditMode ? "payments.form.updating" : "payments.form.duplicateSubmitting")
+            : t(isEditMode ? "payments.form.update" : "payments.form.duplicateSubmit")}
+        </Button>
+      ) : isInlineMode ? (
+        /* インラインモード: 「保存して次へ」単一ボタン */
+        <Button type="submit" variant="primary" size="md" fullWidth loading={isSubmitting}>
+          {isSubmitting ? t("payments.form.submitting") : t("payments.form.submitAndNext")}
+        </Button>
+      ) : (
+        /* 新規作成モード: 2ボタン形式 */
+        <div className="flex flex-col gap-3 sm:flex-row-reverse">
+          <Button type="submit" variant="primary" size="md" fullWidth loading={isSubmitting}>
+            {isSubmitting ? t("payments.form.submitting") : t("payments.form.submitAndNext")}
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            size="md"
+            fullWidth
+            loading={isSubmitting}
+            onClick={handleSubmit}
+          >
+            {t("payments.form.submit")}
+          </Button>
+        </div>
+      )}
     </form>
   );
 }
