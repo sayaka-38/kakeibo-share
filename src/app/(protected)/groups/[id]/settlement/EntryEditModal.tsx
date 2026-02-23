@@ -5,6 +5,7 @@ import { t } from "@/lib/i18n";
 import { Button } from "@/components/ui/Button";
 import { AmountFieldWithKeypad } from "@/components/payment-form/fields/AmountFieldWithKeypad";
 import { formatCurrency } from "@/lib/format/currency";
+import { formatDateSmart } from "@/lib/format/date";
 import type { Profile } from "@/types/database";
 import type { EntryData } from "@/types/domain";
 
@@ -106,7 +107,7 @@ export default function EntryEditModal({
             <h2 className="text-lg font-semibold text-theme-headline">
               {entry.description}
             </h2>
-            <p className="text-sm text-theme-muted">{entry.payment_date}</p>
+            <p className="text-sm text-theme-muted">{formatDateSmart(entry.payment_date)}</p>
           </div>
           <button
             type="button"

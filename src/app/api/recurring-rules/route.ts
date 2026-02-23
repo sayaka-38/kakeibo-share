@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/api/authenticate";
 import { validateRecurringRule } from "@/lib/validation/recurring-rule";
 import { withErrorHandler } from "@/lib/api/with-error-handler";
@@ -7,12 +7,12 @@ import { withErrorHandler } from "@/lib/api/with-error-handler";
 // GET /api/recurring-rules?groupId=xxx
 // グループの固定費ルール一覧を取得
 // =============================================================================
-export async function GET(request: NextRequest) {
+export const GET = withErrorHandler(async (request: Request) => {
   const auth = await authenticateRequest();
   if (!auth.success) return auth.response;
   const { user, supabase } = auth;
 
-  const groupId = request.nextUrl.searchParams.get("groupId");
+  const groupId = new URL(request.url).searchParams.get("groupId");
   if (!groupId) {
     return NextResponse.json(
       { error: "グループIDが必要です" },
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.json({ rules });
-}
+}, "GET /api/recurring-rules");
 
 // =============================================================================
 // POST /api/recurring-rules

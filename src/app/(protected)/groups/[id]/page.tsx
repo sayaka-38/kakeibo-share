@@ -4,6 +4,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format/currency";
+import { formatDateSmart } from "@/lib/format/date";
 import InviteMemberForm from "@/components/InviteMemberForm";
 import FullPaymentForm from "@/components/payment-form/FullPaymentForm";
 import { InviteLinkButton } from "@/components/InviteLinkButton";
@@ -155,7 +156,7 @@ export default async function GroupDetailPage({ params }: Props) {
             <div className="mt-6 bg-theme-text/10 border border-theme-card-border rounded-lg p-3">
               <p className="text-sm text-theme-text">
                 <span className="font-medium">最新の清算期間:</span>{" "}
-                {latestSettlement.period_start} 〜 {latestSettlement.period_end}
+                {formatDateSmart(latestSettlement.period_start)} 〜 {formatDateSmart(latestSettlement.period_end)}
               </p>
             </div>
           )}

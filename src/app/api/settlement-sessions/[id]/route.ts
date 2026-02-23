@@ -1,18 +1,19 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/api/authenticate";
+import { withErrorHandler } from "@/lib/api/with-error-handler";
 
-type RouteParams = { params: Promise<{ id: string }> };
+type RouteContext = { params: Promise<{ id: string }> };
 
 // =============================================================================
 // GET /api/settlement-sessions/[id]
 // 清算セッションの詳細（エントリ一覧含む）を取得
 // =============================================================================
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export const GET = withErrorHandler<RouteContext>(async (request, context) => {
   const auth = await authenticateRequest();
   if (!auth.success) return auth.response;
   const { user, supabase } = auth;
 
-  const { id } = await params;
+  const { id } = await context.params;
 
   // セッションを取得
   const { data: session, error } = await supabase
@@ -86,18 +87,18 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   };
 
   return NextResponse.json({ session, entries, stats });
-}
+}, "GET /api/settlement-sessions/[id]");
 
 // =============================================================================
 // DELETE /api/settlement-sessions/[id]
 // 清算セッションを削除（draftのみ、作成者のみ）
 // =============================================================================
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export const DELETE = withErrorHandler<RouteContext>(async (_request, context) => {
   const auth = await authenticateRequest();
   if (!auth.success) return auth.response;
   const { user, supabase } = auth;
 
-  const { id } = await params;
+  const { id } = await context.params;
 
   // セッションを取得
   const { data: session, error: fetchError } = await supabase
@@ -144,4 +145,4 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   }
 
   return NextResponse.json({ success: true });
-}
+}, "DELETE /api/settlement-sessions/[id]");

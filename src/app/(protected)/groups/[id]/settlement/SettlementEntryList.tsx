@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { t } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format/currency";
+import { formatDateSmart } from "@/lib/format/date";
 import { Button } from "@/components/ui/Button";
 import type { Profile, NetTransfer } from "@/types/database";
 import type { SessionData, EntryData } from "@/types/domain";
@@ -69,11 +70,8 @@ export default function SettlementEntryList({
         <div className="flex items-center justify-between">
           <div>
             <h2 className="font-medium text-theme-headline">
-              {session.period_start} 〜 {session.period_end}
+              {formatDateSmart(session.period_start)} 〜 {formatDateSmart(session.period_end)}
             </h2>
-            <p className="text-sm text-theme-muted">
-              {t("settlementSession.checklist")}
-            </p>
           </div>
           <div className="flex items-center gap-2">
             {/* リフレッシュボタン */}

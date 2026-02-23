@@ -1,17 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/api/authenticate";
 import { generateSettlementEntries } from "@/lib/settlement/generate-entries";
+import { withErrorHandler } from "@/lib/api/with-error-handler";
 
 // =============================================================================
 // GET /api/settlement-sessions?groupId=xxx
 // グループの清算セッション一覧を取得
 // =============================================================================
-export async function GET(request: NextRequest) {
+export const GET = withErrorHandler(async (request: Request) => {
   const auth = await authenticateRequest();
   if (!auth.success) return auth.response;
   const { user, supabase } = auth;
 
-  const groupId = request.nextUrl.searchParams.get("groupId");
+  const groupId = new URL(request.url).searchParams.get("groupId");
   if (!groupId) {
     return NextResponse.json(
       { error: "グループIDが必要です" },
@@ -54,13 +55,13 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.json({ sessions });
-}
+}, "GET /api/settlement-sessions");
 
 // =============================================================================
 // POST /api/settlement-sessions
 // 新規清算セッションを作成し、エントリを自動生成
 // =============================================================================
-export async function POST(request: NextRequest) {
+export const POST = withErrorHandler(async (request: Request) => {
   const auth = await authenticateRequest();
   if (!auth.success) return auth.response;
   const { user, supabase } = auth;
@@ -203,4 +204,4 @@ export async function POST(request: NextRequest) {
     },
     { status: 201 }
   );
-}
+}, "POST /api/settlement-sessions");

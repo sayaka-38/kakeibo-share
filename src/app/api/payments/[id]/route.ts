@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/api/authenticate";
-import { validatePayment } from "@/lib/validation/payment";
 import { translateRpcError } from "@/lib/api/translate-rpc-error";
 import { withErrorHandler } from "@/lib/api/with-error-handler";
+import { paymentRequestSchema } from "@/lib/validation/schemas";
 import type { Json } from "@/types/database.generated";
 
 // UUID v4 フォーマット検証
@@ -127,51 +127,16 @@ export const PUT = withErrorHandler<RouteContext>(async (request, context) => {
   if (!auth.success) return auth.response;
   const { user, supabase } = auth;
 
-  // 3. リクエストボディのパース
-  let body: {
-    amount?: unknown;
-    description?: unknown;
-    categoryId?: unknown;
-    paymentDate?: unknown;
-    splits?: unknown;
-  };
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json(
-      { error: "リクエストボディが不正です" },
-      { status: 400 }
-    );
-  }
+  // 3. リクエストボディのパース + Zod バリデーション
+  // ZodError は withErrorHandler が 400 で捕捉する
+  const rawBody = await request.json();
+  const { amount, description, paymentDate: paymentDateStr, categoryId } =
+    paymentRequestSchema
+      .pick({ amount: true, description: true, paymentDate: true, categoryId: true })
+      .parse(rawBody);
+  const splits = Array.isArray(rawBody.splits) ? rawBody.splits : [];
 
-  // 4. 基本型チェック
-  const amount =
-    typeof body.amount === "number" ? body.amount : NaN;
-  const description =
-    typeof body.description === "string" ? body.description : "";
-  const categoryId =
-    typeof body.categoryId === "string" ? body.categoryId : null;
-  const paymentDateStr =
-    typeof body.paymentDate === "string" ? body.paymentDate : "";
-  const splits = Array.isArray(body.splits) ? body.splits : [];
-
-  // 5. 共通バリデーション（新規作成と同じルール）
-  const paymentDate = new Date(paymentDateStr);
-  const validation = validatePayment({
-    amount,
-    description,
-    paymentDate,
-  });
-
-  if (!validation.success) {
-    const firstError = Object.values(validation.errors).find(Boolean);
-    return NextResponse.json(
-      { error: firstError || "入力内容に誤りがあります" },
-      { status: 400 }
-    );
-  }
-
-  // 6. splits バリデーション
+  // 4. splits バリデーション
   if (splits.length === 0) {
     return NextResponse.json(
       { error: "割り勘の内訳が必要です" },
