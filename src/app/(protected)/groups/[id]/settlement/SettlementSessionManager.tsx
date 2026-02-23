@@ -316,4 +316,3 @@ function PendingSessionControls({
   );
 }
 
-export type { SessionData, EntryData, SuggestionData };

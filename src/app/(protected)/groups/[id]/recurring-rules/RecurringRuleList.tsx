@@ -118,5 +118,3 @@ export default function RecurringRuleList({
     </div>
   );
 }
-
-export type { RuleWithRelations };
