@@ -14,12 +14,12 @@ type RouteParams = { params: Promise<{ id: string }> };
 // GET /api/recurring-rules/[id]
 // 個別の固定費ルールを取得
 // =============================================================================
-export async function GET(_request: Request, { params }: RouteParams) {
+export const GET = withErrorHandler<RouteParams>(async (_request, context) => {
   const auth = await authenticateRequest();
   if (!auth.success) return auth.response;
   const { user, supabase } = auth;
 
-  const { id } = await params;
+  const { id } = await context.params;
 
   // ルールを取得（関連データも含む）
   const { data: rule, error } = await supabase
@@ -62,7 +62,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
   }
 
   return NextResponse.json({ rule });
-}
+}, "GET /api/recurring-rules/[id]");
 
 // =============================================================================
 // PUT /api/recurring-rules/[id]

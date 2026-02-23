@@ -53,6 +53,17 @@ export const createCategoryRequestSchema = categoryRequestSchema.extend({
   groupId: z.string().uuid(),
 });
 
+// グループ操作スキーマ
+export const groupIdRequestSchema = z.object({ groupId: z.string().uuid() });
+export const joinGroupRequestSchema = z.object({ inviteCode: z.string().trim().min(6) });
+export const transferOwnerRequestSchema = z.object({
+  groupId: z.string().uuid(),
+  newOwnerId: z.string().uuid(),
+});
+
+// 認証操作スキーマ
+export const changePasswordRequestSchema = z.object({ newPassword: z.string().min(6) });
+
 // 型エクスポート
 export type PaymentRequest = z.infer<typeof paymentRequestSchema>;
 export type RecurringRuleRequest = z.infer<typeof recurringRuleRequestSchema>;

@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { formatCurrency } from "@/lib/format/currency";
+import { formatDateSmart } from "@/lib/format/date";
 import {
   balancesToTransfers,
   calculateMyTransferBalance,
@@ -317,7 +318,7 @@ export default function SettlementResultCard({
 
       {/* 期間情報 */}
       <div className="mt-4 text-center text-xs text-theme-muted">
-        {session.period_start} 〜 {session.period_end}
+        {formatDateSmart(session.period_start)} 〜 {formatDateSmart(session.period_end)}
       </div>
     </div>
   );

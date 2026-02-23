@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/api/authenticate";
 import { refreshSettlementEntries } from "@/lib/settlement/refresh-entries";
+import { withErrorHandler } from "@/lib/api/with-error-handler";
 
-type RouteParams = { params: Promise<{ id: string }> };
+type RouteContext = { params: Promise<{ id: string }> };
 
 /**
  * POST /api/settlement-sessions/[id]/refresh
@@ -15,12 +16,12 @@ type RouteParams = { params: Promise<{ id: string }> };
  *
  * 認可: グループメンバーであること（draft状態のみ）
  */
-export async function POST(request: NextRequest, { params }: RouteParams) {
+export const POST = withErrorHandler<RouteContext>(async (_request, context) => {
   const auth = await authenticateRequest();
   if (!auth.success) return auth.response;
   const { user, supabase } = auth;
 
-  const { id: sessionId } = await params;
+  const { id: sessionId } = await context.params;
 
   // セッションを取得
   const { data: session, error: sessionError } = await supabase
@@ -68,4 +69,4 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   }
 
   return NextResponse.json({ addedCount: result });
-}
+}, "POST /api/settlement-sessions/[id]/refresh");

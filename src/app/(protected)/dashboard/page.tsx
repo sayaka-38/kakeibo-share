@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format/currency";
+import { formatDateSmart } from "@/lib/format/date";
 import type {
   GroupMembershipWithDescriptionResult,
   DashboardPaymentResult,
@@ -169,7 +170,7 @@ export default async function DashboardPage() {
                         <p className="text-sm text-theme-text">
                           {payment.profiles?.display_name ||
                             payment.profiles?.email}{" "}
-                          - {payment.payment_date}
+                          - {formatDateSmart(payment.payment_date)}
                         </p>
                       </div>
                       <span className="font-medium text-theme-headline">

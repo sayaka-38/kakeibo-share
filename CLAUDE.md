@@ -19,9 +19,10 @@
 4. **環境変数**: `getSupabaseEnv()` (`src/lib/env.ts`)。`process.env.XXX!` 禁止
 5. **デモ作成**: 必ず `create-demo` Edge Function 経由 (`supabase.functions.invoke`)。クライアントからの直接 DB 操作禁止。Turnstile トークン検証・service_role による最小権限実行を担保する
 6. **ドメイン型**: コンポーネント横断型は `src/types/domain.ts` に集約する
-7. **バリデーション**: API Route の body parsing は Zod (`src/lib/validation/schemas.ts`) を使用する
-8. **APIルート**: 外側の try-catch は `withErrorHandler` (`src/lib/api/with-error-handler.ts`) で共通化する
+7. **バリデーション**: API Route の body parsing は Zod (`src/lib/validation/schemas.ts`) を使用する。新規スキーマは必ずこのファイルに追加し、ルート内インライン定義禁止
+8. **APIルート**: 全ルートハンドラは例外なく `withErrorHandler` (`src/lib/api/with-error-handler.ts`) でラップする。`export async function GET/POST/...` パターン禁止
 9. **DB変更後**: `npm run db:gen-types` を即座に実行する（マイグレーション適用後必須）
+10. **日付表示**: 画面上の `YYYY-MM-DD` 文字列は必ず `formatDateSmart()` (`src/lib/format/date.ts`) を通す
 
 ---
 

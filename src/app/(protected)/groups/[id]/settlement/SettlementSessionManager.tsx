@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { t } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format/currency";
+import { formatDateSmart } from "@/lib/format/date";
 import { Button } from "@/components/ui/Button";
 import type { Profile, Category } from "@/types/database";
 import type { SessionData, SuggestionData, EntryData } from "@/types/domain";
@@ -123,8 +124,8 @@ export default function SettlementSessionManager({
               }`}
             >
               {t("settlementSession.draftPeriod", {
-                start: draft.period_start,
-                end: draft.period_end,
+                start: formatDateSmart(draft.period_start),
+                end: formatDateSmart(draft.period_end),
               })}
             </button>
           ))}
@@ -213,8 +214,8 @@ export default function SettlementSessionManager({
                 期間外に新しい支払いがあります
               </p>
               <p className="text-xs text-theme-muted mt-1">
-                このセッションの期間（〜{session.period_end}）以降に未清算の支払いがあります。
-                セッションを削除して再作成すると、最新の支払い（〜{suggestion?.suggestedEnd}）まで含まれます。
+                このセッションの期間（〜{formatDateSmart(session.period_end)}）以降に未清算の支払いがあります。
+                セッションを削除して再作成すると、最新の支払い（〜{suggestion?.suggestedEnd ? formatDateSmart(suggestion.suggestedEnd) : ""}）まで含まれます。
               </p>
             </div>
           )}
@@ -276,7 +277,7 @@ function PendingSessionControls({
     <div className="mt-4 bg-theme-card-bg rounded-lg shadow p-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-theme-muted">
-          前回の清算（{pendingSession.period_start} 〜 {pendingSession.period_end}）
+          前回の清算（{formatDateSmart(pendingSession.period_start)} 〜 {formatDateSmart(pendingSession.period_end)}）
         </p>
         <div className="flex gap-2">
           {isPayer && !hasReported && (

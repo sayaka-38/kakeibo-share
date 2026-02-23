@@ -1,19 +1,20 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { authenticateRequest } from "@/lib/api/authenticate";
+import { withErrorHandler } from "@/lib/api/with-error-handler";
 
-type RouteParams = { params: Promise<{ id: string }> };
+type RouteContext = { params: Promise<{ id: string }> };
 
 // =============================================================================
 // POST /api/settlement-sessions/[id]/confirm-receipt
 // 受取確認で清算完了（pending_payment → settled）
 // =============================================================================
-export async function POST(_request: NextRequest, { params }: RouteParams) {
+export const POST = withErrorHandler<RouteContext>(async (_request, context) => {
   const auth = await authenticateRequest();
   if (!auth.success) return auth.response;
   const { user, supabase } = auth;
 
-  const { id } = await params;
+  const { id } = await context.params;
 
   const { data: result, error } = await supabase.rpc(
     "confirm_settlement_receipt",
@@ -66,4 +67,4 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
   }
 
   return NextResponse.json({ success: true });
-}
+}, "POST /api/settlement-sessions/[id]/confirm-receipt");

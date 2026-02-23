@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/format/currency";
+import { formatDateSmart } from "@/lib/format/date";
 import type { Profile } from "@/types/database";
 import SettlementResultCard from "../../SettlementResultCard";
 import type { EntryData, SessionData } from "@/types/domain";
@@ -236,7 +237,7 @@ export default async function SettlementHistoryDetailPage({ params }: PageProps)
         </Link>
         <div className="flex items-center gap-2">
           <h1 className="text-2xl font-bold text-theme-headline">
-            {session.period_start} 〜 {session.period_end}
+            {formatDateSmart(session.period_start)} 〜 {formatDateSmart(session.period_end)}
           </h1>
           {session.status === "settled" && (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-theme-text/15 text-theme-text">
@@ -326,7 +327,7 @@ export default async function SettlementHistoryDetailPage({ params }: PageProps)
                   <div>
                     <p className="font-medium text-theme-headline">{entry.description}</p>
                     <p className="text-sm text-theme-muted">
-                      {payerName} ・ {entry.payment_date}
+                      {payerName} ・ {formatDateSmart(entry.payment_date)}
                       {entry.category && (
                         <span className="ml-2 text-xs bg-theme-bg px-1.5 py-0.5 rounded">
                           {entry.category.name}
@@ -389,7 +390,7 @@ export default async function SettlementHistoryDetailPage({ params }: PageProps)
               <div key={mergedSession.id}>
                 <div className="px-4 py-2 bg-theme-bg/50 border-b border-theme-card-border flex justify-between items-center">
                   <span className="text-xs font-medium text-theme-muted">
-                    {mergedSession.period_start} 〜 {mergedSession.period_end}
+                    {formatDateSmart(mergedSession.period_start)} 〜 {formatDateSmart(mergedSession.period_end)}
                   </span>
                   <span className="text-xs text-theme-muted">
                     {formatCurrency(sessionTotal)}（{sessionEntries.length}件）
@@ -409,7 +410,7 @@ export default async function SettlementHistoryDetailPage({ params }: PageProps)
                           <div>
                             <p className="text-sm text-theme-headline">{entry.description}</p>
                             <p className="text-xs text-theme-muted">
-                              {payerName} ・ {entry.payment_date}
+                              {payerName} ・ {formatDateSmart(entry.payment_date)}
                             </p>
                           </div>
                           <span className="text-sm text-theme-headline">

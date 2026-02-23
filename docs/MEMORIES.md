@@ -2,7 +2,7 @@
 
 セッション間の文脈保持用。アーキテクチャ規約・DBスキーマは **CLAUDE.md** を参照。
 
-最終更新: 2026-02-23 (Phase 15B'')
+最終更新: 2026-02-23 (Phase 15B''')
 
 ---
 
@@ -18,7 +18,8 @@
 | 15A–15A' | スマートチップ(get_frequent_payments RPC)・スマート再計算(↻ボタン・filled/skipped保護) | #66 |
 | 15B | 連続入力モード: 2ボタン形式（保存して次へ/保存）・resetForNext・成功通知グリーン化 | #68, #69 |
 | 15B' | 填記即時登録・ActionSheet・清算内容の調整へ改称・チップトグル・モーダル改善 | #70 |
-| **15B''** | **アーキテクチャ洗練: withErrorHandler・Zod統合・domain.ts型集約・useTimedMessage・UI最終調整** | WIP |
+| 15B'' | アーキテクチャ洗練: withErrorHandler・Zod統合・domain.ts型集約・useTimedMessage・UI最終調整 | #72 |
+| **15B'''** | **コード简洁化: formatDateSmart全展開・Zodスキーマ集約・withErrorHandler全ルート統一・デッドコード除去** | WIP |
 
 **現在**: Vitest **1166件** + Playwright E2E 1件 = **計1167テスト** / ビルド正常 / lint クリーン
 
@@ -48,8 +49,9 @@
 | **confirm_settlement 冪等性** | `confirm_settlement` RPC (Migration 041) | `source_payment_id IS NOT NULL` のエントリは二重作成しない |
 | モーダル閉じ | `RecurringRuleForm` / `EntryEditModal` | 背景クリック（`onClick={() => onClose()}`）+ ヘッダー × ボタン（44px タップターゲット） |
 | 清算内容の調整 | 旧称「清算準備室」 | UI表示・i18n キー `settlementSession.title` は「清算内容の調整」に統一済み |
-| **withErrorHandler** | `src/lib/api/with-error-handler.ts` | `export const DELETE = withErrorHandler<Ctx>(async (req, ctx) => {...}, "名前")` — ZodError → 400、予期せぬ例外 → 500 |
-| **Zod スキーマ** | `src/lib/validation/schemas.ts` | API Route body parsing 用。`paymentRequestSchema` / `recurringRuleRequestSchema` / `categoryRequestSchema`。フロントエンド側の i18n バリデーター（`validation/*.ts`）は別途保持 |
+| **withErrorHandler** | `src/lib/api/with-error-handler.ts` | `export const DELETE = withErrorHandler<Ctx>(async (req, ctx) => {...}, "名前")` — ZodError → 400、予期せぬ例外 → 500。**全 API Route に適用済み（例外なし）** |
+| **Zod スキーマ** | `src/lib/validation/schemas.ts` | API Route body parsing 用。`paymentRequestSchema` / `recurringRuleRequestSchema` / `categoryRequestSchema` / `groupIdRequestSchema` / `joinGroupRequestSchema` / `transferOwnerRequestSchema` / `changePasswordRequestSchema`。フロントエンド側 i18n バリデーター（`validation/*.ts`）は別途保持 |
+| **formatDateSmart** | `src/lib/format/date.ts` | 当年 → `MM-DD`、他年 → `YYYY-MM-DD`。**全画面の日付表示で使用済み**（dashboard / groups / settlement / history / PendingPayment / EntryEditModal） |
 | **domain.ts** | `src/types/domain.ts` | `SessionData` / `EntryData` / `SuggestionData` / `RuleWithRelations` を集約。全 consumer は `@/types/domain` から直接 import |
 | **useTimedMessage** | `src/hooks/useTimedMessage.ts` | 5秒自動消去メッセージ hook。FullPaymentForm / InlinePaymentForm の成功バナー表示に使用 |
 

@@ -80,7 +80,10 @@ describe("POST /api/auth/change-password", () => {
 
   it("POST ハンドラがエクスポートされている", () => {
     const content = fs.readFileSync(CHANGE_PASSWORD_API_PATH, "utf-8");
-    expect(content).toContain("export async function POST");
+    expect(
+      content.includes("export async function POST") ||
+      content.includes("export const POST")
+    ).toBe(true);
   });
 
   it("authenticateRequest を使用している", () => {
@@ -90,8 +93,14 @@ describe("POST /api/auth/change-password", () => {
 
   it("6文字以上のバリデーションがある", () => {
     const content = fs.readFileSync(CHANGE_PASSWORD_API_PATH, "utf-8");
-    expect(content).toContain("6");
-    expect(content).toContain("400");
+    // バリデーションは schemas.ts に集約済みのため、スキーマ参照を確認
+    expect(
+      content.includes("changePasswordRequestSchema") || content.includes("6")
+    ).toBe(true);
+    // 400 は withErrorHandler または明示的な status: 400 のいずれかで担保
+    expect(
+      content.includes("400") || content.includes("withErrorHandler")
+    ).toBe(true);
   });
 
   it("Supabase auth.updateUser を使用している", () => {
@@ -112,7 +121,10 @@ describe("POST /api/auth/delete-account", () => {
 
   it("POST ハンドラがエクスポートされている", () => {
     const content = fs.readFileSync(DELETE_ACCOUNT_API_PATH, "utf-8");
-    expect(content).toContain("export async function POST");
+    expect(
+      content.includes("export async function POST") ||
+      content.includes("export const POST")
+    ).toBe(true);
   });
 
   it("authenticateRequest を使用している", () => {

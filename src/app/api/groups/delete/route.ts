@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/api/authenticate";
+import { withErrorHandler } from "@/lib/api/with-error-handler";
+import { groupIdRequestSchema } from "@/lib/validation/schemas";
 
 /**
  * POST /api/groups/delete
@@ -9,72 +11,53 @@ import { authenticateRequest } from "@/lib/api/authenticate";
  * RLS ポリシー: owner_id = auth.uid() の場合のみ DELETE 可能
  * CASCADE: group_members, payments, payment_splits, settlements, demo_sessions は自動削除
  */
-export async function POST(request: Request) {
-  try {
-    // 1. リクエストボディをパース
-    const body = await request.json();
-    const { groupId } = body;
+export const POST = withErrorHandler(async (request: Request) => {
+  const body = await request.json();
+  const { groupId } = groupIdRequestSchema.parse(body);
 
-    // 2. バリデーション
-    if (!groupId || typeof groupId !== "string") {
-      return NextResponse.json(
-        { error: "グループIDが必要です" },
-        { status: 400 }
-      );
-    }
+  const auth = await authenticateRequest();
+  if (!auth.success) return auth.response;
+  const { user, supabase } = auth;
 
-    // 3. ユーザー認証確認
-    const auth = await authenticateRequest();
-    if (!auth.success) return auth.response;
-    const { user, supabase } = auth;
+  // グループの存在確認とオーナー確認
+  const { data: group, error: groupError } = await supabase
+    .from("groups")
+    .select("id, name, owner_id")
+    .eq("id", groupId)
+    .single();
 
-    // 4. グループの存在確認とオーナー確認
-    const { data: group, error: groupError } = await supabase
-      .from("groups")
-      .select("id, name, owner_id")
-      .eq("id", groupId)
-      .single();
-
-    if (groupError || !group) {
-      return NextResponse.json(
-        { error: "グループが見つかりません" },
-        { status: 404 }
-      );
-    }
-
-    // 5. オーナー権限チェック
-    if (group.owner_id !== user.id) {
-      return NextResponse.json(
-        { error: "グループを削除する権限がありません" },
-        { status: 403 }
-      );
-    }
-
-    // 6. グループを削除（CASCADE により関連データも自動削除）
-    const { error: deleteError } = await supabase
-      .from("groups")
-      .delete()
-      .eq("id", groupId);
-
-    if (deleteError) {
-      console.error("[API /groups/delete] Delete failed:", deleteError);
-      return NextResponse.json(
-        { error: "グループの削除に失敗しました" },
-        { status: 500 }
-      );
-    }
-
-    // 7. 成功
-    return NextResponse.json({
-      success: true,
-      deletedGroupId: groupId,
-      deletedGroupName: group.name,
-    });
-  } catch (error) {
-    console.error("[API /groups/delete] Unexpected error:", error);
+  if (groupError || !group) {
     return NextResponse.json(
-      { error: "サーバーエラーが発生しました" },
+      { error: "グループが見つかりません" },
+      { status: 404 }
+    );
+  }
+
+  // オーナー権限チェック
+  if (group.owner_id !== user.id) {
+    return NextResponse.json(
+      { error: "グループを削除する権限がありません" },
+      { status: 403 }
+    );
+  }
+
+  // グループを削除（CASCADE により関連データも自動削除）
+  const { error: deleteError } = await supabase
+    .from("groups")
+    .delete()
+    .eq("id", groupId);
+
+  if (deleteError) {
+    console.error("[API /groups/delete] Delete failed:", deleteError);
+    return NextResponse.json(
+      { error: "グループの削除に失敗しました" },
       { status: 500 }
     );
   }
-}
+
+  return NextResponse.json({
+    success: true,
+    deletedGroupId: groupId,
+    deletedGroupName: group.name,
+  });
+}, "POST /api/groups/delete");

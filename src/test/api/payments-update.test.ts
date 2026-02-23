@@ -354,12 +354,12 @@ describe("API Route 実装詳細", () => {
   });
 
   describe("サーバー側バリデーション", () => {
-    it("validatePayment を使用して共通バリデーションを実施している", () => {
+    it("paymentRequestSchema を使用して共通バリデーションを実施している", () => {
       if (!fs.existsSync(API_ROUTE_PATH)) {
         expect.fail("API Route ファイルが存在しない（Red フェーズ）");
       }
       const content = fs.readFileSync(API_ROUTE_PATH, "utf-8");
-      expect(content).toContain("validatePayment");
+      expect(content).toContain("paymentRequestSchema");
     });
   });
 });

@@ -1,6 +1,7 @@
 "use client";
 
 import { formatCurrency } from "@/lib/format/currency";
+import { formatDateSmart } from "@/lib/format/date";
 import { t } from "@/lib/i18n";
 import { Button } from "@/components/ui/Button";
 import type { Profile } from "@/types/database";
@@ -58,7 +59,7 @@ export default function PendingPaymentView({
             {t("settlementSession.pendingPayment.title")}
           </h2>
           <p className="text-xs text-theme-muted">
-            {session.period_start} 〜 {session.period_end}
+            {formatDateSmart(session.period_start)} 〜 {formatDateSmart(session.period_end)}
           </p>
         </div>
       </div>

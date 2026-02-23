@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/format/currency";
+import { formatDateSmart } from "@/lib/format/date";
 import { t } from "@/lib/i18n";
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -160,7 +161,7 @@ export default async function SettlementHistoryPage({ params }: PageProps) {
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="font-medium text-theme-headline">
-                      {session.period_start} 〜 {session.period_end}
+                      {formatDateSmart(session.period_start)} 〜 {formatDateSmart(session.period_end)}
                     </h3>
                     {session.status === "pending_payment" && (
                       <span className="text-xs bg-theme-primary/15 text-theme-primary-text px-1.5 py-0.5 rounded">
