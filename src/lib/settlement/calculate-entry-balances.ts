@@ -16,12 +16,20 @@ export type EntryBalance = {
 /**
  * 清算エントリから各メンバーの収支を計算する（金融機関レベルの端数処理）
  *
- * 計算ルール:
- * 1. 内訳指定なし（splits なし）のエントリを集計: 合計 S
- * 2. 各自の案分額 = Math.floor(S / 人数)（全員共通）
- * 3. 余り（S % 人数）は最も多く支払ったメンバー（最大 payer）の負担に加算
- *    → sum(owed) = totalExpense を保証する
- * 4. 個別内訳（Proxy等）の splits 金額をそのまま各自の負担に加算
+ * 【計算アルゴリズム】
+ *
+ * Group A（均等割り勘）: split_type !== "custom" のエントリ
+ *   - S_A = Group A の合計金額
+ *   - 全員共通の案分額 = Math.floor(S_A / 人数)
+ *   - 余り（S_A % 人数）は最大 payer の負担に1回だけ加算
+ *     → sum(Group A の owed) = S_A を保証
+ *
+ * Group B（個別内訳）: split_type === "custom" のエントリ
+ *   - 各エントリの splits を actual_amount に正規化してから加算
+ *   - 正規化: floor(actual_amount × stored_ratio)、余りは最大 stored 比率のメンバーへ
+ *     → sum(Group B の owed) = sum(Group B の actual_amount) を保証
+ *   ※ splits に基づく storedTotal と actual_amount が異なる場合
+ *      （ルール default_amount と実際の填記金額が違うケース）に対応
  *
  * @param entries - filled 状態のエントリリスト
  * @param members - グループメンバーリスト
@@ -32,17 +40,15 @@ export function calculateEntryBalances(
 ): EntryBalance[] {
   if (members.length === 0) return [];
 
-  // Step 1: splits なしエントリを一括集計（エントリごと切り捨てによる誤差累積を防ぐ）
-  const noSplitEntries = entries.filter((e) => !e.splits || e.splits.length === 0);
-  const noSplitTotal = noSplitEntries.reduce((sum, e) => sum + (e.actual_amount ?? 0), 0);
+  // ──────────────────────────────────────────────
+  // 元本の分離
+  // ──────────────────────────────────────────────
+  const groupA = entries.filter((e) => e.split_type !== "custom");
+  const groupB = entries.filter((e) => e.split_type === "custom");
 
-  // Step 2: 一括案分（全員同額・切り捨て）
-  const noSplitPerPerson = Math.floor(noSplitTotal / members.length);
-
-  // Step 3: 余りを最大 payer へ加算（sum(owed) = S を保証）
-  const remainder = noSplitTotal % members.length;
-
-  // 全エントリの支払い合計を計算（最大 payer 特定に使用）
+  // ──────────────────────────────────────────────
+  // 全エントリの支払い合計（paid + 最大 payer 特定）
+  // ──────────────────────────────────────────────
   const paidByMember = new Map<string, number>();
   for (const m of members) paidByMember.set(m.id, 0);
   for (const e of entries) {
@@ -50,9 +56,8 @@ export function calculateEntryBalances(
     paidByMember.set(e.payer_id, curr + (e.actual_amount ?? 0));
   }
 
-  // 最大 payer を特定（同額の場合はリスト先頭のメンバー）
   let maxPayerId = members[0].id;
-  let maxPaid = paidByMember.get(members[0].id) ?? 0;
+  let maxPaid = -1;
   for (const m of members) {
     const p = paidByMember.get(m.id) ?? 0;
     if (p > maxPaid) {
@@ -61,22 +66,61 @@ export function calculateEntryBalances(
     }
   }
 
-  // Step 4: 各メンバーの収支を算出
-  const splitEntries = entries.filter((e) => e.splits && e.splits.length > 0);
+  // ──────────────────────────────────────────────
+  // Group A の計算（一括集計 → 1回割り → 余りを最大 payer へ）
+  // ──────────────────────────────────────────────
+  const totalA = groupA.reduce((sum, e) => sum + (e.actual_amount ?? 0), 0);
+  const perPersonA = Math.floor(totalA / members.length);
+  const remainderA = totalA % members.length;
 
+  // ──────────────────────────────────────────────
+  // Group B の計算（splits を actual_amount に正規化）
+  // ──────────────────────────────────────────────
+  const owedBByMember = new Map<string, number>();
+  for (const m of members) owedBByMember.set(m.id, 0);
+
+  for (const entry of groupB) {
+    const actual = entry.actual_amount ?? 0;
+    if (!entry.splits || entry.splits.length === 0) continue;
+
+    const storedTotal = entry.splits.reduce((sum, s) => sum + s.amount, 0);
+    if (storedTotal === 0) continue; // 全 0 splits → 誰にも課金しない
+
+    // actual_amount に正規化した splits を計算（stored ratio を保持しつつ誤差を除去）
+    let assigned = 0;
+    let maxStoredAmount = -1;
+    let maxStoredMemberId = entry.splits[0].user_id;
+
+    const normalized: { user_id: string; amount: number }[] = [];
+    for (const s of entry.splits) {
+      const normAmount = Math.floor((actual * s.amount) / storedTotal);
+      normalized.push({ user_id: s.user_id, amount: normAmount });
+      assigned += normAmount;
+      if (s.amount > maxStoredAmount) {
+        maxStoredAmount = s.amount;
+        maxStoredMemberId = s.user_id;
+      }
+    }
+
+    // 余り（0 or 1円程度）を最大 stored 比率のメンバーへ加算
+    const entryRemainder = actual - assigned;
+
+    for (const ns of normalized) {
+      const extra = ns.user_id === maxStoredMemberId ? entryRemainder : 0;
+      const curr = owedBByMember.get(ns.user_id) ?? 0;
+      owedBByMember.set(ns.user_id, curr + ns.amount + extra);
+    }
+  }
+
+  // ──────────────────────────────────────────────
+  // 最終合算
+  // ──────────────────────────────────────────────
   return members.map((member) => {
     const paid = paidByMember.get(member.id) ?? 0;
-
-    // splits あり（Proxy等）: 自分宛の splits 合計をそのまま加算
-    const owedFromSplits = splitEntries.reduce((sum, e) => {
-      const mySplit = e.splits!.find((s) => s.user_id === member.id);
-      return sum + (mySplit ? mySplit.amount : 0);
-    }, 0);
-
-    // 余りは最大 payer のみ加算（1円以下なので影響は最小限）
-    const remainderShare = remainder > 0 && member.id === maxPayerId ? remainder : 0;
-
-    const owed = noSplitPerPerson + remainderShare + owedFromSplits;
+    const owedA =
+      perPersonA + (remainderA > 0 && member.id === maxPayerId ? remainderA : 0);
+    const owedB = owedBByMember.get(member.id) ?? 0;
+    const owed = owedA + owedB;
 
     return {
       id: member.id,
