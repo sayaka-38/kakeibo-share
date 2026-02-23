@@ -24,7 +24,7 @@ export function withErrorHandler<TContext = unknown>(
       return await handler(request, context);
     } catch (error) {
       if (error instanceof ZodError) {
-        const message = error.errors[0]?.message ?? "入力内容に誤りがあります";
+        const message = error.issues[0]?.message ?? "入力内容に誤りがあります";
         return NextResponse.json({ error: message }, { status: 400 });
       }
       console.error(`[${routeName}] Unexpected error:`, error);

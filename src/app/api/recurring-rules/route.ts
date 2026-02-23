@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
 // POST /api/recurring-rules
 // 新規固定費ルールを作成
 // =============================================================================
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withErrorHandler(async (request: Request) => {
   const auth = await authenticateRequest();
   if (!auth.success) return auth.response;
   const { user, supabase } = auth;
