@@ -9,6 +9,7 @@ import {
   consolidateTransfers,
 } from "@/lib/settlement/consolidate";
 import type { MemberBalance } from "@/lib/settlement/consolidate";
+import { calculateEntryBalances } from "@/lib/settlement/calculate-entry-balances";
 import type { Profile, NetTransfer } from "@/types/database";
 import type { EntryData, SessionData } from "@/types/domain";
 
@@ -33,38 +34,13 @@ export default function SettlementResultCard({
     [entries]
   );
 
-  // 各メンバーの支払い・負担を計算
+  // 各メンバーの支払い・負担を計算（余りは最大 payer へ加算して合計一致を保証）
   const balances: MemberBalance[] = useMemo(() => {
-    // splits なしエントリの合計（一度だけ割ることで端数累積を防ぐ）
-    const noSplitTotal = filledEntries
-      .filter((e) => !e.splits || e.splits.length === 0)
-      .reduce((sum, e) => sum + (e.actual_amount || 0), 0);
-    const noSplitPerPerson = Math.floor(noSplitTotal / members.length);
-
-    return members.map((member) => {
-      const paid = filledEntries
-        .filter((e) => e.payer_id === member.id)
-        .reduce((sum, e) => sum + (e.actual_amount || 0), 0);
-
-      // splits ありのエントリ: splits の金額を参照
-      const owedFromSplits = filledEntries
-        .filter((e) => e.splits && e.splits.length > 0)
-        .reduce((sum, e) => {
-          const mySplit = e.splits!.find((s) => s.user_id === member.id);
-          return sum + (mySplit ? mySplit.amount : 0);
-        }, 0);
-
-      // splits なしのエントリ: 合計を人数で割った均等額
-      const owed = owedFromSplits + noSplitPerPerson;
-
-      return {
-        id: member.id,
-        name: member.display_name || member.email || "Unknown",
-        paid,
-        owed,
-        balance: paid - owed,
-      };
-    });
+    const entryMembers = members.map((m) => ({
+      id: m.id,
+      name: m.display_name || m.email || "Unknown",
+    }));
+    return calculateEntryBalances(filledEntries, entryMembers);
   }, [filledEntries, members]);
 
   const myBalance = balances.find((b) => b.id === currentUserId);
