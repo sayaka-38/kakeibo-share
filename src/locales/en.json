@@ -384,7 +384,6 @@
     "newPeriod": "+ New period",
     "creating": "Creating...",
     "deleteDraft": "Reset Period",
-    "periodResetSafety": "Changing the period won't delete any registered payment data.",
     "checklist": "Checklist",
     "statusPending": "Pending",
     "statusFilled": "Filled",
@@ -410,7 +409,9 @@
       "reportedBy": "{name} reported payment sent",
       "waitingForRecipient": "Waiting for recipient to confirm"
     },
-    "refresh": "Sync latest",
+    "confirmPeriodReset": "Reset the period?",
+    "confirmPeriodResetAction": "Reset",
+    "refresh": "Refresh",
     "errors": {
       "fetchFailed": "Failed to fetch session",
       "createFailed": "Failed to create session",
@@ -440,8 +441,7 @@
     "intervalEveryNMonths": "Every {n} months",
     "isVariable": "Amount Type",
     "fixedAmount": "Fixed",
-    "variableAmount": "Variable",
-    "variableAmountHint": "Enter amount each time",
+    "variableAmount": "Variable (enter each time)",
     "defaultPayer": "Default Payer",
     "splitType": "Split Method",
     "splitEqual": "Equal",

@@ -4,7 +4,7 @@ import { t } from "@/lib/i18n";
 import Link from "next/link";
 import type { Profile, Category } from "@/types/database";
 import SettlementSessionManager from "./SettlementSessionManager";
-import type { SessionData } from "./SettlementSessionManager";
+import type { SessionData } from "@/types/domain";
 
 type PageProps = {
   params: Promise<{ id: string }>;

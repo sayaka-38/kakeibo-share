@@ -4,7 +4,7 @@ import { formatCurrency } from "@/lib/format/currency";
 import { t } from "@/lib/i18n";
 import { Button } from "@/components/ui/Button";
 import type { Profile } from "@/types/database";
-import type { SessionData } from "./SettlementSessionManager";
+import type { SessionData } from "@/types/domain";
 
 type PendingPaymentViewProps = {
   session: SessionData;

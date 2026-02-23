@@ -4,7 +4,7 @@ import Link from "next/link";
 import { formatCurrency } from "@/lib/format/currency";
 import type { Profile } from "@/types/database";
 import SettlementResultCard from "../../SettlementResultCard";
-import type { EntryData, SessionData } from "../../SettlementSessionManager";
+import type { EntryData, SessionData } from "@/types/domain";
 
 type PageProps = {
   params: Promise<{ id: string; sessionId: string }>;

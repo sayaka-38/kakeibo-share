@@ -4,59 +4,13 @@ import { useState, useEffect, useCallback } from "react";
 import { t } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format/currency";
 import { Button } from "@/components/ui/Button";
-import type { Profile, Category, NetTransfer } from "@/types/database";
+import type { Profile, Category } from "@/types/database";
+import type { SessionData, SuggestionData, EntryData } from "@/types/domain";
+export type { SessionData, SuggestionData, EntryData };
 import PeriodSelector from "./PeriodSelector";
 import SettlementEntryList from "./SettlementEntryList";
 import PendingPaymentView from "./PendingPaymentView";
 import { useSettlementSession } from "./useSettlementSession";
-
-type SessionData = {
-  id: string;
-  group_id: string;
-  period_start: string;
-  period_end: string;
-  status: string;
-  created_by: string;
-  created_at: string;
-  confirmed_at: string | null;
-  confirmed_by: string | null;
-  net_transfers: NetTransfer[] | null;
-  is_zero_settlement: boolean;
-  payment_reported_at: string | null;
-  payment_reported_by: string | null;
-  settled_at: string | null;
-  settled_by: string | null;
-};
-
-type SuggestionData = {
-  suggestedStart: string | null;
-  suggestedEnd: string | null;
-  oldestUnsettledDate: string | null;
-  lastConfirmedEnd: string | null;
-  unsettledCount: number;
-};
-
-type EntryData = {
-  id: string;
-  session_id: string;
-  rule_id: string | null;
-  payment_id: string | null;
-  description: string;
-  category_id: string | null;
-  expected_amount: number | null;
-  actual_amount: number | null;
-  payer_id: string;
-  payment_date: string;
-  status: string;
-  split_type: string;
-  entry_type: string;
-  filled_by: string | null;
-  filled_at: string | null;
-  source_payment_id: string | null;
-  category?: { id: string; name: string; icon: string | null; color: string | null } | null;
-  payer?: { id: string; display_name: string | null; email: string | null } | null;
-  splits?: { id: string; user_id: string; amount: number; user?: Profile | null }[];
-};
 
 type SettlementSessionManagerProps = {
   groupId: string;

@@ -5,7 +5,7 @@ import { t } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format/currency";
 import { Button } from "@/components/ui/Button";
 import type { Profile, NetTransfer } from "@/types/database";
-import type { SessionData, EntryData } from "./SettlementSessionManager";
+import type { SessionData, EntryData } from "@/types/domain";
 import EntryCard from "./EntryCard";
 import EntryEditModal from "./EntryEditModal";
 import SettlementResultCard from "./SettlementResultCard";
@@ -108,14 +108,14 @@ export default function SettlementEntryList({
 
             {showDeleteConfirm ? (
               <>
-                <span className="text-xs text-theme-muted">削除しますか？</span>
+                <span className="text-xs text-theme-muted">{t("settlementSession.confirmPeriodReset")}</span>
                 <Button
-                  variant="danger"
+                  variant="ghost"
                   size="sm"
                   onClick={onDelete}
                   loading={isLoading}
                 >
-                  {t("common.delete")}
+                  {t("settlementSession.confirmPeriodResetAction")}
                 </Button>
                 <Button
                   variant="ghost"
@@ -127,19 +127,14 @@ export default function SettlementEntryList({
                 </Button>
               </>
             ) : (
-              <div className="text-right">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowDeleteConfirm(true)}
-                  className="text-theme-accent hover:text-theme-accent/80"
-                >
-                  {t("settlementSession.deleteDraft")}
-                </Button>
-                <p className="text-xs text-theme-muted mt-0.5">
-                  {t("settlementSession.periodResetSafety")}
-                </p>
-              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowDeleteConfirm(true)}
+                className="text-theme-accent hover:text-theme-accent/80"
+              >
+                {t("settlementSession.deleteDraft")}
+              </Button>
             )}
           </div>
         </div>

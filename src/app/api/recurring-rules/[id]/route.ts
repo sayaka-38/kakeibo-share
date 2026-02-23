@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/api/authenticate";
+import { withErrorHandler } from "@/lib/api/with-error-handler";
 import {
   validateDescription,
   validateDayOfMonth,
@@ -13,7 +14,7 @@ type RouteParams = { params: Promise<{ id: string }> };
 // GET /api/recurring-rules/[id]
 // 個別の固定費ルールを取得
 // =============================================================================
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(_request: Request, { params }: RouteParams) {
   const auth = await authenticateRequest();
   if (!auth.success) return auth.response;
   const { user, supabase } = auth;
@@ -67,14 +68,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 // PUT /api/recurring-rules/[id]
 // 固定費ルールを更新
 // =============================================================================
-export async function PUT(request: NextRequest, { params }: RouteParams) {
+export const PUT = withErrorHandler<RouteParams>(async (request, { params }) => {
   const auth = await authenticateRequest();
   if (!auth.success) return auth.response;
   const { user, supabase } = auth;
 
   const { id } = await params;
 
-  let body;
+  let body: Record<string, unknown>;
   try {
     body = await request.json();
   } catch {
@@ -130,7 +131,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
   // 共通バリデーション（部分更新: 提供されたフィールドのみ検証）
   if (description !== undefined) {
-    const err = validateDescription(description);
+    const err = validateDescription(String(description));
     if (err) return NextResponse.json({ error: err }, { status: 400 });
   }
 
@@ -144,9 +145,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     if (err) return NextResponse.json({ error: err }, { status: 400 });
   }
 
-  const newIsVariable = isVariable !== undefined ? isVariable : existingRule.is_variable;
+  const newIsVariable = isVariable !== undefined ? Boolean(isVariable) : existingRule.is_variable;
   const newDefaultAmount = defaultAmount !== undefined ? defaultAmount : existingRule.default_amount;
-  const amountErr = validateAmount(newIsVariable, newDefaultAmount);
+  const amountErr = validateAmount(newIsVariable, newDefaultAmount as number | null | undefined);
   if (amountErr) return NextResponse.json({ error: amountErr }, { status: 400 });
 
   // 更新データを構築
@@ -211,13 +212,13 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   }
 
   return NextResponse.json({ rule });
-}
+}, "PUT /api/recurring-rules/[id]");
 
 // =============================================================================
 // DELETE /api/recurring-rules/[id]
 // 固定費ルールを削除（オーナーのみ）
 // =============================================================================
-export async function DELETE(_request: NextRequest, { params }: RouteParams) {
+export const DELETE = withErrorHandler<RouteParams>(async (_request, { params }) => {
   const auth = await authenticateRequest();
   if (!auth.success) return auth.response;
   const { user, supabase } = auth;
@@ -262,4 +263,4 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   }
 
   return NextResponse.json({ success: true });
-}
+}, "DELETE /api/recurring-rules/[id]");

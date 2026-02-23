@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { t } from "@/lib/i18n";
 import type { NetTransfer } from "@/types/database";
 
-import type { SessionData, EntryData, SuggestionData } from "./SettlementSessionManager";
+import type { SessionData, EntryData, SuggestionData } from "@/types/domain";
 
 type StatsData = {
   total: number;

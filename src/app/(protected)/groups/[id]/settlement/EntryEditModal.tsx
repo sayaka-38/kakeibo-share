@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { AmountFieldWithKeypad } from "@/components/payment-form/fields/AmountFieldWithKeypad";
 import { formatCurrency } from "@/lib/format/currency";
 import type { Profile } from "@/types/database";
-import type { EntryData } from "./SettlementSessionManager";
+import type { EntryData } from "@/types/domain";
 
 type EntryEditModalProps = {
   entry: EntryData;

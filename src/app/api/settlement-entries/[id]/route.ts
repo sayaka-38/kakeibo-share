@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/api/authenticate";
+import { withErrorHandler } from "@/lib/api/with-error-handler";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -7,7 +8,7 @@ type RouteParams = { params: Promise<{ id: string }> };
 // PUT /api/settlement-entries/[id]
 // 清算エントリを更新（金額入力など）
 // =============================================================================
-export async function PUT(request: NextRequest, { params }: RouteParams) {
+export const PUT = withErrorHandler<RouteParams>(async (request, { params }) => {
   const auth = await authenticateRequest();
   if (!auth.success) return auth.response;
   const { user, supabase } = auth;
@@ -128,13 +129,13 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   }
 
   return NextResponse.json({ success: true });
-}
+}, "PUT /api/settlement-entries/[id]");
 
 // =============================================================================
 // DELETE /api/settlement-entries/[id]
 // 清算エントリを削除（手動追加のみ、draftセッションのみ）
 // =============================================================================
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export const DELETE = withErrorHandler<RouteParams>(async (request, { params }) => {
   const auth = await authenticateRequest();
   if (!auth.success) return auth.response;
   const { user, supabase } = auth;
@@ -208,4 +209,4 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   }
 
   return NextResponse.json({ success: true });
-}
+}, "DELETE /api/settlement-entries/[id]");

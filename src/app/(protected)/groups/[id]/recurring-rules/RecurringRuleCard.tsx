@@ -4,7 +4,7 @@ import { useState } from "react";
 import { t } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format/currency";
 import { Button } from "@/components/ui/Button";
-import type { RuleWithRelations } from "./RecurringRuleList";
+import type { RuleWithRelations } from "@/types/domain";
 
 type RecurringRuleCardProps = {
   rule: RuleWithRelations;
