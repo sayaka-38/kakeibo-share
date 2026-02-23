@@ -227,7 +227,8 @@
       "groupNotEditable": "グループはメンバー構成に影響するため変更できません",
       "duplicateBadge": "内容をコピーして新規作成",
       "duplicateSubmit": "複製を保存",
-      "duplicateSubmitting": "複製を保存中..."
+      "duplicateSubmitting": "複製を保存中...",
+      "submitAndNext": "保存して次へ"
     },
     "validation": {
       "amountMin": "金額は1円以上で入力してください",

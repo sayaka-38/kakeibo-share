@@ -2,7 +2,7 @@
 
 セッション間の文脈保持用。アーキテクチャ規約・DBスキーマは **CLAUDE.md** を参照。
 
-最終更新: 2026-02-22
+最終更新: 2026-02-23
 
 ---
 
@@ -14,13 +14,13 @@
 | 11 | インフラ正常化・コード共通化・統合テスト56件・Playwright E2E・Migration 031 | #52 |
 | 11.5 | 多言語切替(ja/en)・グループ退出/オーナー譲渡RPC・i18n DRY・RPC共通エラー翻訳・設定画面分割 | #54 |
 | 12 | カスタムカテゴリCRUD・アイコン/カラー選択UI・WCAG対応コントラスト・クールモダン5テーマ | #55, #56 |
-| 13 | 神UX（クイック確定・テンキーOL・スキップバグ修正）・グループナビ改善・GroupSelector | #57–#59 |
-| 13.3–13.6 | 並行清算解禁・FlashMessage・直接グループ遷移・ヘッダー同期・デッドリンク除去・複数draft並行タブUI | #62, #63 |
+| 13–13.6 | 神UX（クイック確定・テンキーOL・スキップバグ修正）・FlashMessage・並行清算解禁・複数draft並行タブUI | #57–#63 |
 | 14 | デモ防衛強化: Edge Function化・Turnstile CAPTCHA・pg_cron自動クリーンアップ・429ハンドリング | #64 |
-| **15A** | **スマートチップ: get_frequent_payments RPC・API route・useFrequentPayments hook・常時表示UI** | WIP |
-| **15A'** | **スマート再計算: refreshSettlementEntries・↻ボタン・filled/skipped保護ロジック** | WIP |
+| 15A | スマートチップ: get_frequent_payments RPC・API route・useFrequentPayments hook・常時表示UI | #66 |
+| 15A' | スマート再計算: refreshSettlementEntries・↻ボタン・filled/skipped保護ロジック | #66 |
+| **15B** | **連続入力モード: 2ボタン形式（保存して次へ/保存）・resetForNext・自動フォーカス** | WIP |
 
-**現在**: Vitest **1168件** + Playwright E2E 1件 = **計1169テスト** / ビルド正常 / lint クリーン
+**現在**: Vitest **1173件** + Playwright E2E 1件 = **計1174テスト** / ビルド正常 / lint クリーン
 
 ---
 
@@ -39,12 +39,13 @@
 | 複数 draft UI | `SettlementSessionManager` | `localDraftSessions` + `isCreating` ステート。pill タブバー |
 | i18n 定数 | `src/lib/i18n/index.ts` | `LOCALE_COOKIE_KEY` / `DEFAULT_LOCALE` 等 |
 | RPC エラー翻訳 | `src/lib/api/translate-rpc-error.ts` | `translateRpcError(rpcName, msg)` / `translateHttpError(status)` |
-| **デモ作成** | **`supabase/functions/create-demo/`** | **Edge Function 経由必須。Turnstile検証→service_roleでDB生成→session返却** |
-| **Turnstile** | **`DemoButton.tsx`** | **`getTurnstileSiteKey()` で取得。未設定時はウィジェット非表示** |
-| **pg_cron** | **Migration 038** | **`delete_expired_demo_data()` を3時間おきに実行** |
-| **HTTP エラー** | **`translateHttpError(status)`** | **429 → `common.rateLimited`、0/"Failed to fetch" → `common.networkError`** |
-| **スマートチップ** | **`DescriptionField.tsx` + `useFrequentPayments`** | **chips あれば常時表示（focus 不要）。h-8 固定でレイアウトシフト防止。onMouseDown+preventDefault でフォーカス保持** |
-| **スマート再計算** | **`src/lib/settlement/refresh-entries.ts`** | **filled/skipped エントリは絶対保護。pending のみ更新/削除対象。RPC key="rule_id\|YYYY-MM-DD"** |
+| デモ作成 | `supabase/functions/create-demo/` | Edge Function 経由必須。Turnstile検証→service_roleでDB生成→session返却 |
+| Turnstile | `DemoButton.tsx` | `getTurnstileSiteKey()` で取得。未設定時はウィジェット非表示 |
+| pg_cron | Migration 038 | `delete_expired_demo_data()` を3時間おきに実行 |
+| HTTP エラー | `translateHttpError(status)` | 429 → `common.rateLimited`、0/"Failed to fetch" → `common.networkError` |
+| スマートチップ | `DescriptionField.tsx` + `useFrequentPayments` | chips あれば常時表示（focus 不要）。h-8 固定でレイアウトシフト防止。onMouseDown+preventDefault でフォーカス保持 |
+| スマート再計算 | `src/lib/settlement/refresh-entries.ts` | filled/skipped エントリは絶対保護。pending のみ更新/削除対象。RPC key="rule_id\|YYYY-MM-DD" |
+| **連続入力** | **`usePaymentForm` + `FullPaymentForm` / `InlinePaymentForm`** | **`resetForNext()` で amount/description/errors のみクリア。日付・splitType 等は維持。「保存して次へ」成功後に `amountRef.current?.focus()`** |
 
 ---
 
@@ -84,11 +85,8 @@
 
 ## ロードマップ
 
-### Phase 15B 候補
-- 連続入力モード（支払い登録後すぐ次の入力へ）
-- Dashboard アクションセンター化（未払い・要対応をトップに集約）
-
 ### 将来構想
+- Dashboard アクションセンター化（未払い・要対応をトップに集約）
 - Capacitor アプリ化（iOS / Android）
 - LINE 通知連携
 - 定期支払いの自動生成

@@ -1,6 +1,7 @@
 "use client";
 
 import { memo } from "react";
+import type { RefObject } from "react";
 import { t } from "@/lib/i18n";
 
 export type AmountFieldProps = {
@@ -8,6 +9,8 @@ export type AmountFieldProps = {
   onChange: (value: string) => void;
   error?: string;
   id?: string;
+  /** 外部から input 要素を参照するための ref（フォーカス制御等に使用） */
+  inputRef?: RefObject<HTMLInputElement | null>;
 };
 
 /**
@@ -24,6 +27,7 @@ export const AmountField = memo(function AmountField({
   onChange,
   error,
   id = "payment-amount",
+  inputRef,
 }: AmountFieldProps) {
   const errorId = `${id}-error`;
 
@@ -40,6 +44,7 @@ export const AmountField = memo(function AmountField({
           {t("common.currency")}
         </span>
         <input
+          ref={inputRef}
           id={id}
           type="text"
           inputMode="numeric"
