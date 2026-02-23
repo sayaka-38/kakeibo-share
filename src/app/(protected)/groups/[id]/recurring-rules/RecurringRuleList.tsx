@@ -4,36 +4,10 @@ import { useState } from "react";
 import { t } from "@/lib/i18n";
 import { Button } from "@/components/ui/Button";
 import type { Category, Profile } from "@/types/database";
+import type { RuleWithRelations } from "@/types/domain";
+export type { RuleWithRelations };
 import RecurringRuleCard from "./RecurringRuleCard";
 import RecurringRuleForm from "./RecurringRuleForm";
-
-// API レスポンスの型
-type RuleWithRelations = {
-  id: string;
-  group_id: string;
-  category_id: string | null;
-  description: string;
-  default_amount: number | null;
-  is_variable: boolean;
-  day_of_month: number;
-  default_payer_id: string;
-  split_type: string;
-  is_active: boolean;
-  interval_months: number;
-  start_date: string;
-  end_date: string | null;
-  created_at: string;
-  updated_at: string;
-  category: { id: string; name: string; icon: string | null; color: string | null } | null;
-  default_payer: { id: string; display_name: string | null; email: string | null } | null;
-  splits: {
-    id: string;
-    user_id: string;
-    amount: number | null;
-    percentage: number | null;
-    user: { id: string; display_name: string | null; email: string | null } | null;
-  }[];
-};
 
 type RecurringRuleListProps = {
   groupId: string;

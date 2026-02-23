@@ -46,7 +46,11 @@ describe("PUT /api/payments/[id] API Route", () => {
         expect.fail("API Route ファイルが存在しない（Red フェーズ）");
       }
       const content = fs.readFileSync(API_ROUTE_PATH, "utf-8");
-      expect(content).toContain("export async function PUT");
+      // withErrorHandler ラッパー形式 または 通常の export async function 形式どちらでも可
+      expect(
+        content.includes("export async function PUT") ||
+        content.includes("export const PUT")
+      ).toBe(true);
     });
 
     it("authenticateRequest を使用している", () => {
@@ -63,7 +67,10 @@ describe("PUT /api/payments/[id] API Route", () => {
       }
       const content = fs.readFileSync(API_ROUTE_PATH, "utf-8");
       // PUT ハンドラで request body から groupId を取得していない
-      const putHandler = content.slice(content.indexOf("export async function PUT"));
+      const putStart = content.includes("export async function PUT")
+        ? content.indexOf("export async function PUT")
+        : content.indexOf("export const PUT");
+      const putHandler = content.slice(putStart);
       expect(putHandler).not.toMatch(/body\.groupId|body\.group_id/);
     });
   });
@@ -245,7 +252,10 @@ describe("API Route 実装詳細", () => {
       }
       const content = fs.readFileSync(API_ROUTE_PATH, "utf-8");
       // PUT ハンドラ内にバリデーション関連のコードが存在
-      const putHandler = content.slice(content.indexOf("export async function PUT"));
+      const putStart = content.includes("export async function PUT")
+        ? content.indexOf("export async function PUT")
+        : content.indexOf("export const PUT");
+      const putHandler = content.slice(putStart);
       expect(putHandler).toContain("400");
     });
 
@@ -254,7 +264,10 @@ describe("API Route 実装詳細", () => {
         expect.fail("API Route ファイルが存在しない（Red フェーズ）");
       }
       const content = fs.readFileSync(API_ROUTE_PATH, "utf-8");
-      const putHandler = content.slice(content.indexOf("export async function PUT"));
+      const putStart = content.includes("export async function PUT")
+        ? content.indexOf("export async function PUT")
+        : content.indexOf("export const PUT");
+      const putHandler = content.slice(putStart);
       // splits 合計の検証ロジックが存在
       expect(putHandler).toMatch(/split|splits/i);
     });
@@ -290,7 +303,10 @@ describe("API Route 実装詳細", () => {
         expect.fail("API Route ファイルが存在しない（Red フェーズ）");
       }
       const content = fs.readFileSync(API_ROUTE_PATH, "utf-8");
-      const putHandler = content.slice(content.indexOf("export async function PUT"));
+      const putStart = content.includes("export async function PUT")
+        ? content.indexOf("export async function PUT")
+        : content.indexOf("export const PUT");
+      const putHandler = content.slice(putStart);
       // PUT ハンドラでは owner_id チェックを行わない（支払者本人のみ）
       expect(putHandler).not.toContain("ownerMatch");
       expect(putHandler).not.toContain("owner_id");
@@ -303,7 +319,10 @@ describe("API Route 実装詳細", () => {
         expect.fail("API Route ファイルが存在しない（Red フェーズ）");
       }
       const content = fs.readFileSync(API_ROUTE_PATH, "utf-8");
-      const putHandler = content.slice(content.indexOf("export async function PUT"));
+      const putStart = content.includes("export async function PUT")
+        ? content.indexOf("export async function PUT")
+        : content.indexOf("export const PUT");
+      const putHandler = content.slice(putStart);
       expect(putHandler).toMatch(/\.update\(/);
     });
 
@@ -312,7 +331,10 @@ describe("API Route 実装詳細", () => {
         expect.fail("API Route ファイルが存在しない（Red フェーズ）");
       }
       const content = fs.readFileSync(API_ROUTE_PATH, "utf-8");
-      const putHandler = content.slice(content.indexOf("export async function PUT"));
+      const putStart = content.includes("export async function PUT")
+        ? content.indexOf("export async function PUT")
+        : content.indexOf("export const PUT");
+      const putHandler = content.slice(putStart);
       expect(putHandler).toContain("replace_payment_splits");
       expect(putHandler).toMatch(/\.rpc\(/);
     });
@@ -322,7 +344,10 @@ describe("API Route 実装詳細", () => {
         expect.fail("API Route ファイルが存在しない（Red フェーズ）");
       }
       const content = fs.readFileSync(API_ROUTE_PATH, "utf-8");
-      const putHandler = content.slice(content.indexOf("export async function PUT"));
+      const putStart = content.includes("export async function PUT")
+        ? content.indexOf("export async function PUT")
+        : content.indexOf("export const PUT");
+      const putHandler = content.slice(putStart);
       // insertedCount < 0 によるエラー検出
       expect(putHandler).toContain("insertedCount");
     });

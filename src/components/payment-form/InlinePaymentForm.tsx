@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { usePaymentForm, type PaymentFormData } from "./hooks/usePaymentForm";
 import { useFrequentPayments } from "./hooks/useFrequentPayments";
 import type { SmartChip } from "./fields/DescriptionField";
@@ -8,6 +8,7 @@ import { AmountFieldWithKeypad, DescriptionField, DateField } from "./fields";
 import { Button } from "@/components/ui/Button";
 import { SuccessBanner } from "@/components/ui/SuccessBanner";
 import { t } from "@/lib/i18n";
+import { useTimedMessage } from "@/hooks/useTimedMessage";
 import type { Category } from "@/types/database";
 
 export type { PaymentFormData };
@@ -59,13 +60,7 @@ export function InlinePaymentForm({
   const dateRef = useRef<HTMLInputElement>(null);
 
   // 成功フィードバック状態
-  const [showSuccess, setShowSuccess] = useState(false);
-  useEffect(() => {
-    if (showSuccess) {
-      const timer = setTimeout(() => setShowSuccess(false), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [showSuccess]);
+  const { message: successMessage, setMessage: setSuccessMessage } = useTimedMessage();
 
   // エラー変化時に最初のエラーフィールドへフォーカス（useEffect で fresh な state を参照）
   useEffect(() => {
@@ -82,7 +77,7 @@ export function InlinePaymentForm({
 
     try {
       await form.handleSubmitAndNext(onSubmit);
-      setShowSuccess(true);
+      setSuccessMessage(t("payments.form.submitSuccess"));
       amountRef.current?.focus();
     } catch {
       // エラーハンドリングは親コンポーネントに委譲
@@ -97,7 +92,7 @@ export function InlinePaymentForm({
 
     try {
       await form.handleSubmit(onSubmit);
-      setShowSuccess(true);
+      setSuccessMessage(t("payments.form.submitSuccess"));
       onDone?.();
     } catch {
       // エラーハンドリングは親コンポーネントに委譲
@@ -107,8 +102,8 @@ export function InlinePaymentForm({
   return (
     <form onSubmit={handleSubmitAndNext} className="space-y-5">
       {/* 成功フィードバック */}
-      {showSuccess && (
-        <SuccessBanner message={t("payments.form.submitSuccess")} />
+      {successMessage && (
+        <SuccessBanner message={successMessage} />
       )}
 
       <AmountFieldWithKeypad

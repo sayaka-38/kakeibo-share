@@ -5,7 +5,12 @@ import { t } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format/currency";
 import { Button } from "@/components/ui/Button";
 import type { Profile } from "@/types/database";
-import type { EntryData } from "./SettlementSessionManager";
+import type { EntryData } from "@/types/domain";
+
+function formatPaymentDate(dateStr: string): string {
+  const currentYear = new Date().getFullYear().toString();
+  return dateStr.startsWith(currentYear) ? dateStr.slice(5) : dateStr;
+}
 
 type EntryCardProps = {
   entry: EntryData;
@@ -144,7 +149,7 @@ export default function EntryCard({
             </span>
           </div>
           <div className="flex items-center gap-3 text-xs text-theme-muted mt-1">
-            <span>{entry.payment_date}</span>
+            <span>{formatPaymentDate(entry.payment_date)}</span>
             <span>・</span>
             <span>{payerName}</span>
             {entry.category && (

@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/api/authenticate";
+import { withErrorHandler } from "@/lib/api/with-error-handler";
 import { validateCategory } from "@/lib/validation/category";
 import { t } from "@/lib/i18n";
 
@@ -10,14 +11,14 @@ type RouteContext = {
 // =============================================================================
 // PUT /api/categories/[id] — カスタムカテゴリ更新
 // =============================================================================
-export async function PUT(request: NextRequest, context: RouteContext) {
+export const PUT = withErrorHandler<RouteContext>(async (request, context) => {
   const auth = await authenticateRequest();
   if (!auth.success) return auth.response;
   const { supabase } = auth;
 
   const { id } = await context.params;
 
-  let body;
+  let body: Record<string, unknown>;
   try {
     body = await request.json();
   } catch {
@@ -31,7 +32,11 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 
   // バリデーション（部分更新: name は必須ではないが、指定された場合はチェック）
   if (name !== undefined) {
-    const validation = validateCategory({ name, icon, color });
+    const validation = validateCategory({
+      name: typeof name === "string" ? name : "",
+      icon: typeof icon === "string" ? icon : null,
+      color: typeof color === "string" ? color : null,
+    });
     if (!validation.success) {
       const firstError = Object.values(validation.errors)[0];
       return NextResponse.json({ error: firstError }, { status: 400 });
@@ -61,7 +66,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 
   // 更新フィールド組み立て
   const update: Record<string, unknown> = {};
-  if (name !== undefined) update.name = name.trim();
+  if (name !== undefined) update.name = (name as string).trim();
   if (icon !== undefined) update.icon = icon || null;
   if (color !== undefined) update.color = color || null;
 
@@ -89,12 +94,12 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   }
 
   return NextResponse.json({ category });
-}
+}, "PUT /api/categories/[id]");
 
 // =============================================================================
 // DELETE /api/categories/[id] — カスタムカテゴリ削除
 // =============================================================================
-export async function DELETE(_request: NextRequest, context: RouteContext) {
+export const DELETE = withErrorHandler<RouteContext>(async (_request, context) => {
   const auth = await authenticateRequest();
   if (!auth.success) return auth.response;
   const { supabase } = auth;
@@ -137,4 +142,4 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
   }
 
   return NextResponse.json({ success: true });
-}
+}, "DELETE /api/categories/[id]");

@@ -18,6 +18,10 @@
 3. **通貨**: `formatCurrency()` (`src/lib/format/currency.ts`)。清算は `showSign: true`
 4. **環境変数**: `getSupabaseEnv()` (`src/lib/env.ts`)。`process.env.XXX!` 禁止
 5. **デモ作成**: 必ず `create-demo` Edge Function 経由 (`supabase.functions.invoke`)。クライアントからの直接 DB 操作禁止。Turnstile トークン検証・service_role による最小権限実行を担保する
+6. **ドメイン型**: コンポーネント横断型は `src/types/domain.ts` に集約する
+7. **バリデーション**: API Route の body parsing は Zod (`src/lib/validation/schemas.ts`) を使用する
+8. **APIルート**: 外側の try-catch は `withErrorHandler` (`src/lib/api/with-error-handler.ts`) で共通化する
+9. **DB変更後**: `npm run db:gen-types` を即座に実行する（マイグレーション適用後必須）
 
 ---
 

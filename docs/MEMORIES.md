@@ -2,7 +2,7 @@
 
 セッション間の文脈保持用。アーキテクチャ規約・DBスキーマは **CLAUDE.md** を参照。
 
-最終更新: 2026-02-23 (Phase 15B')
+最終更新: 2026-02-23 (Phase 15B'')
 
 ---
 
@@ -16,10 +16,11 @@
 | 13–13.6 | 神UX（クイック確定・テンキーOL・スキップバグ修正）・FlashMessage・並行清算解禁・複数draft並行タブUI | #57–#63 |
 | 14 | デモ防衛強化: Edge Function化・Turnstile CAPTCHA・pg_cron自動クリーンアップ | #64 |
 | 15A–15A' | スマートチップ(get_frequent_payments RPC)・スマート再計算(↻ボタン・filled/skipped保護) | #66 |
-| **15B** | **連続入力モード: 2ボタン形式（保存して次へ/保存）・resetForNext・成功通知グリーン化** | #68 |
-| **15B'** | **填記即時登録・ActionSheet・清算内容の調整へ改称・チップトグル・モーダル改善** | WIP |
+| 15B | 連続入力モード: 2ボタン形式（保存して次へ/保存）・resetForNext・成功通知グリーン化 | #68, #69 |
+| 15B' | 填記即時登録・ActionSheet・清算内容の調整へ改称・チップトグル・モーダル改善 | #70 |
+| **15B''** | **アーキテクチャ洗練: withErrorHandler・Zod統合・domain.ts型集約・useTimedMessage・UI最終調整** | WIP |
 
-**現在**: Vitest **1173件** + Playwright E2E 1件 = **計1174テスト** / ビルド正常 / lint クリーン
+**現在**: Vitest **1166件** + Playwright E2E 1件 = **計1167テスト** / ビルド正常 / lint クリーン
 
 ---
 
@@ -47,6 +48,10 @@
 | **confirm_settlement 冪等性** | `confirm_settlement` RPC (Migration 041) | `source_payment_id IS NOT NULL` のエントリは二重作成しない |
 | モーダル閉じ | `RecurringRuleForm` / `EntryEditModal` | 背景クリック（`onClick={() => onClose()}`）+ ヘッダー × ボタン（44px タップターゲット） |
 | 清算内容の調整 | 旧称「清算準備室」 | UI表示・i18n キー `settlementSession.title` は「清算内容の調整」に統一済み |
+| **withErrorHandler** | `src/lib/api/with-error-handler.ts` | `export const DELETE = withErrorHandler<Ctx>(async (req, ctx) => {...}, "名前")` — ZodError → 400、予期せぬ例外 → 500 |
+| **Zod スキーマ** | `src/lib/validation/schemas.ts` | API Route body parsing 用。`paymentRequestSchema` / `recurringRuleRequestSchema` / `categoryRequestSchema`。フロントエンド側の i18n バリデーター（`validation/*.ts`）は別途保持 |
+| **domain.ts** | `src/types/domain.ts` | `SessionData` / `EntryData` / `SuggestionData` / `RuleWithRelations` を集約。全 consumer は `@/types/domain` から直接 import |
+| **useTimedMessage** | `src/hooks/useTimedMessage.ts` | 5秒自動消去メッセージ hook。FullPaymentForm / InlinePaymentForm の成功バナー表示に使用 |
 
 ---
 

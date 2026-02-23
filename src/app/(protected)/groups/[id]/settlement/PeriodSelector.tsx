@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { t } from "@/lib/i18n";
 import { Button } from "@/components/ui/Button";
-import type { SuggestionData } from "./SettlementSessionManager";
+import type { SuggestionData } from "@/types/domain";
 
 type PeriodSelectorProps = {
   suggestion: SuggestionData | null;

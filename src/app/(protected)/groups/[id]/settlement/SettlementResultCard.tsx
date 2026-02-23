@@ -9,7 +9,7 @@ import {
 } from "@/lib/settlement/consolidate";
 import type { MemberBalance } from "@/lib/settlement/consolidate";
 import type { Profile, NetTransfer } from "@/types/database";
-import type { EntryData, SessionData } from "./SettlementSessionManager";
+import type { EntryData, SessionData } from "@/types/domain";
 
 type SettlementResultCardProps = {
   session: SessionData;

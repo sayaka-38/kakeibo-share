@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { t } from "@/lib/i18n";
@@ -8,6 +8,7 @@ import { formatCurrency } from "@/lib/format/currency";
 import { usePaymentForm } from "./hooks/usePaymentForm";
 import type { PaymentFormInitialData } from "./hooks/usePaymentForm";
 import { useFrequentPayments } from "./hooks/useFrequentPayments";
+import { useTimedMessage } from "@/hooks/useTimedMessage";
 import { AmountField, DescriptionField, DateField } from "./fields";
 import type { SmartChip } from "./fields/DescriptionField";
 import { Button } from "@/components/ui/Button";
@@ -85,14 +86,7 @@ export default function FullPaymentForm({
   const amountRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-
-  useEffect(() => {
-    if (showSuccess) {
-      const timer = setTimeout(() => setShowSuccess(false), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [showSuccess]);
+  const { message: successMessage, setMessage: setSuccessMessage } = useTimedMessage();
 
   // グループ状態: fixedGroupId があればそれを使用
   const [groupId, setGroupId] = useState(fixedGroupId || prefill?.groupId || groups[0]?.id || "");
@@ -328,7 +322,7 @@ export default function FullPaymentForm({
     const ok = await executeSubmit();
     if (!ok) return;
     form.resetForNext();
-    setShowSuccess(true);
+    setSuccessMessage(t("payments.form.submitSuccess"));
     router.refresh();
     amountRef.current?.focus();
   };
@@ -342,7 +336,7 @@ export default function FullPaymentForm({
     if (isInlineMode) {
       // インラインモードでは遷移せずリセット＋成功表示
       form.resetForNext();
-      setShowSuccess(true);
+      setSuccessMessage(t("payments.form.submitSuccess"));
       router.refresh();
       amountRef.current?.focus();
     } else {
@@ -368,8 +362,8 @@ export default function FullPaymentForm({
         </div>
       )}
 
-      {showSuccess && (
-        <SuccessBanner message={t("payments.form.submitSuccess")} />
+      {successMessage && (
+        <SuccessBanner message={successMessage} />
       )}
 
       {error && (

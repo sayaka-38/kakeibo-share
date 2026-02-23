@@ -41,7 +41,10 @@ describe("PUT /api/profile", () => {
 
   it("PUT ハンドラがエクスポートされている", () => {
     const content = fs.readFileSync(PROFILE_API_PATH, "utf-8");
-    expect(content).toContain("export async function PUT");
+    expect(
+      content.includes("export async function PUT") ||
+      content.includes("export const PUT")
+    ).toBe(true);
   });
 
   it("authenticateRequest を使用している", () => {

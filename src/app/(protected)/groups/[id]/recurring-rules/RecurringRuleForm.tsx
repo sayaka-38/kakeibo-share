@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { AmountFieldWithKeypad } from "@/components/payment-form/fields/AmountFieldWithKeypad";
 import { validateRecurringRule } from "@/lib/validation/recurring-rule";
 import type { Category, Profile } from "@/types/database";
-import type { RuleWithRelations } from "./RecurringRuleList";
+import type { RuleWithRelations } from "@/types/domain";
 
 type RecurringRuleFormProps = {
   groupId: string;
@@ -357,11 +357,6 @@ export default function RecurringRuleForm({
                 </span>
               </label>
             </div>
-            {isVariable && (
-              <p className="mt-1 text-xs text-theme-muted">
-                {t("recurringRules.variableAmountHint")}
-              </p>
-            )}
           </div>
 
           {/* Amount (固定額は入力可、変動は disabled で常時表示) */}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/api/authenticate";
 import { validateRecurringRule } from "@/lib/validation/recurring-rule";
+import { withErrorHandler } from "@/lib/api/with-error-handler";
 
 // =============================================================================
 // GET /api/recurring-rules?groupId=xxx
@@ -68,7 +69,7 @@ export async function GET(request: NextRequest) {
 // POST /api/recurring-rules
 // 新規固定費ルールを作成
 // =============================================================================
-export async function POST(request: NextRequest) {
+export const POST = withErrorHandler(async (request: NextRequest) => {
   const auth = await authenticateRequest();
   if (!auth.success) return auth.response;
   const { user, supabase } = auth;
@@ -194,4 +195,4 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ rule }, { status: 201 });
-}
+}, "POST /api/recurring-rules");

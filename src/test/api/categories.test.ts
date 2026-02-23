@@ -21,7 +21,10 @@ describe("POST /api/categories", () => {
 
   it("POST ハンドラがエクスポートされている", () => {
     const content = fs.readFileSync(POST_ROUTE, "utf-8");
-    expect(content).toContain("export async function POST");
+    expect(
+      content.includes("export async function POST") ||
+      content.includes("export const POST")
+    ).toBe(true);
   });
 
   it("authenticateRequest を使用している", () => {
@@ -29,9 +32,13 @@ describe("POST /api/categories", () => {
     expect(content).toContain("authenticateRequest");
   });
 
-  it("validateCategory を使用している", () => {
+  it("Zod または validateCategory でバリデーションしている", () => {
     const content = fs.readFileSync(POST_ROUTE, "utf-8");
-    expect(content).toContain("validateCategory");
+    expect(
+      content.includes("validateCategory") ||
+      content.includes("categoryRequestSchema") ||
+      content.includes("createCategoryRequestSchema")
+    ).toBe(true);
   });
 
   it("メンバーシップ確認をしている", () => {
@@ -52,7 +59,10 @@ describe("PUT /api/categories/[id]", () => {
 
   it("PUT ハンドラがエクスポートされている", () => {
     const content = fs.readFileSync(ITEM_ROUTE, "utf-8");
-    expect(content).toContain("export async function PUT");
+    expect(
+      content.includes("export async function PUT") ||
+      content.includes("export const PUT")
+    ).toBe(true);
   });
 
   it("is_default ガードチェックがある", () => {
@@ -65,7 +75,10 @@ describe("PUT /api/categories/[id]", () => {
 describe("DELETE /api/categories/[id]", () => {
   it("DELETE ハンドラがエクスポートされている", () => {
     const content = fs.readFileSync(ITEM_ROUTE, "utf-8");
-    expect(content).toContain("export async function DELETE");
+    expect(
+      content.includes("export async function DELETE") ||
+      content.includes("export const DELETE")
+    ).toBe(true);
   });
 
   it("is_default ガードチェックがある", () => {

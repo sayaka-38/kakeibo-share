@@ -43,7 +43,11 @@ describe("DELETE /api/payments/[id] API Route", () => {
         expect.fail("API Route ファイルが存在しない（Red フェーズ）");
       }
       const content = fs.readFileSync(API_ROUTE_PATH, "utf-8");
-      expect(content).toContain("export async function DELETE");
+      // withErrorHandler ラッパー形式 または 通常の export async function 形式どちらでも可
+      expect(
+        content.includes("export async function DELETE") ||
+        content.includes("export const DELETE")
+      ).toBe(true);
     });
 
     it("authenticateRequest を使用している", () => {
@@ -60,11 +64,15 @@ describe("DELETE /api/payments/[id] API Route", () => {
       }
       const content = fs.readFileSync(API_ROUTE_PATH, "utf-8");
       // DELETE ハンドラ部分のみ検証（PUT ハンドラは request.json() を使うため）
+      const deleteStart = content.includes("export async function DELETE")
+        ? content.indexOf("export async function DELETE")
+        : content.indexOf("export const DELETE");
+      const putStart = content.includes("export async function PUT")
+        ? content.indexOf("export async function PUT")
+        : content.indexOf("export const PUT");
       const deleteHandler = content.slice(
-        content.indexOf("export async function DELETE"),
-        content.indexOf("export async function PUT") === -1
-          ? undefined
-          : content.indexOf("export async function PUT")
+        deleteStart,
+        putStart === -1 ? undefined : putStart
       );
       // DELETE ハンドラでは request.json() を呼んでいない
       expect(deleteHandler).not.toContain("request.json()");
@@ -340,22 +348,30 @@ describe("アーカイブマイグレーション", () => {
 describe("DELETE ハンドラがアーカイブ RPC を使用", () => {
   it("archive_payment RPC を呼び出している", () => {
     const content = fs.readFileSync(API_ROUTE_PATH, "utf-8");
+    const deleteStart = content.includes("export async function DELETE")
+      ? content.indexOf("export async function DELETE")
+      : content.indexOf("export const DELETE");
+    const putStart = content.includes("export async function PUT")
+      ? content.indexOf("export async function PUT")
+      : content.indexOf("export const PUT");
     const deleteHandler = content.slice(
-      content.indexOf("export async function DELETE"),
-      content.indexOf("export async function PUT") === -1
-        ? undefined
-        : content.indexOf("export async function PUT")
+      deleteStart,
+      putStart === -1 ? undefined : putStart
     );
     expect(deleteHandler).toContain('rpc("archive_payment"');
   });
 
   it("RPC エラーを translateRpcError で処理している", () => {
     const content = fs.readFileSync(API_ROUTE_PATH, "utf-8");
+    const deleteStart = content.includes("export async function DELETE")
+      ? content.indexOf("export async function DELETE")
+      : content.indexOf("export const DELETE");
+    const putStart = content.includes("export async function PUT")
+      ? content.indexOf("export async function PUT")
+      : content.indexOf("export const PUT");
     const deleteHandler = content.slice(
-      content.indexOf("export async function DELETE"),
-      content.indexOf("export async function PUT") === -1
-        ? undefined
-        : content.indexOf("export async function PUT")
+      deleteStart,
+      putStart === -1 ? undefined : putStart
     );
     // RAISE EXCEPTION 形式に統一済み: 数値コードではなく translateRpcError で処理
     expect(deleteHandler).toContain("translateRpcError");
@@ -368,11 +384,15 @@ describe("DELETE ハンドラがアーカイブ RPC を使用", () => {
 
   it("アプリ層の事前チェックで 404 / 403 を返す", () => {
     const content = fs.readFileSync(API_ROUTE_PATH, "utf-8");
+    const deleteStart = content.includes("export async function DELETE")
+      ? content.indexOf("export async function DELETE")
+      : content.indexOf("export const DELETE");
+    const putStart = content.includes("export async function PUT")
+      ? content.indexOf("export async function PUT")
+      : content.indexOf("export const PUT");
     const deleteHandler = content.slice(
-      content.indexOf("export async function DELETE"),
-      content.indexOf("export async function PUT") === -1
-        ? undefined
-        : content.indexOf("export async function PUT")
+      deleteStart,
+      putStart === -1 ? undefined : putStart
     );
     // 事前チェック（404: 存在しない、403: 清算済み・権限なし）
     expect(deleteHandler).toContain("404");
@@ -391,11 +411,15 @@ describe("DELETE ハンドラがアーカイブ RPC を使用", () => {
 
   it("直接 .from('payments').delete() を使用していない", () => {
     const content = fs.readFileSync(API_ROUTE_PATH, "utf-8");
+    const deleteStart = content.includes("export async function DELETE")
+      ? content.indexOf("export async function DELETE")
+      : content.indexOf("export const DELETE");
+    const putStart = content.includes("export async function PUT")
+      ? content.indexOf("export async function PUT")
+      : content.indexOf("export const PUT");
     const deleteHandler = content.slice(
-      content.indexOf("export async function DELETE"),
-      content.indexOf("export async function PUT") === -1
-        ? undefined
-        : content.indexOf("export async function PUT")
+      deleteStart,
+      putStart === -1 ? undefined : putStart
     );
     expect(deleteHandler).not.toContain('.delete()');
   });

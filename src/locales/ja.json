@@ -402,7 +402,6 @@
     "newPeriod": "＋ 新しい期間",
     "creating": "準備中...",
     "deleteDraft": "期間を再設定",
-    "periodResetSafety": "期間を変更しても、登録済みの支払いデータは消えません",
     "checklist": "チェックリスト",
     "statusPending": "未入力",
     "statusFilled": "入力済み",
@@ -428,7 +427,9 @@
       "reportedBy": "{name}さんが送金完了を報告しました",
       "waitingForRecipient": "相手の受取確認を待っています"
     },
-    "refresh": "最新の状態に更新",
+    "confirmPeriodReset": "期間を再設定しますか？",
+    "confirmPeriodResetAction": "再設定",
+    "refresh": "更新",
     "errors": {
       "fetchFailed": "セッションの取得に失敗しました",
       "createFailed": "セッションの作成に失敗しました",
@@ -458,8 +459,7 @@
     "intervalEveryNMonths": "{n}ヶ月ごと",
     "isVariable": "金額タイプ",
     "fixedAmount": "固定額",
-    "variableAmount": "変動",
-    "variableAmountHint": "毎回金額を入力",
+    "variableAmount": "変動（毎回金額を入力）",
     "defaultPayer": "デフォルト支払者",
     "splitType": "分割方法",
     "splitEqual": "均等",

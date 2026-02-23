@@ -1,17 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/api/authenticate";
-import { validateCategory } from "@/lib/validation/category";
+import { withErrorHandler } from "@/lib/api/with-error-handler";
+import { createCategoryRequestSchema } from "@/lib/validation/schemas";
 import { t } from "@/lib/i18n";
 
 // =============================================================================
 // POST /api/categories — カスタムカテゴリ作成
 // =============================================================================
-export async function POST(request: NextRequest) {
+export const POST = withErrorHandler(async (request: Request) => {
   const auth = await authenticateRequest();
   if (!auth.success) return auth.response;
   const { user, supabase } = auth;
 
-  let body;
+  let body: Record<string, unknown>;
   try {
     body = await request.json();
   } catch {
@@ -21,21 +22,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { groupId, name, icon, color } = body;
-
-  if (!groupId) {
-    return NextResponse.json(
-      { error: t("categories.api.groupIdRequired") },
-      { status: 400 }
-    );
-  }
-
-  // バリデーション
-  const validation = validateCategory({ name: name || "", icon, color });
-  if (!validation.success) {
-    const firstError = Object.values(validation.errors)[0];
-    return NextResponse.json({ error: firstError }, { status: 400 });
-  }
+  // Zod でバリデーション（ZodError は withErrorHandler が 400 で捕捉）
+  const { groupId, name, icon, color } = createCategoryRequestSchema.parse(body);
 
   // メンバーシップ確認
   const { data: membership } = await supabase
@@ -74,4 +62,4 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ category }, { status: 201 });
-}
+}, "POST /api/categories");
