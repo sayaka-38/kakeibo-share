@@ -2,7 +2,7 @@
 
 セッション間の文脈保持用。アーキテクチャ規約・DBスキーマは **CLAUDE.md** を参照。
 
-最終更新: 2026-02-23 (Phase 15B + UI/UX polish)
+最終更新: 2026-02-23 (Phase 15B')
 
 ---
 
@@ -11,14 +11,13 @@
 | Phase | 内容 | 最終PR |
 |-------|------|--------|
 | 1–10 | 基盤・UI・型安全・CI・RLS・認証・清算エンジン・テーマ・設定画面・匿名化退会 | #43 |
-| 11 | インフラ正常化・コード共通化・統合テスト56件・Playwright E2E・Migration 031 | #52 |
-| 11.5 | 多言語切替(ja/en)・グループ退出/オーナー譲渡RPC・i18n DRY・RPC共通エラー翻訳・設定画面分割 | #54 |
-| 12 | カスタムカテゴリCRUD・アイコン/カラー選択UI・WCAG対応コントラスト・クールモダン5テーマ | #55, #56 |
+| 11–11.5 | インフラ正常化・多言語(ja/en)・グループ退出/オーナー譲渡・i18n DRY・統合テスト56件・E2E | #52–#54 |
+| 12 | カスタムカテゴリCRUD・WCAG対応コントラスト・クールモダン5テーマ | #55, #56 |
 | 13–13.6 | 神UX（クイック確定・テンキーOL・スキップバグ修正）・FlashMessage・並行清算解禁・複数draft並行タブUI | #57–#63 |
-| 14 | デモ防衛強化: Edge Function化・Turnstile CAPTCHA・pg_cron自動クリーンアップ・429ハンドリング | #64 |
-| 15A | スマートチップ: get_frequent_payments RPC・API route・useFrequentPayments hook・常時表示UI | #66 |
-| 15A' | スマート再計算: refreshSettlementEntries・↻ボタン・filled/skipped保護ロジック | #66 |
-| **15B** | **連続入力モード: 2ボタン形式（保存して次へ/保存）・resetForNext・自動フォーカス・成功通知グリーン化・チップ領域安定化** | #68 |
+| 14 | デモ防衛強化: Edge Function化・Turnstile CAPTCHA・pg_cron自動クリーンアップ | #64 |
+| 15A–15A' | スマートチップ(get_frequent_payments RPC)・スマート再計算(↻ボタン・filled/skipped保護) | #66 |
+| **15B** | **連続入力モード: 2ボタン形式（保存して次へ/保存）・resetForNext・成功通知グリーン化** | #68 |
+| **15B'** | **填記即時登録・ActionSheet・清算内容の調整へ改称・チップトグル・モーダル改善** | WIP |
 
 **現在**: Vitest **1173件** + Playwright E2E 1件 = **計1174テスト** / ビルド正常 / lint クリーン
 
@@ -34,20 +33,20 @@
 | splits 更新 | DB RPC `replace_payment_splits` | 直接 UPDATE 禁止 |
 | スキップエントリ | `actual_amount CHECK (> 0)` 制約 | skip 時は必ず `null`（0 は DB 制約違反） |
 | FlashMessage | `src/components/FlashMessage.tsx` | `?flash=xxx` URLパラムを読み4秒表示。`<Suspense>` 必須 |
-| GroupSelector | `src/components/GroupSelector.tsx` | `pathname` useEffect 依存 → ページ遷移ごとに再取得 |
 | 並行清算 | `api/settlement-sessions` POST | 期間重複 draft のみブロック（同期間のみ 409） |
-| 複数 draft UI | `SettlementSessionManager` | `localDraftSessions` + `isCreating` ステート。pill タブバー |
 | i18n 定数 | `src/lib/i18n/index.ts` | `LOCALE_COOKIE_KEY` / `DEFAULT_LOCALE` 等 |
 | RPC エラー翻訳 | `src/lib/api/translate-rpc-error.ts` | `translateRpcError(rpcName, msg)` / `translateHttpError(status)` |
 | デモ作成 | `supabase/functions/create-demo/` | Edge Function 経由必須。Turnstile検証→service_roleでDB生成→session返却 |
-| Turnstile | `DemoButton.tsx` | `getTurnstileSiteKey()` で取得。未設定時はウィジェット非表示 |
 | pg_cron | Migration 038 | `delete_expired_demo_data()` を3時間おきに実行 |
-| HTTP エラー | `translateHttpError(status)` | 429 → `common.rateLimited`、0/"Failed to fetch" → `common.networkError` |
-| スマートチップ | `DescriptionField.tsx` + `useFrequentPayments` | chips あれば常時表示（focus 不要）。h-9 + overflow-y-hidden でレイアウトシフト防止。onMouseDown+preventDefault でフォーカス保持 |
-| スマート再計算 | `src/lib/settlement/refresh-entries.ts` | filled/skipped エントリは絶対保護。pending のみ更新/削除対象。RPC key="rule_id\|YYYY-MM-DD" |
-| **連続入力** | **`usePaymentForm` + `FullPaymentForm` / `InlinePaymentForm`** | **`resetForNext()` で amount/description/errors のみクリア。日付・splitType 等は維持。「保存して次へ」成功後に `amountRef.current?.focus()`** |
-| **成功通知** | `InlinePaymentForm` / `FullPaymentForm` / `FlashMessage` | `bg-green-500/10 border-green-500/30 text-green-700` + SVG チェックマーク。5秒表示。全フォームで統一 |
-| **inputRef 規約** | `AmountField` / `DescriptionField` / `DateField` | `inputRef?: RefObject<HTMLInputElement \| null>` で外部 ref を受け取る（フォーカス制御用） |
+| スマートチップ | `DescriptionField.tsx` + `useFrequentPayments` | chips あれば常時表示（focus 不要）。h-9 + overflow-y-hidden。onMouseDown+preventDefault でフォーカス保持。**再タップで × トグル（クリア）** |
+| スマート再計算 | `src/lib/settlement/refresh-entries.ts` | filled/skipped エントリは絶対保護。pending のみ更新/削除対象 |
+| 連続入力 | `usePaymentForm` + `FullPaymentForm` / `InlinePaymentForm` | `resetForNext()` で amount/description/errors のみクリア。日付・splitType 等は維持 |
+| 成功通知 | `src/components/ui/SuccessBanner.tsx` | `bg-green-500/10 border-green-500/30 text-green-700` + SVG チェックマーク。FullPaymentForm/InlinePaymentForm で共用 |
+| ActionSheet | `src/components/ui/ActionSheet.tsx` | ボトムドロワー（`fixed bottom-0`）。PaymentRow 三点リーダーから呼出し（編集/複製/削除） |
+| **填記即時登録** | `fill_settlement_entry_with_payment` RPC (Migration 041) | `rule_id IS NOT NULL` エントリ填記 → payments 即時作成。スキップ時は payment 削除。API Route が rule_id で RPC を振り分け |
+| **confirm_settlement 冪等性** | `confirm_settlement` RPC (Migration 041) | `source_payment_id IS NOT NULL` のエントリは二重作成しない |
+| モーダル閉じ | `RecurringRuleForm` / `EntryEditModal` | 背景クリック（`onClick={() => onClose()}`）+ ヘッダー × ボタン（44px タップターゲット） |
+| 清算内容の調整 | 旧称「清算準備室」 | UI表示・i18n キー `settlementSession.title` は「清算内容の調整」に統一済み |
 
 ---
 
@@ -58,7 +57,6 @@
 | ボット対策 (CAPTCHA) | Cloudflare Turnstile | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` (Vercel) / `TURNSTILE_SECRET_KEY` (Edge Function) |
 | アトミックなデモ生成 | Edge Function `create-demo` | `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY`（自動） |
 | 自動データ削除 | pg_cron + `delete_expired_demo_data()` | — (Migration 038 で設定済み) |
-| 429 ハンドリング | `translateHttpError(429)` | — |
 
 **注意**: ローカル開発では `TURNSTILE_SECRET_KEY` 未設定 = CAPTCHA スキップ。`NEXT_PUBLIC_TURNSTILE_SITE_KEY` 未設定 = ウィジェット非表示。
 
@@ -91,4 +89,3 @@
 - Dashboard アクションセンター化（未払い・要対応をトップに集約）
 - Capacitor アプリ化（iOS / Android）
 - LINE 通知連携
-- 定期支払いの自動生成

@@ -92,17 +92,32 @@ export default function EntryEditModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+      onClick={() => { if (!isSubmitting) onClose(); }}
+    >
       <div
         className="bg-theme-card-bg rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-theme-card-bg border-b border-theme-card-border px-6 py-4 rounded-t-xl">
-          <h2 className="text-lg font-semibold text-theme-headline">
-            {entry.description}
-          </h2>
-          <p className="text-sm text-theme-muted">{entry.payment_date}</p>
+        <div className="sticky top-0 bg-theme-card-bg border-b border-theme-card-border px-6 py-4 rounded-t-xl flex items-start justify-between gap-2">
+          <div>
+            <h2 className="text-lg font-semibold text-theme-headline">
+              {entry.description}
+            </h2>
+            <p className="text-sm text-theme-muted">{entry.payment_date}</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2.5 -m-2.5 text-theme-muted hover:text-theme-text transition-colors shrink-0"
+            aria-label="閉じる"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
         {/* Form */}

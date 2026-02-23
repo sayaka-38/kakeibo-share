@@ -247,16 +247,29 @@ export default function RecurringRuleForm({
   }, [onClose, isSubmitting]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+      onClick={() => { if (!isSubmitting) onClose(); }}
+    >
       <div
         className="bg-theme-card-bg rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-theme-card-bg border-b px-6 py-4 rounded-t-xl">
+        <div className="sticky top-0 bg-theme-card-bg border-b px-6 py-4 rounded-t-xl flex items-center justify-between">
           <h2 className="text-lg font-semibold text-theme-headline">
             {isEditMode ? t("recurringRules.editRule") : t("recurringRules.addRule")}
           </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2.5 -m-2.5 text-theme-muted hover:text-theme-text transition-colors"
+            aria-label="閉じる"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
         {/* Form */}
@@ -351,15 +364,14 @@ export default function RecurringRuleForm({
             )}
           </div>
 
-          {/* Amount (only for fixed) */}
-          {!isVariable && (
-            <AmountFieldWithKeypad
-              id="rule-amount"
-              value={amount}
-              onChange={setAmount}
-              error={errors.amount}
-            />
-          )}
+          {/* Amount (固定額は入力可、変動は disabled で常時表示) */}
+          <AmountFieldWithKeypad
+            id="rule-amount"
+            value={amount}
+            onChange={setAmount}
+            error={errors.amount}
+            disabled={isVariable}
+          />
 
           {/* Day of Month */}
           <div>

@@ -51,10 +51,16 @@ export const DescriptionField = memo(function DescriptionField({
 
   const handleSelectChip = useCallback(
     (chip: SmartChip) => {
-      onChange(chip.description);
-      onSelectChip?.(chip);
+      if (chip.description === value) {
+        // 再タップ → クリア
+        onChange("");
+        onSelectChip?.({ description: "", categoryId: null });
+      } else {
+        onChange(chip.description);
+        onSelectChip?.(chip);
+      }
     },
-    [onChange, onSelectChip]
+    [onChange, onSelectChip, value]
   );
 
   return (
@@ -72,19 +78,29 @@ export const DescriptionField = memo(function DescriptionField({
         aria-label={visibleChips.length > 0 ? t("payments.form.smartChipsLabel") : undefined}
         aria-hidden={visibleChips.length === 0 ? true : undefined}
       >
-        {visibleChips.map((chip) => (
-          <button
-            key={chip.description}
-            type="button"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              handleSelectChip(chip);
-            }}
-            className="flex-shrink-0 px-2.5 py-0.5 text-xs rounded-full border border-theme-primary/40 bg-theme-primary/10 text-theme-primary hover:bg-theme-primary/20 transition-colors whitespace-nowrap"
-          >
-            {chip.description}
-          </button>
-        ))}
+        {visibleChips.map((chip) => {
+          const isSelected = chip.description === value;
+          return (
+            <button
+              key={chip.description}
+              type="button"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                handleSelectChip(chip);
+              }}
+              className={`flex-shrink-0 px-2.5 py-0.5 text-xs rounded-full border transition-colors whitespace-nowrap flex items-center gap-1 ${
+                isSelected
+                  ? "bg-theme-primary/25 border-theme-primary text-theme-primary font-medium"
+                  : "border-theme-primary/40 bg-theme-primary/10 text-theme-primary hover:bg-theme-primary/20"
+              }`}
+            >
+              {isSelected && (
+                <span className="text-theme-primary leading-none" aria-hidden="true">×</span>
+              )}
+              {chip.description}
+            </button>
+          );
+        })}
       </div>
 
       <input

@@ -13,6 +13,11 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+// Mock next/navigation (PaymentRow が useRouter を使用)
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+}));
+
 // Mock i18n
 vi.mock("@/lib/i18n", () => ({
   t: (key: string) => {
@@ -42,9 +47,9 @@ vi.mock("@/lib/calculation/split", () => ({
   isProxySplit: () => false,
 }));
 
-// Mock DeletePaymentForm
-vi.mock("@/components/DeletePaymentButton", () => ({
-  DeletePaymentForm: () => <button>削除</button>,
+// Mock ActionSheet (PaymentRow が使用)
+vi.mock("@/components/ui/ActionSheet", () => ({
+  ActionSheet: () => null,
 }));
 
 // Mock PaymentSplitAccordion

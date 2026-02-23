@@ -381,7 +381,7 @@
     }
   },
   "settlementSession": {
-    "title": "清算準備室",
+    "title": "清算内容の調整",
     "subtitle": "固定費と未清算の支払いをまとめて確認・確定",
     "periodSelection": "清算期間を選択",
     "periodStart": "開始日",
@@ -391,24 +391,19 @@
     "lastSettled": "前回清算: {date}まで",
     "createSession": "清算準備を開始",
     "help": {
-      "forgotten": "確定後に支払い忘れが見つかっても、次回の清算に自動で合算されるので安心してください。",
-      "howItWorks": "清算の仕組みについて"
+      "forgotten": "確定後に支払い忘れが見つかっても、次回の清算に自動で合算されるので安心してください。"
     },
     "empty": {
       "title": "まだ清算履歴がありません",
       "description": "清算を確定すると、ここに履歴が表示されます。",
-      "howItWorks": "まず「清算準備室」で期間を選び、固定費・支払いを確認してから清算を確定しましょう。"
+      "howItWorks": "まず「清算内容の調整」で期間を選び、固定費・支払いを確認してから清算を確定しましょう。"
     },
-    "multipleDrafts": "作業中の清算が複数あります",
-    "selectDraft": "作業するセッションを選んでください",
     "draftPeriod": "{start} 〜 {end}",
     "newPeriod": "＋ 新しい期間",
     "creating": "準備中...",
-    "existingDraft": "作成中のセッションがあります",
-    "resumeDraft": "続きから",
-    "deleteDraft": "破棄して新規作成",
+    "deleteDraft": "期間を再設定",
+    "periodResetSafety": "期間を変更しても、登録済みの支払いデータは消えません",
     "checklist": "チェックリスト",
-    "checklistHint": "各項目の金額を確認・入力してください",
     "statusPending": "未入力",
     "statusFilled": "入力済み",
     "statusSkipped": "スキップ",
@@ -417,21 +412,14 @@
     "entryTypeExisting": "既存支払い",
     "fillAmount": "金額を入力",
     "skipEntry": "スキップ",
-    "skipConfirm": "この項目をスキップしますか？（今月は発生しなかった等）",
-    "addManual": "手動で項目を追加",
     "summary": "サマリー",
-    "totalEntries": "全{total}件",
-    "filledCount": "入力済み: {count}件",
-    "pendingCount": "未入力: {count}件",
     "totalAmount": "合計金額",
     "confirmSettlement": "清算を確定",
     "confirming": "確定中...",
     "confirmWarning": "確定すると、入力済みの項目が支払いとして登録されます",
     "cannotConfirm": "未入力の項目があります",
-    "confirmed": "清算が確定しました",
     "pendingPayment": {
       "title": "支払い待ち",
-      "transferInstructions": "送金指示",
       "reportPayment": "送金完了を報告",
       "reporting": "報告中...",
       "confirmReceipt": "受取を確認して清算完了",
@@ -441,7 +429,6 @@
       "waitingForRecipient": "相手の受取確認を待っています"
     },
     "refresh": "最新の状態に更新",
-    "refreshing": "更新中...",
     "errors": {
       "fetchFailed": "セッションの取得に失敗しました",
       "createFailed": "セッションの作成に失敗しました",

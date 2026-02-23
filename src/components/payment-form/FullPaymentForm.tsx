@@ -11,6 +11,7 @@ import { useFrequentPayments } from "./hooks/useFrequentPayments";
 import { AmountField, DescriptionField, DateField } from "./fields";
 import type { SmartChip } from "./fields/DescriptionField";
 import { Button } from "@/components/ui/Button";
+import { SuccessBanner } from "@/components/ui/SuccessBanner";
 import {
   calculateEqualSplit,
   calculateCustomSplits,
@@ -368,16 +369,7 @@ export default function FullPaymentForm({
       )}
 
       {showSuccess && (
-        <div
-          className="bg-green-500/10 border border-green-500/30 text-green-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2 animate-fade-in"
-          role="status"
-          aria-live="polite"
-        >
-          <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-          {t("payments.form.submitSuccess")}
-        </div>
+        <SuccessBanner message={t("payments.form.submitSuccess")} />
       )}
 
       {error && (

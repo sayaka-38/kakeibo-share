@@ -127,14 +127,19 @@ export default function SettlementEntryList({
                 </Button>
               </>
             ) : (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowDeleteConfirm(true)}
-                className="text-theme-accent hover:text-theme-accent/80"
-              >
-                {t("settlementSession.deleteDraft")}
-              </Button>
+              <div className="text-right">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="text-theme-accent hover:text-theme-accent/80"
+                >
+                  {t("settlementSession.deleteDraft")}
+                </Button>
+                <p className="text-xs text-theme-muted mt-0.5">
+                  {t("settlementSession.periodResetSafety")}
+                </p>
+              </div>
             )}
           </div>
         </div>

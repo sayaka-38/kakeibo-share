@@ -44,9 +44,11 @@ describe("Payment list layout hardening", () => {
       expect(content).toContain("flex flex-col items-end");
     });
 
-    it("アクションスロットが固定幅（w-16）で配置されている", () => {
+    it("三点リーダーメニューボタンが配置されている", () => {
       const content = fs.readFileSync(PAYMENT_ROW_PATH, "utf-8");
-      expect(content).toContain("w-16 flex items-center justify-end gap-1");
+      // ActionSheet を使ったメニューボタンが存在する
+      expect(content).toContain("ActionSheet");
+      expect(content).toContain("showActionSheet");
     });
 
     it("複製ボタンが配置されている", () => {
