@@ -800,6 +800,17 @@ export type Database = {
         Args: { p_payment_id: string; p_user_id: string }
         Returns: number
       }
+      fill_settlement_entry_with_payment: {
+        Args: {
+          p_actual_amount: number
+          p_entry_id: string
+          p_payer_id?: string
+          p_payment_date?: string
+          p_status?: string
+          p_user_id: string
+        }
+        Returns: number
+      }
       generate_settlement_entries: {
         Args: { p_session_id: string; p_user_id: string }
         Returns: number

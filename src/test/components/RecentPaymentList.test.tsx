@@ -9,6 +9,30 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { RecentPaymentList } from "@/components/payment-list/RecentPaymentList";
 
+// Mock next/navigation (PaymentRow が useRouter を使用)
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+}));
+
+// Mock next/link
+vi.mock("next/link", () => ({
+  default: ({ children, href }: { children: React.ReactNode; href: string }) => (
+    <a href={href}>{children}</a>
+  ),
+}));
+
+// Mock ActionSheet
+vi.mock("@/components/ui/ActionSheet", () => ({
+  ActionSheet: () => null,
+}));
+
+// Mock PaymentSplitAccordion
+vi.mock("@/components/payment-list/PaymentSplitAccordion", () => ({
+  SplitAccordionProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  SplitBadge: () => <span>内訳</span>,
+  SplitContent: () => null,
+}));
+
 // Mock Supabase
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(),

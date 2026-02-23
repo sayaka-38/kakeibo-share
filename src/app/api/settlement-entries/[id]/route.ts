@@ -44,8 +44,27 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   // スキップ時は actual_amount を null にして DB constraint (> 0) を回避
   const resolvedAmount = status === "skipped" ? null : (actualAmount ?? null);
 
-  // RPC でエントリを更新
-  const { data: result, error } = await supabase.rpc("update_settlement_entry", {
+  // rule_id を取得（固定費エントリか判定するため）
+  const { data: entry, error: entryError } = await supabase
+    .from("settlement_entries")
+    .select("rule_id")
+    .eq("id", id)
+    .single();
+
+  if (entryError || !entry) {
+    return NextResponse.json(
+      { error: "エントリが見つかりません" },
+      { status: 404 }
+    );
+  }
+
+  // rule_id IS NOT NULL → 填記即時登録 RPC を使用
+  // rule_id IS NULL → 既存の update_settlement_entry を使用
+  const rpcName = entry.rule_id
+    ? "fill_settlement_entry_with_payment"
+    : "update_settlement_entry";
+
+  const { data: result, error } = await supabase.rpc(rpcName, {
     p_entry_id: id,
     p_user_id: user.id,
     p_actual_amount: resolvedAmount,
@@ -55,7 +74,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   });
 
   if (error) {
-    console.error("Failed to update settlement entry:", error);
+    console.error(`Failed to update settlement entry (${rpcName}):`, error);
     return NextResponse.json(
       { error: "エントリの更新に失敗しました" },
       { status: 500 }

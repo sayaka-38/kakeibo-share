@@ -116,7 +116,7 @@ export default async function SettlementHistoryPage({ params }: PageProps) {
           href={`/groups/${groupId}/settlement`}
           className="text-sm text-theme-primary-text hover:text-theme-primary-text/80 mb-2 inline-block"
         >
-          &larr; 清算準備室
+          &larr; 清算内容の調整
         </Link>
         <h1 className="text-2xl font-bold text-theme-headline">清算履歴</h1>
         <p className="text-sm text-theme-muted mt-1">

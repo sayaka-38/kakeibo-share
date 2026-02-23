@@ -103,7 +103,8 @@ describe("フロントエンド清算済みガード", () => {
       // isSettled が payment.settlement_id から導出され、!isSettled で制御
       expect(content).toContain("!!payment.settlement_id");
       expect(content).toContain("!isSettled");
-      expect(content).toContain("DeletePaymentForm");
+      // ActionSheet 経由で削除を提供
+      expect(content).toContain("ActionSheet");
     });
 
     it("RecentPaymentList が PaymentRow を使用している", () => {
@@ -147,13 +148,13 @@ describe("フロントエンド清算済みガード", () => {
       expect(guardIdx).toBeGreaterThan(-1);
     });
 
-    it("PaymentRow で削除ボタンに !isSettled ガードがある", () => {
+    it("PaymentRow で削除アイテムに !isSettled ガードがある", () => {
       const content = fs.readFileSync(PAYMENT_ROW_PATH, "utf-8");
-      // DeletePaymentForm の使用箇所（import ではなく JSX）の条件に !isSettled が含まれる
-      const importEnd = content.indexOf("DeletePaymentForm") + "DeletePaymentForm".length;
-      const usageIdx = content.indexOf("DeletePaymentForm", importEnd);
-      expect(usageIdx).toBeGreaterThan(-1);
-      const guardIdx = content.lastIndexOf("!isSettled", usageIdx);
+      // ActionSheet items の構築部分で isOwner && !isSettled 条件で削除を制御
+      // payments.delete キーが !isSettled ガードと共に存在する
+      const deleteKeyIdx = content.indexOf('"payments.delete"');
+      expect(deleteKeyIdx).toBeGreaterThan(-1);
+      const guardIdx = content.lastIndexOf("!isSettled", deleteKeyIdx);
       expect(guardIdx).toBeGreaterThan(-1);
     });
 

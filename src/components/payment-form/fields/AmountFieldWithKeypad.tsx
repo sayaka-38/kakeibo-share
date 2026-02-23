@@ -20,6 +20,8 @@ export type AmountFieldWithKeypadProps = {
   id?: string;
   /** 外部から input 要素を参照するための ref（フォーカス制御等に使用） */
   inputRef?: RefObject<HTMLInputElement | null>;
+  /** true の場合、入力不可（グレー背景・キーパッド無効） */
+  disabled?: boolean;
 };
 
 export const AmountFieldWithKeypad = memo(function AmountFieldWithKeypad({
@@ -28,6 +30,7 @@ export const AmountFieldWithKeypad = memo(function AmountFieldWithKeypad({
   error,
   id = "payment-amount",
   inputRef: externalInputRef,
+  disabled = false,
 }: AmountFieldWithKeypadProps) {
   const [showKeypad, setShowKeypad] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -57,8 +60,9 @@ export const AmountFieldWithKeypad = memo(function AmountFieldWithKeypad({
   }, [showKeypad]);
 
   const handleFocus = useCallback(() => {
+    if (disabled) return;
     setShowKeypad(true);
-  }, []);
+  }, [disabled]);
 
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -103,9 +107,10 @@ export const AmountFieldWithKeypad = memo(function AmountFieldWithKeypad({
           onChange={handleInputChange}
           onFocus={handleFocus}
           placeholder={t("payments.form.amountPlaceholder")}
+          disabled={disabled}
           className={`block w-full pl-8 pr-3 py-3 border rounded-lg shadow-sm text-theme-headline placeholder:text-theme-muted/70 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-colors ${
             error ? "border-theme-accent" : "border-theme-card-border"
-          }`}
+          } ${disabled ? "bg-gray-100 cursor-not-allowed text-theme-muted" : ""}`}
           aria-invalid={!!error}
           aria-describedby={error ? errorId : undefined}
         />
