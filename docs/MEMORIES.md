@@ -2,7 +2,7 @@
 
 セッション間の文脈保持用。アーキテクチャ規約・DBスキーマは **CLAUDE.md** を参照。
 
-最終更新: 2026-02-23
+最終更新: 2026-02-23 (Phase 15B + UI/UX polish)
 
 ---
 
@@ -18,7 +18,7 @@
 | 14 | デモ防衛強化: Edge Function化・Turnstile CAPTCHA・pg_cron自動クリーンアップ・429ハンドリング | #64 |
 | 15A | スマートチップ: get_frequent_payments RPC・API route・useFrequentPayments hook・常時表示UI | #66 |
 | 15A' | スマート再計算: refreshSettlementEntries・↻ボタン・filled/skipped保護ロジック | #66 |
-| **15B** | **連続入力モード: 2ボタン形式（保存して次へ/保存）・resetForNext・自動フォーカス** | WIP |
+| **15B** | **連続入力モード: 2ボタン形式（保存して次へ/保存）・resetForNext・自動フォーカス・成功通知グリーン化・チップ領域安定化** | #68 |
 
 **現在**: Vitest **1173件** + Playwright E2E 1件 = **計1174テスト** / ビルド正常 / lint クリーン
 
@@ -43,9 +43,11 @@
 | Turnstile | `DemoButton.tsx` | `getTurnstileSiteKey()` で取得。未設定時はウィジェット非表示 |
 | pg_cron | Migration 038 | `delete_expired_demo_data()` を3時間おきに実行 |
 | HTTP エラー | `translateHttpError(status)` | 429 → `common.rateLimited`、0/"Failed to fetch" → `common.networkError` |
-| スマートチップ | `DescriptionField.tsx` + `useFrequentPayments` | chips あれば常時表示（focus 不要）。h-8 固定でレイアウトシフト防止。onMouseDown+preventDefault でフォーカス保持 |
+| スマートチップ | `DescriptionField.tsx` + `useFrequentPayments` | chips あれば常時表示（focus 不要）。h-9 + overflow-y-hidden でレイアウトシフト防止。onMouseDown+preventDefault でフォーカス保持 |
 | スマート再計算 | `src/lib/settlement/refresh-entries.ts` | filled/skipped エントリは絶対保護。pending のみ更新/削除対象。RPC key="rule_id\|YYYY-MM-DD" |
 | **連続入力** | **`usePaymentForm` + `FullPaymentForm` / `InlinePaymentForm`** | **`resetForNext()` で amount/description/errors のみクリア。日付・splitType 等は維持。「保存して次へ」成功後に `amountRef.current?.focus()`** |
+| **成功通知** | `InlinePaymentForm` / `FullPaymentForm` / `FlashMessage` | `bg-green-500/10 border-green-500/30 text-green-700` + SVG チェックマーク。5秒表示。全フォームで統一 |
+| **inputRef 規約** | `AmountField` / `DescriptionField` / `DateField` | `inputRef?: RefObject<HTMLInputElement \| null>` で外部 ref を受け取る（フォーカス制御用） |
 
 ---
 

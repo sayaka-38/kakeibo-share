@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useCallback } from "react";
+import type { RefObject } from "react";
 import { t } from "@/lib/i18n";
 
 export type SmartChip = {
@@ -15,6 +16,8 @@ export type DescriptionFieldProps = {
   id?: string;
   chips?: SmartChip[];
   onSelectChip?: (chip: SmartChip) => void;
+  /** 外部から input 要素を参照するための ref（フォーカス制御等に使用） */
+  inputRef?: RefObject<HTMLInputElement | null>;
 };
 
 /**
@@ -34,6 +37,7 @@ export const DescriptionField = memo(function DescriptionField({
   id = "payment-description",
   chips = [],
   onSelectChip,
+  inputRef,
 }: DescriptionFieldProps) {
   const errorId = `${id}-error`;
 
@@ -62,9 +66,9 @@ export const DescriptionField = memo(function DescriptionField({
         {t("payments.form.description")}
       </label>
 
-      {/* スマートチップ領域 — 常に h-8 を確保してレイアウトシフトを防ぐ */}
+      {/* スマートチップ領域 — 常に h-9 を確保してレイアウトシフトを防ぐ */}
       <div
-        className="h-8 flex items-center gap-1.5 overflow-x-auto scrollbar-none mb-1"
+        className="h-9 flex items-center gap-1.5 overflow-x-auto overflow-y-hidden scrollbar-none mb-1"
         aria-label={visibleChips.length > 0 ? t("payments.form.smartChipsLabel") : undefined}
         aria-hidden={visibleChips.length === 0 ? true : undefined}
       >
@@ -84,6 +88,7 @@ export const DescriptionField = memo(function DescriptionField({
       </div>
 
       <input
+        ref={inputRef}
         id={id}
         type="text"
         value={value}

@@ -1,6 +1,7 @@
 "use client";
 
 import { memo } from "react";
+import type { RefObject } from "react";
 import { t } from "@/lib/i18n";
 
 export type DateFieldProps = {
@@ -8,6 +9,8 @@ export type DateFieldProps = {
   onChange: (value: string) => void;
   error?: string;
   id?: string;
+  /** 外部から input 要素を参照するための ref（フォーカス制御等に使用） */
+  inputRef?: RefObject<HTMLInputElement | null>;
 };
 
 /**
@@ -23,6 +26,7 @@ export const DateField = memo(function DateField({
   onChange,
   error,
   id = "payment-date",
+  inputRef,
 }: DateFieldProps) {
   const errorId = `${id}-error`;
 
@@ -35,6 +39,7 @@ export const DateField = memo(function DateField({
         {t("payments.form.date")}
       </label>
       <input
+        ref={inputRef}
         id={id}
         type="date"
         value={value}

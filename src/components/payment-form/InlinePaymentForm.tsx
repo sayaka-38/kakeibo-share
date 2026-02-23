@@ -1,10 +1,10 @@
 "use client";
 
-import { useRef, useState, useEffect, forwardRef, memo } from "react";
+import { useRef, useState, useEffect } from "react";
 import { usePaymentForm, type PaymentFormData } from "./hooks/usePaymentForm";
 import { useFrequentPayments } from "./hooks/useFrequentPayments";
 import type { SmartChip } from "./fields/DescriptionField";
-import { AmountFieldWithKeypad } from "./fields";
+import { AmountFieldWithKeypad, DescriptionField, DateField } from "./fields";
 import { Button } from "@/components/ui/Button";
 import { t } from "@/lib/i18n";
 import type { Category } from "@/types/database";
@@ -61,7 +61,7 @@ export function InlinePaymentForm({
   const [showSuccess, setShowSuccess] = useState(false);
   useEffect(() => {
     if (showSuccess) {
-      const timer = setTimeout(() => setShowSuccess(false), 2000);
+      const timer = setTimeout(() => setShowSuccess(false), 5000);
       return () => clearTimeout(timer);
     }
   }, [showSuccess]);
@@ -108,10 +108,13 @@ export function InlinePaymentForm({
       {/* 成功フィードバック */}
       {showSuccess && (
         <div
-          className="bg-theme-text/10 border border-theme-text text-theme-text px-4 py-3 rounded-lg text-sm animate-fade-in"
+          className="bg-green-500/10 border border-green-500/30 text-green-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2 animate-fade-in"
           role="status"
           aria-live="polite"
         >
+          <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
           {t("payments.form.submitSuccess")}
         </div>
       )}
@@ -123,11 +126,11 @@ export function InlinePaymentForm({
         inputRef={amountRef}
       />
 
-      <DescriptionFieldWithRef
-        ref={descriptionRef}
+      <DescriptionField
         value={form.description}
         onChange={form.setDescription}
         error={form.errors.description}
+        inputRef={descriptionRef}
         chips={smartChips}
         onSelectChip={(chip) => {
           form.setDescription(chip.description);
@@ -135,11 +138,11 @@ export function InlinePaymentForm({
         }}
       />
 
-      <DateFieldWithRef
-        ref={dateRef}
+      <DateField
         value={form.paymentDate}
         onChange={form.setPaymentDate}
         error={form.errors.paymentDate}
+        inputRef={dateRef}
       />
 
       {/* カテゴリ選択 */}
@@ -272,124 +275,3 @@ export function InlinePaymentForm({
     </form>
   );
 }
-
-// ============================================
-// ref対応ラッパーコンポーネント
-// ============================================
-
-type DescriptionFieldWithRefProps = {
-  value: string;
-  onChange: (value: string) => void;
-  error?: string;
-  chips?: SmartChip[];
-  onSelectChip?: (chip: SmartChip) => void;
-};
-
-const DescriptionFieldWithRef = memo(
-  forwardRef<HTMLInputElement, DescriptionFieldWithRefProps>(
-    function DescriptionFieldWithRef(
-      { value, onChange, error, chips = [], onSelectChip },
-      ref
-    ) {
-      const errorId = "payment-description-error";
-
-      const visibleChips = chips.length > 0
-        ? chips.filter(
-            (c) =>
-              !value ||
-              c.description.toLowerCase().includes(value.toLowerCase())
-          )
-        : [];
-
-      return (
-        <div>
-          <label
-            htmlFor="payment-description"
-            className="block text-sm font-medium text-theme-text mb-1"
-          >
-            {t("payments.form.description")}
-          </label>
-
-          {/* スマートチップ領域 — 常に h-8 を確保してレイアウトシフトを防ぐ */}
-          <div className="h-8 flex items-center gap-1.5 overflow-x-auto scrollbar-none mb-1">
-            {visibleChips.map((chip) => (
-              <button
-                key={chip.description}
-                type="button"
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  onChange(chip.description);
-                  onSelectChip?.(chip);
-                }}
-                className="flex-shrink-0 px-2.5 py-0.5 text-xs rounded-full border border-theme-primary/40 bg-theme-primary/10 text-theme-primary hover:bg-theme-primary/20 transition-colors whitespace-nowrap"
-              >
-                {chip.description}
-              </button>
-            ))}
-          </div>
-
-          <input
-            ref={ref}
-            id="payment-description"
-            type="text"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder={t("payments.form.descriptionPlaceholder")}
-            className={`block w-full px-3 py-3 border rounded-lg shadow-sm text-theme-headline placeholder:text-theme-muted/70 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-colors ${
-              error ? "border-theme-accent" : "border-theme-card-border"
-            }`}
-            aria-invalid={!!error}
-            aria-describedby={error ? errorId : undefined}
-          />
-          {error && (
-            <p id={errorId} className="mt-1 text-sm text-theme-accent" role="alert">
-              {error}
-            </p>
-          )}
-        </div>
-      );
-    }
-  )
-);
-
-type DateFieldWithRefProps = {
-  value: string;
-  onChange: (value: string) => void;
-  error?: string;
-};
-
-const DateFieldWithRef = memo(
-  forwardRef<HTMLInputElement, DateFieldWithRefProps>(
-    function DateFieldWithRef({ value, onChange, error }, ref) {
-      const errorId = "payment-date-error";
-
-      return (
-        <div>
-          <label
-            htmlFor="payment-date"
-            className="block text-sm font-medium text-theme-text mb-1"
-          >
-            {t("payments.form.date")}
-          </label>
-          <input
-            ref={ref}
-            id="payment-date"
-            type="date"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            className={`block w-full px-3 py-3 border rounded-lg shadow-sm text-theme-headline focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-colors ${
-              error ? "border-theme-accent" : "border-theme-card-border"
-            }`}
-            aria-invalid={!!error}
-            aria-describedby={error ? errorId : undefined}
-          />
-          {error && (
-            <p id={errorId} className="mt-1 text-sm text-theme-accent" role="alert">
-              {error}
-            </p>
-          )}
-        </div>
-      );
-    }
-  )
-);
