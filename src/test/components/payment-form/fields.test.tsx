@@ -313,8 +313,8 @@ describe("DescriptionField", () => {
           onSelectChip={vi.fn()}
         />
       );
-      // チップコンテナ（h-8クラス）は常にDOMに存在する
-      expect(container.querySelector(".h-8")).toBeInTheDocument();
+      // チップコンテナ（h-9クラス）は常にDOMに存在する
+      expect(container.querySelector(".h-9")).toBeInTheDocument();
     });
   });
 });
