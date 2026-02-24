@@ -141,7 +141,8 @@ async function insertNewRuleEntries(
   supabase: Supabase,
   sessionId: string,
   expectedRuleKeys: Map<string, { rule: RuleQueryResult; paymentDate: string }>,
-  handledRuleKeys: Set<string>
+  handledRuleKeys: Set<string>,
+  paymentMap: Map<string, PaymentQueryResult>
 ): Promise<number> {
   let added = 0;
 
@@ -157,6 +158,17 @@ async function insertNewRuleEntries(
       split_type: string;
       splits: { user_id: string; amount: number | null; percentage: number | null }[];
     };
+
+    // fill_settlement_entry_with_payment で作成された payment が paymentMap に残っている場合
+    // （セッション削除→再ドラフト後も payment は settlement_id=NULL のまま残る）、
+    // pending 再生成をスキップ。payment は insertNewPaymentEntries が filled エントリとして追加する。
+    const hasMatchingPayment = [...paymentMap.values()].some(
+      (p) =>
+        p.payment_date === paymentDate &&
+        p.payer_id === r.default_payer_id &&
+        p.description === r.description
+    );
+    if (hasMatchingPayment) continue;
 
     const { data: entry } = await supabase
       .from("settlement_entries")
@@ -325,7 +337,8 @@ export async function refreshSettlementEntries(
     supabase,
     sessionId,
     expectedRuleKeys,
-    handledRuleKeys
+    handledRuleKeys,
+    paymentMap
   );
   const addedPayments = await insertNewPaymentEntries(
     supabase,
