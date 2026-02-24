@@ -10,6 +10,33 @@ import type { Database } from "@/types/database";
 import { computeRuleDatesInPeriod } from "./recurring-schedule";
 
 /**
+ * payment_splits のデータから split_type を推定する。
+ *
+ * - splits が空 → equal
+ * - いずれかの金額が 0 → custom（全額負担の代理払いなど）
+ * - 最大金額と最小金額の差が 1 超 → custom（意図的な比率設定）
+ * - それ以外（1円以内のゆらぎ） → equal（均等割りの端数処理）
+ */
+function detectSplitType(
+  splits: { user_id: string; amount: number }[]
+): "equal" | "custom" {
+  if (splits.length === 0) return "equal";
+  const amounts = splits.map((s) => s.amount);
+  const min = Math.min(...amounts);
+  const max = Math.max(...amounts);
+  if (min === 0 || max - min > 1) return "custom";
+  return "equal";
+}
+
+/** ローカルタイムゾーンで YYYY-MM-DD 文字列に変換 */
+function formatDateLocal(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+/**
  * 清算セッションにエントリを生成
  *
  * Part 1: アクティブな recurring_rules から、期間内の発生日ごとにエントリ作成
@@ -50,6 +77,20 @@ export async function generateSettlementEntries(
 
   let entryCount = 0;
 
+  // 未清算の支払いを先行取得（Part 1の重複ガードと Part 2 のインポート両方で使用）
+  const { data: payments } = await supabase
+    .from("payments")
+    .select(`*, payment_splits(user_id, amount)`)
+    .eq("group_id", groupId)
+    .is("settlement_id", null)
+    .lte("payment_date", periodEnd);
+
+  // ルール照合用: (description|payer_id|payment_date) の存在セット
+  const existingPaymentKeys = new Set<string>();
+  for (const p of payments ?? []) {
+    existingPaymentKeys.add(`${p.description}|${p.payer_id}|${p.payment_date}`);
+  }
+
   // =========================================================================
   // Part 1: 固定費ルールからエントリを生成
   // =========================================================================
@@ -76,6 +117,11 @@ export async function generateSettlementEntries(
 
       for (const date of dates) {
         const paymentDate = formatDateLocal(date);
+
+        // 同じ説明・支払者・日付の payment が既に存在する場合はスキップ
+        // （fill_settlement_entry_with_payment で作成済みの payment は Part 2 で取り込む）
+        const matchKey = `${rule.description}|${rule.default_payer_id}|${paymentDate}`;
+        if (existingPaymentKeys.has(matchKey)) continue;
 
         const { data: entry } = await supabase
           .from("settlement_entries")
@@ -131,17 +177,15 @@ export async function generateSettlementEntries(
   // =========================================================================
   // Part 2: 未清算の既存支払いを取り込み
   // =========================================================================
-  const { data: payments } = await supabase
-    .from("payments")
-    .select(`*, payment_splits(user_id, amount)`)
-    .eq("group_id", groupId)
-    .is("settlement_id", null)
-    .lte("payment_date", periodEnd);
-
   if (payments) {
     for (const payment of payments) {
       const hasSplits =
         payment.payment_splits && payment.payment_splits.length > 0;
+
+      // splits データから split_type を正確に推定する（均等割りの誤分類を防ぐ）
+      const splitType = hasSplits
+        ? detectSplitType(payment.payment_splits)
+        : "equal";
 
       const { data: entry } = await supabase
         .from("settlement_entries")
@@ -154,7 +198,7 @@ export async function generateSettlementEntries(
           payer_id: payment.payer_id,
           payment_date: payment.payment_date,
           status: "filled",
-          split_type: hasSplits ? "custom" : "equal",
+          split_type: splitType,
           entry_type: "existing",
           source_payment_id: payment.id,
           filled_by: payment.payer_id,
@@ -166,8 +210,8 @@ export async function generateSettlementEntries(
       if (entry) {
         entryCount++;
 
-        // 既存の payment_splits をコピー
-        if (hasSplits) {
+        // カスタム split のみ splits テーブルにコピー（equal は不要）
+        if (splitType === "custom" && hasSplits) {
           const splitsToInsert = payment.payment_splits.map(
             (s: { user_id: string; amount: number }) => ({
               entry_id: entry.id,
@@ -185,12 +229,4 @@ export async function generateSettlementEntries(
   }
 
   return entryCount;
-}
-
-/** ローカルタイムゾーンで YYYY-MM-DD 文字列に変換 */
-function formatDateLocal(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
 }
