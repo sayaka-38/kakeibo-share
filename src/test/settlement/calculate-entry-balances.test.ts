@@ -214,6 +214,42 @@ describe("calculateEntryBalances", () => {
       expect(you.owed + partner.owed).toBe(1_001); // sum(owed) = actual_amount ✓
     });
 
+    it("actual_amount > storedTotal: 12,000円 / stored=[A=5000, B=5000] → A=6,000, B=6,000", () => {
+      /**
+       * 50/50 ルールで default_amount=10,000 のエントリを 12,000 円で填記した場合。
+       * stored splits の金額（5,000 + 5,000 = 10,000）ではなく、
+       * 比率（50%/50%）を actual_amount=12,000 に掛け直す必要がある。
+       *
+       * 正規化:
+       *   A: floor(12000 × 5000 / 10000) = 6000
+       *   B: floor(12000 × 5000 / 10000) = 6000
+       *   remainder = 12000 - 12000 = 0
+       * → A=6,000, B=6,000（「5,000 ずつ」にはならない）
+       */
+      const MEMBER_A = "user-a";
+      const MEMBER_B = "user-b";
+      const twoEqual: EntryMember[] = [
+        { id: MEMBER_A, name: "A" },
+        { id: MEMBER_B, name: "B" },
+      ];
+
+      const entries = [
+        makeCustomEntry("e1", MEMBER_A, 12_000, [
+          { user_id: MEMBER_A, storedAmount: 5_000 }, // 50% 設定
+          { user_id: MEMBER_B, storedAmount: 5_000 }, // 50% 設定
+        ]),
+      ];
+
+      const result = calculateEntryBalances(entries, twoEqual);
+      const a = result.find((b) => b.id === MEMBER_A)!;
+      const b = result.find((b) => b.id === MEMBER_B)!;
+
+      // stored 金額（5,000）ではなく比率再計算（6,000）になること
+      expect(a.owed).toBe(6_000);
+      expect(b.owed).toBe(6_000);
+      expect(a.owed + b.owed).toBe(12_000); // 不変条件: sum(owed) = actual_amount
+    });
+
     it("複数カスタムエントリで誤差が累積しない", () => {
       // 各エントリ: stored based on default=1000, actual=1001 (ズレあり)
       const entries = [
@@ -289,6 +325,55 @@ describe("calculateEntryBalances", () => {
       expect(you.balance + partner.balance).toBe(0);
 
       // 不変条件: 負担合計 = 総支出
+      expect(you.owed + partner.owed).toBe(191_148);
+    });
+
+    it("均等割り6項目(合計¥181,148) + カスタム¥10,000(あなた100%) → 負担¥100,574 / 差額+¥80,574", () => {
+      /**
+       * 実データ再現（6エントリ版）:
+       *   均等割り: 15,463 + 10,105 + 128,000 + 4,950 + 8,355 + 14,275 = 181,148
+       *   カスタム: パートナー立替¥10,000、あなたが100%負担
+       *   合計支出: 191,148
+       *
+       *   Group A 計算（エントリ数によらず一括合算）:
+       *     S_A = 181,148 → perPerson = 90,574, remainder = 0
+       *   Group B 計算:
+       *     YOU owed = 10,000, PARTNER owed = 0
+       *   合算:
+       *     YOU  owed = 90,574 + 10,000 = 100,574
+       *     PARTNER owed = 90,574 + 0   =  90,574
+       */
+      const entries = [
+        makeEntry("e1", YOU, 15_463),
+        makeEntry("e2", YOU, 10_105),
+        makeEntry("e3", YOU, 128_000),
+        makeEntry("e4", YOU, 4_950),
+        makeEntry("e5", YOU, 8_355),
+        makeEntry("e6", YOU, 14_275),
+        makeCustomEntry("e7", PARTNER, 10_000, [
+          { user_id: YOU, storedAmount: 10_000 },
+          { user_id: PARTNER, storedAmount: 0 },
+        ]),
+      ];
+
+      const result = calculateEntryBalances(entries, twoMembers);
+      const you = result.find((b) => b.id === YOU)!;
+      const partner = result.find((b) => b.id === PARTNER)!;
+
+      // 支払い
+      expect(you.paid).toBe(181_148);
+      expect(partner.paid).toBe(10_000);
+
+      // 負担分（1円の狂いもなく）
+      expect(you.owed).toBe(100_574);
+      expect(partner.owed).toBe(90_574);
+
+      // 差額
+      expect(you.balance).toBe(80_574);
+      expect(partner.balance).toBe(-80_574);
+
+      // 不変条件
+      expect(you.balance + partner.balance).toBe(0);
       expect(you.owed + partner.owed).toBe(191_148);
     });
 
