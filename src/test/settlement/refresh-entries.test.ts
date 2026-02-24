@@ -583,6 +583,130 @@ describe("refreshSettlementEntries", () => {
   });
 
   // ============================================
+  // 二重エントリ防止（填記済みルールエントリの source_payment_id 保護）
+  // ============================================
+  describe("二重エントリ防止", () => {
+    it("填記済みルールエントリの source_payment_id は payment として重複追加されない", async () => {
+      /**
+       * シナリオ:
+       *   - entry-filled-rule: rule_id=rule-1, source_payment_id=payment-x, status=filled
+       *     （fill_settlement_entry_with_payment で即時作成、settlement_id は未設定）
+       *   - payments に payment-x が settlement_id=null で存在する
+       *   - rule-1 は期間内にアクティブ
+       *
+       * 期待値:
+       *   - 新規エントリは追加されない（result=0）
+       *   - insertedEntries は空
+       */
+      const { supabase, insertedEntries } = createRefreshMockSupabase({
+        membership: true,
+        session: { id: "session-1", status: "draft" },
+        existingEntries: [
+          {
+            id: "entry-filled-rule",
+            rule_id: "rule-1",
+            source_payment_id: "payment-x",
+            payment_date: "2026-01-25",
+            status: "filled",
+            description: "家賃",
+            expected_amount: 100_000,
+            payer_id: "user-1",
+            category_id: null,
+          },
+        ],
+        rules: [
+          {
+            id: "rule-1",
+            description: "家賃",
+            category_id: null,
+            default_amount: 100_000,
+            default_payer_id: "user-1",
+            day_of_month: 25,
+            interval_months: 1,
+            split_type: "equal",
+            is_active: true,
+            start_date: "2026-01-01",
+            end_date: null,
+            created_at: "2026-01-01T00:00:00Z",
+            splits: [],
+          },
+        ],
+        payments: [
+          {
+            // fill_settlement_entry_with_payment が作った payment。
+            // confirm 前は settlement_id=null のまま payments クエリに載る。
+            id: "payment-x",
+            description: "家賃",
+            category_id: null,
+            amount: 100_000,
+            payer_id: "user-1",
+            payment_date: "2026-01-25",
+            created_at: "2026-01-25T10:00:00Z",
+            payment_splits: [],
+          },
+        ],
+      });
+
+      const result = await refreshSettlementEntries(
+        supabase, "session-1", "group-1",
+        "2026-01-01", "2026-01-31", "user-1"
+      );
+
+      expect(result).toBe(0);
+      expect(insertedEntries).toHaveLength(0);
+    });
+
+    it("廃止ルールの填記済みエントリの source_payment_id も重複追加されない", async () => {
+      /**
+       * シナリオ:
+       *   - ルールが廃止された後も、填記済みエントリと対応 payment が残っている
+       *   - refresh 時に payment が重複追加されないことを確認
+       */
+      const { supabase, insertedEntries, deletedEntryIds } =
+        createRefreshMockSupabase({
+          membership: true,
+          session: { id: "session-1", status: "draft" },
+          existingEntries: [
+            {
+              id: "entry-filled-stale-rule",
+              rule_id: "rule-deleted",
+              source_payment_id: "payment-y",
+              payment_date: "2026-01-25",
+              status: "filled",
+              description: "廃止済み固定費",
+              expected_amount: 5_000,
+              payer_id: "user-1",
+              category_id: null,
+            },
+          ],
+          rules: [], // rule-deleted は廃止済み
+          payments: [
+            {
+              id: "payment-y",
+              description: "廃止済み固定費",
+              category_id: null,
+              amount: 5_000,
+              payer_id: "user-1",
+              payment_date: "2026-01-25",
+              created_at: "2026-01-25T10:00:00Z",
+              payment_splits: [],
+            },
+          ],
+        });
+
+      const result = await refreshSettlementEntries(
+        supabase, "session-1", "group-1",
+        "2026-01-01", "2026-01-31", "user-1"
+      );
+
+      expect(result).toBe(0);
+      expect(insertedEntries).toHaveLength(0);
+      // filled エントリは廃止ルールでも削除されない
+      expect(deletedEntryIds).not.toContain("entry-filled-stale-rule");
+    });
+  });
+
+  // ============================================
   // 複合シナリオ
   // ============================================
   describe("複合シナリオ", () => {

@@ -98,6 +98,13 @@ async function reconcileExistingEntries(
 
   for (const entry of entries) {
     if (entry.rule_id) {
+      // 填記済みルールエントリが source_payment_id を持つ場合（fill_settlement_entry_with_payment
+      // で即時作成された payment）、その payment を handledPaymentIds に登録しておく。
+      // これをしないと refresh 時に同 payment が未清算 payment として重複追加される。
+      if (entry.source_payment_id) {
+        handledPaymentIds.add(entry.source_payment_id);
+      }
+
       const key = `${entry.rule_id}|${entry.payment_date}`;
 
       if (expectedRuleKeys.has(key)) {
