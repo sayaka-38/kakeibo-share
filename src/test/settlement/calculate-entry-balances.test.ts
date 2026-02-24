@@ -214,6 +214,42 @@ describe("calculateEntryBalances", () => {
       expect(you.owed + partner.owed).toBe(1_001); // sum(owed) = actual_amount ✓
     });
 
+    it("actual_amount > storedTotal: 12,000円 / stored=[A=5000, B=5000] → A=6,000, B=6,000", () => {
+      /**
+       * 50/50 ルールで default_amount=10,000 のエントリを 12,000 円で填記した場合。
+       * stored splits の金額（5,000 + 5,000 = 10,000）ではなく、
+       * 比率（50%/50%）を actual_amount=12,000 に掛け直す必要がある。
+       *
+       * 正規化:
+       *   A: floor(12000 × 5000 / 10000) = 6000
+       *   B: floor(12000 × 5000 / 10000) = 6000
+       *   remainder = 12000 - 12000 = 0
+       * → A=6,000, B=6,000（「5,000 ずつ」にはならない）
+       */
+      const MEMBER_A = "user-a";
+      const MEMBER_B = "user-b";
+      const twoEqual: EntryMember[] = [
+        { id: MEMBER_A, name: "A" },
+        { id: MEMBER_B, name: "B" },
+      ];
+
+      const entries = [
+        makeCustomEntry("e1", MEMBER_A, 12_000, [
+          { user_id: MEMBER_A, storedAmount: 5_000 }, // 50% 設定
+          { user_id: MEMBER_B, storedAmount: 5_000 }, // 50% 設定
+        ]),
+      ];
+
+      const result = calculateEntryBalances(entries, twoEqual);
+      const a = result.find((b) => b.id === MEMBER_A)!;
+      const b = result.find((b) => b.id === MEMBER_B)!;
+
+      // stored 金額（5,000）ではなく比率再計算（6,000）になること
+      expect(a.owed).toBe(6_000);
+      expect(b.owed).toBe(6_000);
+      expect(a.owed + b.owed).toBe(12_000); // 不変条件: sum(owed) = actual_amount
+    });
+
     it("複数カスタムエントリで誤差が累積しない", () => {
       // 各エントリ: stored based on default=1000, actual=1001 (ズレあり)
       const entries = [
