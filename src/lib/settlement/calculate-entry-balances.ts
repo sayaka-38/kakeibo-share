@@ -18,11 +18,12 @@ export type EntryBalance = {
  *
  * 【計算アルゴリズム】
  *
- * Group A（均等割り勘）: split_type !== "custom" のエントリ
+ * Group A（均等割り勘）: split_type === "equal" または split_type が未設定のエントリ
  *   - S_A = Group A の合計金額
  *   - 全員共通の案分額 = Math.floor(S_A / 人数)
  *   - 余り（S_A % 人数）は最大 payer の負担に1回だけ加算
  *     → sum(Group A の owed) = S_A を保証
+ *   ※ エントリに splits データが存在しても完全に無視する（split_type ラベルのみで判定）
  *
  * Group B（個別内訳）: split_type === "custom" のエントリ
  *   - 各エントリの splits を actual_amount に正規化してから加算
@@ -40,28 +41,14 @@ export function calculateEntryBalances(
 ): EntryBalance[] {
   if (members.length === 0) return [];
 
-  // ──────────────────────────────────────────────
-  // 元本の分離
-  // ──────────────────────────────────────────────
-  const groupA = entries.filter((e) => e.split_type !== "custom");
+  // split_type ラベルのみで分類（splits データの有無は参照しない）
+  const groupA = entries.filter(
+    (e) => e.split_type === "equal" || !e.split_type
+  );
   const groupB = entries.filter((e) => e.split_type === "custom");
 
-  // 診断ログ（デバッグ用）
-  console.log("[calculateEntryBalances v2-groupAB]", {
-    totalEntries: entries.length,
-    groupA: groupA.length,
-    groupB: groupB.length,
-    groupATotal: groupA.reduce((s, e) => s + (e.actual_amount ?? 0), 0),
-    groupBDetails: groupB.map((e) => ({
-      actual: e.actual_amount,
-      split_type: e.split_type,
-      splits: e.splits?.map((s) => ({ uid: s.user_id.slice(-4), amt: s.amount })) ?? [],
-      storedTotal: e.splits?.reduce((sum, s) => sum + s.amount, 0) ?? 0,
-    })),
-  });
-
   // ──────────────────────────────────────────────
-  // 全エントリの支払い合計（paid + 最大 payer 特定）
+  // 全エントリの支払い合計（最大 payer 特定）
   // ──────────────────────────────────────────────
   const paidByMember = new Map<string, number>();
   for (const m of members) paidByMember.set(m.id, 0);
@@ -98,9 +85,8 @@ export function calculateEntryBalances(
     if (!entry.splits || entry.splits.length === 0) continue;
 
     const storedTotal = entry.splits.reduce((sum, s) => sum + s.amount, 0);
-    if (storedTotal === 0) continue; // 全 0 splits → 誰にも課金しない
+    if (storedTotal === 0) continue;
 
-    // actual_amount に正規化した splits を計算（stored ratio を保持しつつ誤差を除去）
     let assigned = 0;
     let maxStoredAmount = -1;
     let maxStoredMemberId = entry.splits[0].user_id;
@@ -118,7 +104,6 @@ export function calculateEntryBalances(
 
     // 余り（0 or 1円程度）を最大 stored 比率のメンバーへ加算
     const entryRemainder = actual - assigned;
-
     for (const ns of normalized) {
       const extra = ns.user_id === maxStoredMemberId ? entryRemainder : 0;
       const curr = owedBByMember.get(ns.user_id) ?? 0;
