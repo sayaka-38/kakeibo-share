@@ -46,6 +46,15 @@ export function calculateEntryBalances(
   const groupA = entries.filter((e) => e.split_type !== "custom");
   const groupB = entries.filter((e) => e.split_type === "custom");
 
+  // 診断ログ（デバッグ用）
+  console.log("[calculateEntryBalances v2-groupAB]", {
+    totalEntries: entries.length,
+    groupA: groupA.length,
+    groupB: groupB.length,
+    groupATotal: groupA.reduce((s, e) => s + (e.actual_amount ?? 0), 0),
+    groupBEntries: groupB.map((e) => ({ id: e.id, actual: e.actual_amount, splits: e.splits?.length ?? 0 })),
+  });
+
   // ──────────────────────────────────────────────
   // 全エントリの支払い合計（paid + 最大 payer 特定）
   // ──────────────────────────────────────────────
