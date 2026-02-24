@@ -656,6 +656,76 @@ describe("refreshSettlementEntries", () => {
       expect(insertedEntries).toHaveLength(0);
     });
 
+    it("期間再ドラフト後: 旧セッション削除済みでも fill 済み payment が pending として重複出現しない", async () => {
+      /**
+       * シナリオ（「期間を入れ直し」後の重複再発問題）:
+       *   1. セッションAで rule-1 の fill → payment-from-fill 作成
+       *   2. セッションA を削除（エントリは消えるが payment は残る）
+       *   3. セッションBで同じ期間をドラフト → 既存エントリは空
+       *   4. refresh 時: payment-from-fill は paymentMap に載る
+       *              + rule-1 は 2026-01-25 に発火
+       *
+       * 期待値:
+       *   - pending ルールエントリは作成されない（payment で代替）
+       *   - payment-from-fill が filled エントリとして追加される（result=1）
+       *   - insertedEntries に rule_id のあるエントリは含まれない
+       */
+      const { supabase, insertedEntries } = createRefreshMockSupabase({
+        membership: true,
+        session: { id: "session-2", status: "draft" },
+        existingEntries: [], // 前セッション削除済み
+        rules: [
+          {
+            id: "rule-1",
+            description: "家賃",
+            category_id: null,
+            default_amount: 100_000,
+            default_payer_id: "user-1",
+            day_of_month: 25,
+            interval_months: 1,
+            split_type: "equal",
+            is_active: true,
+            start_date: "2026-01-01",
+            end_date: null,
+            created_at: "2026-01-01T00:00:00Z",
+            splits: [],
+          },
+        ],
+        payments: [
+          {
+            // fill_settlement_entry_with_payment が作成した payment。
+            // セッション削除後も settlement_id=null で payments テーブルに残る。
+            id: "payment-from-fill",
+            description: "家賃",       // rule.description と一致
+            category_id: null,
+            amount: 100_000,
+            payer_id: "user-1",        // rule.default_payer_id と一致
+            payment_date: "2026-01-25", // rule 発生日と一致
+            created_at: "2026-01-25T10:00:00Z",
+            payment_splits: [],
+          },
+        ],
+      });
+
+      const result = await refreshSettlementEntries(
+        supabase, "session-2", "group-1",
+        "2026-01-01", "2026-01-31", "user-1"
+      );
+
+      // payment が filled エントリとして1件追加される
+      expect(result).toBe(1);
+
+      // pending ルールエントリは作成されない（二重防止）
+      const ruleEntries = insertedEntries.filter((e) => e.rule_id === "rule-1");
+      expect(ruleEntries).toHaveLength(0);
+
+      // payment は filled エントリとして追加される
+      const paymentEntries = insertedEntries.filter(
+        (e) => e.source_payment_id === "payment-from-fill"
+      );
+      expect(paymentEntries).toHaveLength(1);
+    });
+
     it("廃止ルールの填記済みエントリの source_payment_id も重複追加されない", async () => {
       /**
        * シナリオ:
