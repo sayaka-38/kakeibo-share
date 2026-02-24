@@ -52,7 +52,12 @@ export function calculateEntryBalances(
     groupA: groupA.length,
     groupB: groupB.length,
     groupATotal: groupA.reduce((s, e) => s + (e.actual_amount ?? 0), 0),
-    groupBEntries: groupB.map((e) => ({ id: e.id, actual: e.actual_amount, splits: e.splits?.length ?? 0 })),
+    groupBDetails: groupB.map((e) => ({
+      actual: e.actual_amount,
+      split_type: e.split_type,
+      splits: e.splits?.map((s) => ({ uid: s.user_id.slice(-4), amt: s.amount })) ?? [],
+      storedTotal: e.splits?.reduce((sum, s) => sum + s.amount, 0) ?? 0,
+    })),
   });
 
   // ──────────────────────────────────────────────
