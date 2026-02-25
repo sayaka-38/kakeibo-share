@@ -32,6 +32,26 @@ export default function EntryEditModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // 手動内訳入力の状態
+  const [useCustomSplits, setUseCustomSplits] = useState(
+    entry.split_type === "custom"
+  );
+  const [splitAmounts, setSplitAmounts] = useState<Record<string, string>>(
+    () => {
+      if (entry.split_type === "custom" && entry.splits && entry.splits.length > 0) {
+        const initial: Record<string, string> = {};
+        for (const s of entry.splits) {
+          initial[s.user_id] = String(s.amount);
+        }
+        return initial;
+      }
+      // 均等に初期配分
+      const parsedAmt =
+        parseInt(entry.actual_amount?.toString() || entry.expected_amount?.toString() || "0") || 0;
+      return buildEqualSplitAmounts(members, parsedAmt);
+    }
+  );
+
   // ESC キーで閉じる
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -43,18 +63,59 @@ export default function EntryEditModal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose, isSubmitting]);
 
+  // 金額が変わったら均等配分を再計算（手動調整していない場合のみ）
+  const handleAmountChange = (newAmount: string) => {
+    setAmount(newAmount);
+    if (!useCustomSplits) {
+      const parsed = parseInt(newAmount) || 0;
+      setSplitAmounts(buildEqualSplitAmounts(members, parsed));
+    }
+  };
+
+  // 手動内訳トグル
+  const handleToggleCustomSplits = (enabled: boolean) => {
+    setUseCustomSplits(enabled);
+    if (enabled) {
+      // トグル ON: 現在の amount で均等配分を初期値に設定
+      const parsed = parseInt(amount) || 0;
+      setSplitAmounts(buildEqualSplitAmounts(members, parsed));
+    }
+  };
+
+  // 内訳の合計
+  const splitTotal = Object.values(splitAmounts).reduce((sum, v) => {
+    const n = parseInt(v);
+    return sum + (isNaN(n) ? 0 : n);
+  }, 0);
+  const parsedAmount = parseInt(amount) || 0;
+  const splitMismatch = useCustomSplits && splitTotal !== parsedAmount;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
 
-    const parsedAmount = parseInt(amount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
       setError(t("payments.validation.amountMin"));
       return;
     }
 
+    if (splitMismatch) {
+      setError(
+        `内訳の合計（${formatCurrency(splitTotal)}）が実績額（${formatCurrency(parsedAmount)}）と一致しません`
+      );
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
+
+    // 送信 body を構築
+    const splitsPayload = useCustomSplits
+      ? members.map((m) => ({
+          userId: m.id,
+          amount: parseInt(splitAmounts[m.id] || "0") || 0,
+        }))
+      : [];
 
     try {
       const res = await fetch(`/api/settlement-entries/${entry.id}`, {
@@ -65,6 +126,8 @@ export default function EntryEditModal({
           payerId,
           paymentDate,
           status: "filled",
+          splitType: useCustomSplits ? "custom" : "equal",
+          splits: splitsPayload,
         }),
       });
 
@@ -81,9 +144,17 @@ export default function EntryEditModal({
         payer_id: payerId,
         payment_date: paymentDate,
         status: "filled",
+        split_type: useCustomSplits ? "custom" : "equal",
         filled_by: currentUserId,
         filled_at: new Date().toISOString(),
         payer: members.find((m) => m.id === payerId) || entry.payer,
+        splits: useCustomSplits
+          ? members.map((m, i) => ({
+              id: `temp-split-${i}`,
+              user_id: m.id,
+              amount: parseInt(splitAmounts[m.id] || "0") || 0,
+            }))
+          : [],
       });
     } catch {
       setError(t("settlementSession.errors.updateFailed"));
@@ -143,7 +214,7 @@ export default function EntryEditModal({
           <AmountFieldWithKeypad
             id="entry-amount"
             value={amount}
-            onChange={setAmount}
+            onChange={handleAmountChange}
           />
 
           {/* Payer Selection */}
@@ -185,6 +256,68 @@ export default function EntryEditModal({
             />
           </div>
 
+          {/* 手動内訳入力トグル */}
+          <div className="border-t border-theme-card-border pt-4">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={useCustomSplits}
+                onChange={(e) => handleToggleCustomSplits(e.target.checked)}
+                className="w-4 h-4 rounded border-theme-card-border text-theme-primary focus:ring-theme-primary"
+              />
+              <span className="text-sm font-medium text-theme-text">
+                内訳を細かく設定する
+              </span>
+            </label>
+            <p className="mt-1 text-xs text-theme-muted pl-6">
+              各メンバーの負担額を円単位で直接指定します
+            </p>
+          </div>
+
+          {/* 手動内訳入力フィールド */}
+          {useCustomSplits && (
+            <div className="space-y-3 bg-theme-bg rounded-lg p-4">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium text-theme-text">負担額（合計が実績額と一致すること）</span>
+                <span
+                  className={`font-medium tabular-nums ${
+                    splitMismatch ? "text-theme-accent" : "text-theme-text"
+                  }`}
+                >
+                  {formatCurrency(splitTotal)} / {formatCurrency(parsedAmount)}
+                  {!splitMismatch && parsedAmount > 0 && " ✓"}
+                </span>
+              </div>
+              {members.map((member) => (
+                <div key={member.id} className="flex items-center gap-3">
+                  <span className="text-sm text-theme-muted w-28 truncate shrink-0">
+                    {member.display_name || member.email}
+                  </span>
+                  <div className="flex-1 relative">
+                    <input
+                      type="number"
+                      value={splitAmounts[member.id] || ""}
+                      onChange={(e) =>
+                        setSplitAmounts((prev) => ({
+                          ...prev,
+                          [member.id]: e.target.value,
+                        }))
+                      }
+                      min="0"
+                      step="1"
+                      inputMode="numeric"
+                      className="w-full px-3 py-2 pr-8 border border-theme-card-border rounded-lg shadow-sm text-theme-headline placeholder:text-theme-muted/50 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
+                      placeholder="0"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted/70 text-sm">
+                      円
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Actions */}
           <div className="flex gap-3 pt-4 border-t border-theme-card-border">
             <Button
@@ -196,7 +329,7 @@ export default function EntryEditModal({
             >
               {t("common.cancel")}
             </Button>
-            <Button type="submit" loading={isSubmitting} fullWidth>
+            <Button type="submit" loading={isSubmitting} disabled={splitMismatch} fullWidth>
               {isSubmitting ? "保存中..." : t("common.save")}
             </Button>
           </div>
@@ -204,4 +337,21 @@ export default function EntryEditModal({
       </div>
     </div>
   );
+}
+
+/** 均等配分の初期 splitAmounts を生成する */
+function buildEqualSplitAmounts(
+  members: Profile[],
+  totalAmount: number
+): Record<string, string> {
+  if (members.length === 0 || totalAmount <= 0) {
+    return Object.fromEntries(members.map((m) => [m.id, "0"]));
+  }
+  const perPerson = Math.floor(totalAmount / members.length);
+  const remainder = totalAmount % members.length;
+  const result: Record<string, string> = {};
+  members.forEach((m, i) => {
+    result[m.id] = String(i === 0 ? perPerson + remainder : perPerson);
+  });
+  return result;
 }

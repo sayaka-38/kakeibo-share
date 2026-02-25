@@ -25,7 +25,7 @@ export const PUT = withErrorHandler<RouteParams>(async (request, { params }) => 
     );
   }
 
-  const { actualAmount, payerId, paymentDate, status, splits } = body;
+  const { actualAmount, payerId, paymentDate, status, splitType, splits } = body;
 
   // バリデーション
   if (status === "filled" && (actualAmount === undefined || actualAmount === null)) {
@@ -102,29 +102,28 @@ export const PUT = withErrorHandler<RouteParams>(async (request, { params }) => 
     );
   }
 
-  // カスタム分割の更新（splitsが提供された場合）
-  if (splits !== undefined && Array.isArray(splits)) {
-    const splitsJson = splits.map((s: { userId: string; amount: number }) => ({
-      user_id: s.userId,
-      amount: s.amount,
-    }));
+  // split_type と splits の更新（提供された場合）
+  if (splitType !== undefined || (splits !== undefined && Array.isArray(splits))) {
+    // split_type を DB に反映
+    if (splitType === "custom" || splitType === "equal") {
+      await supabase
+        .from("settlement_entries")
+        .update({ split_type: splitType })
+        .eq("id", id);
+    }
 
-    const { data: splitsResult, error: splitsError } = await supabase.rpc(
-      "replace_settlement_entry_splits",
-      {
+    // splits を置き換え（空配列の場合は全削除して equal 扱い）
+    if (splits !== undefined && Array.isArray(splits)) {
+      const splitsJson = splits.map((s: { userId: string; amount: number }) => ({
+        user_id: s.userId,
+        amount: s.amount,
+      }));
+
+      await supabase.rpc("replace_settlement_entry_splits", {
         p_entry_id: id,
         p_user_id: user.id,
         p_splits: splitsJson,
-      }
-    );
-
-    if (splitsError) {
-      console.error("Failed to update settlement entry splits:", splitsError);
-    }
-
-    // エラーコードをチェック
-    if (splitsResult && splitsResult < 0) {
-      console.error("replace_settlement_entry_splits returned error code:", splitsResult);
+      });
     }
   }
 

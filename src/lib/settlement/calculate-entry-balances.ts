@@ -14,7 +14,7 @@ export type EntryBalance = {
 };
 
 /**
- * 清算エントリから各メンバーの収支を計算する（金融機関レベルの端数処理）
+ * 清算エントリから各メンバーの収支を計算する
  *
  * 【計算アルゴリズム】
  *
@@ -25,12 +25,10 @@ export type EntryBalance = {
  *     → sum(Group A の owed) = S_A を保証
  *   ※ エントリに splits データが存在しても完全に無視する（split_type ラベルのみで判定）
  *
- * Group B（個別内訳）: split_type === "custom" のエントリ
- *   - 各エントリの splits を actual_amount に正規化してから加算
- *   - 正規化: floor(actual_amount × stored_ratio)、余りは最大 stored 比率のメンバーへ
- *     → sum(Group B の owed) = sum(Group B の actual_amount) を保証
- *   ※ splits に基づく storedTotal と actual_amount が異なる場合
- *      （ルール default_amount と実際の填記金額が違うケース）に対応
+ * Group B（手動調整・立替）: split_type === "custom" のエントリ
+ *   - DB に保存された splits.amount の値をそのまま各人の負担額として加算する
+ *   - 比率計算・正規化は一切行わない
+ *   - 手動入力時は EntryEditModal でバリデーション済み（sum(splits) = actual_amount）
  *
  * @param entries - filled 状態のエントリリスト
  * @param members - グループメンバーリスト
@@ -75,39 +73,16 @@ export function calculateEntryBalances(
   const remainderA = totalA % members.length;
 
   // ──────────────────────────────────────────────
-  // Group B の計算（splits を actual_amount に正規化）
+  // Group B の計算（splits.amount をそのまま加算）
   // ──────────────────────────────────────────────
   const owedBByMember = new Map<string, number>();
   for (const m of members) owedBByMember.set(m.id, 0);
 
   for (const entry of groupB) {
-    const actual = entry.actual_amount ?? 0;
     if (!entry.splits || entry.splits.length === 0) continue;
-
-    const storedTotal = entry.splits.reduce((sum, s) => sum + s.amount, 0);
-    if (storedTotal === 0) continue;
-
-    let assigned = 0;
-    let maxStoredAmount = -1;
-    let maxStoredMemberId = entry.splits[0].user_id;
-
-    const normalized: { user_id: string; amount: number }[] = [];
     for (const s of entry.splits) {
-      const normAmount = Math.floor((actual * s.amount) / storedTotal);
-      normalized.push({ user_id: s.user_id, amount: normAmount });
-      assigned += normAmount;
-      if (s.amount > maxStoredAmount) {
-        maxStoredAmount = s.amount;
-        maxStoredMemberId = s.user_id;
-      }
-    }
-
-    // 余り（0 or 1円程度）を最大 stored 比率のメンバーへ加算
-    const entryRemainder = actual - assigned;
-    for (const ns of normalized) {
-      const extra = ns.user_id === maxStoredMemberId ? entryRemainder : 0;
-      const curr = owedBByMember.get(ns.user_id) ?? 0;
-      owedBByMember.set(ns.user_id, curr + ns.amount + extra);
+      const curr = owedBByMember.get(s.user_id) ?? 0;
+      owedBByMember.set(s.user_id, curr + s.amount);
     }
   }
 
