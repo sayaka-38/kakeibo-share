@@ -68,7 +68,6 @@ tests/e2e/            # Playwright E2E テスト
 - **清算フロー**: `draft` → `confirmed` → `pending_payment` → `settled`
 - **型**: `database.generated.ts` 自動生成（編集禁止）/ `database.ts` 手動オーバーライド可
 - **スマート再計算**: `status='filled'` / `status='skipped'` のエントリは絶対保護。`pending` のみ更新・削除対象（`src/lib/settlement/refresh-entries.ts`）
-- **連続入力モード**: 「保存して次へ」成功後は `resetForNext()` で amount・description・errors のみクリア。日付・splitType・categoryId・proxyBeneficiaryId は維持する（`usePaymentForm.ts`）
 - **填記即時登録**: `rule_id IS NOT NULL` のエントリ填記時は `fill_settlement_entry_with_payment` RPC で即座に `payments` + `payment_splits` を作成。スキップ時は対応 payment を削除。`rule_id IS NULL` は `update_settlement_entry` を使用（Migration 041）
 - **confirm_settlement 冪等性**: `source_payment_id IS NOT NULL` のエントリは二重作成しない（既存 payment にリンクのみ）
 - **payments 未来日付許可**: `payments_payment_date_check` 制約を Migration 040 で DROP済み

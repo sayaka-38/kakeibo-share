@@ -48,9 +48,10 @@ export const PUT = withErrorHandler<RouteParams>(async (request, { params }) => 
   const { data: result, error } = await supabase.rpc(rpcName, {
     p_entry_id: id,
     p_user_id: user.id,
-    p_actual_amount: resolvedAmount,
-    p_payer_id: payerId || null,
-    p_payment_date: paymentDate || null,
+    // 生成型は number だが PG 関数は null も受け付ける（skip 時に actual_amount を null にする）
+    p_actual_amount: resolvedAmount as number,
+    p_payer_id: payerId ?? undefined,
+    p_payment_date: paymentDate ?? undefined,
     p_status: status || "filled",
   });
 
