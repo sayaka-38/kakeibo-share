@@ -1,4 +1,5 @@
 import type { EntryData } from "@/types/domain";
+import { isEqualSplit, isCustomSplit } from "@/lib/domain/settlement-utils";
 
 export type EntryMember = {
   id: string;
@@ -40,10 +41,8 @@ export function calculateEntryBalances(
   if (members.length === 0) return [];
 
   // split_type ラベルのみで分類（splits データの有無は参照しない）
-  const groupA = entries.filter(
-    (e) => e.split_type === "equal" || !e.split_type
-  );
-  const groupB = entries.filter((e) => e.split_type === "custom");
+  const groupA = entries.filter((e) => isEqualSplit(e.split_type));
+  const groupB = entries.filter((e) => isCustomSplit(e.split_type));
 
   // ──────────────────────────────────────────────
   // 全エントリの支払い合計（最大 payer 特定）

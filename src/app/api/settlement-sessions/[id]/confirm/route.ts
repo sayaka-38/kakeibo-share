@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { authenticateRequest } from "@/lib/api/authenticate";
 import { consolidateTransfers } from "@/lib/settlement/consolidate";
 import { withErrorHandler } from "@/lib/api/with-error-handler";
+import { rpcCodeToResponse } from "@/lib/api/translate-rpc-error";
 import type { NetTransfer } from "@/types/database";
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -48,30 +49,12 @@ export const POST = withErrorHandler<RouteContext>(async (_request, context) => 
   }
 
   // エラーコードをチェック
-  if (result === -1) {
-    return NextResponse.json(
-      { error: "セッションが見つかりません" },
-      { status: 404 }
-    );
-  }
-  if (result === -2) {
-    return NextResponse.json(
-      { error: "このグループのメンバーではありません" },
-      { status: 403 }
-    );
-  }
-  if (result === -3) {
-    return NextResponse.json(
-      { error: "セッションはドラフト状態ではありません" },
-      { status: 400 }
-    );
-  }
-  if (result === -4) {
-    return NextResponse.json(
-      { error: "確定する入力済みエントリがありません" },
-      { status: 400 }
-    );
-  }
+  const rpcError = rpcCodeToResponse(result, {
+    notFound: "セッションが見つかりません",
+    wrongState: "セッションはドラフト状態ではありません",
+    noEntries: "確定する入力済みエントリがありません",
+  });
+  if (rpcError) return rpcError;
 
   // 確定後のセッション情報を取得（net_transfers, status等）
   const { data: updatedSession } = await supabase

@@ -9,6 +9,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import { computeRuleDatesInPeriod } from "./recurring-schedule";
 import { formatDateLocal } from "@/lib/format/date";
+import { ruleHasCustomSplitsToInsert, resolveEntrySplitType } from "@/lib/domain/settlement-utils";
 
 /**
  * 清算セッションにエントリを生成
@@ -119,11 +120,7 @@ export async function generateSettlementEntries(
           entryCount++;
 
           // カスタム分割設定をコピー
-          if (
-            rule.split_type === "custom" &&
-            rule.splits &&
-            rule.splits.length > 0
-          ) {
+          if (ruleHasCustomSplitsToInsert(rule.split_type, rule.splits?.length ?? 0)) {
             const splitsToInsert = rule.splits.map(
               (s: {
                 user_id: string;
@@ -158,10 +155,10 @@ export async function generateSettlementEntries(
         payment.payment_splits && payment.payment_splits.length > 0;
 
       // payment の split_type ラベルを第一優先で使用（equal 以外はすべて custom に集約）
-      const splitType: "equal" | "custom" =
-        (payment as { split_type?: string }).split_type !== "equal" && hasSplits
-          ? "custom"
-          : "equal";
+      const splitType = resolveEntrySplitType(
+        (payment as { split_type?: string }).split_type,
+        hasSplits
+      );
 
       const { data: entry } = await supabase
         .from("settlement_entries")

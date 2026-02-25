@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/api/authenticate";
 import { withErrorHandler } from "@/lib/api/with-error-handler";
+import { rpcCodeToResponse } from "@/lib/api/translate-rpc-error";
+import { settlementEntryUpdateSchema } from "@/lib/validation/schemas";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -15,32 +17,10 @@ export const PUT = withErrorHandler<RouteParams>(async (request, { params }) => 
 
   const { id } = await params;
 
-  let body;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json(
-      { error: "リクエストボディが不正です" },
-      { status: 400 }
-    );
-  }
+  const raw = await request.json().catch(() => null);
+  const body = settlementEntryUpdateSchema.parse(raw);
 
   const { actualAmount, payerId, paymentDate, status, splitType, splits } = body;
-
-  // バリデーション
-  if (status === "filled" && (actualAmount === undefined || actualAmount === null)) {
-    return NextResponse.json(
-      { error: "入力済みステータスには金額が必要です" },
-      { status: 400 }
-    );
-  }
-
-  if (actualAmount !== undefined && actualAmount !== null && actualAmount < 0) {
-    return NextResponse.json(
-      { error: "金額は0以上で入力してください" },
-      { status: 400 }
-    );
-  }
 
   // スキップ時は actual_amount を null にして DB constraint (> 0) を回避
   const resolvedAmount = status === "skipped" ? null : (actualAmount ?? null);
@@ -83,24 +63,11 @@ export const PUT = withErrorHandler<RouteParams>(async (request, { params }) => 
   }
 
   // エラーコードをチェック
-  if (result === -1) {
-    return NextResponse.json(
-      { error: "エントリが見つかりません" },
-      { status: 404 }
-    );
-  }
-  if (result === -2) {
-    return NextResponse.json(
-      { error: "このグループのメンバーではありません" },
-      { status: 403 }
-    );
-  }
-  if (result === -3) {
-    return NextResponse.json(
-      { error: "セッションはドラフト状態ではありません" },
-      { status: 400 }
-    );
-  }
+  const rpcError = rpcCodeToResponse(result, {
+    notFound: "エントリが見つかりません",
+    wrongState: "セッションはドラフト状態ではありません",
+  });
+  if (rpcError) return rpcError;
 
   // split_type と splits の更新（提供された場合）
   if (splitType !== undefined || (splits !== undefined && Array.isArray(splits))) {

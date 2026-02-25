@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { authenticateRequest } from "@/lib/api/authenticate";
 import { withErrorHandler } from "@/lib/api/with-error-handler";
+import { rpcCodeToResponse } from "@/lib/api/translate-rpc-error";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -32,24 +33,11 @@ export const POST = withErrorHandler<RouteContext>(async (_request, context) => 
     );
   }
 
-  if (result === -1) {
-    return NextResponse.json(
-      { error: "セッションが見つかりません" },
-      { status: 404 }
-    );
-  }
-  if (result === -2) {
-    return NextResponse.json(
-      { error: "このグループのメンバーではありません" },
-      { status: 403 }
-    );
-  }
-  if (result === -3) {
-    return NextResponse.json(
-      { error: "セッションは送金待ち状態ではありません" },
-      { status: 400 }
-    );
-  }
+  const rpcError = rpcCodeToResponse(result, {
+    notFound: "セッションが見つかりません",
+    wrongState: "セッションは送金待ち状態ではありません",
+  });
+  if (rpcError) return rpcError;
 
   // group_id を取得してキャッシュ破棄
   const { data: sessionData } = await supabase
