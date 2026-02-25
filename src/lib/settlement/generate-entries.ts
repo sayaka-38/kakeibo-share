@@ -8,33 +8,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import { computeRuleDatesInPeriod } from "./recurring-schedule";
-
-/**
- * payment_splits のデータから split_type を推定する。
- *
- * - splits が空 → equal
- * - いずれかの金額が 0 → custom（全額負担の代理払いなど）
- * - 最大金額と最小金額の差が 1 超 → custom（意図的な比率設定）
- * - それ以外（1円以内のゆらぎ） → equal（均等割りの端数処理）
- */
-function detectSplitType(
-  splits: { user_id: string; amount: number }[]
-): "equal" | "custom" {
-  if (splits.length === 0) return "equal";
-  const amounts = splits.map((s) => s.amount);
-  const min = Math.min(...amounts);
-  const max = Math.max(...amounts);
-  if (min === 0 || max - min > 1) return "custom";
-  return "equal";
-}
-
-/** ローカルタイムゾーンで YYYY-MM-DD 文字列に変換 */
-function formatDateLocal(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
+import { formatDateLocal } from "@/lib/format/date";
 
 /**
  * 清算セッションにエントリを生成
@@ -84,6 +58,7 @@ export async function generateSettlementEntries(
     .eq("group_id", groupId)
     .is("settlement_id", null)
     .lte("payment_date", periodEnd);
+
 
   // ルール照合用: (description|payer_id|payment_date) の存在セット
   const existingPaymentKeys = new Set<string>();
@@ -182,10 +157,11 @@ export async function generateSettlementEntries(
       const hasSplits =
         payment.payment_splits && payment.payment_splits.length > 0;
 
-      // splits データから split_type を正確に推定する（均等割りの誤分類を防ぐ）
-      const splitType = hasSplits
-        ? detectSplitType(payment.payment_splits)
-        : "equal";
+      // payment の split_type ラベルを第一優先で使用（equal 以外はすべて custom に集約）
+      const splitType: "equal" | "custom" =
+        (payment as { split_type?: string }).split_type !== "equal" && hasSplits
+          ? "custom"
+          : "equal";
 
       const { data: entry } = await supabase
         .from("settlement_entries")

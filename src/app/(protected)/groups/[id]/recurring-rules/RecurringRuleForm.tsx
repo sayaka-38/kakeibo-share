@@ -51,7 +51,10 @@ export default function RecurringRuleForm({
     editingRule?.default_payer_id || currentUserId
   );
   const [splitType, setSplitType] = useState<"equal" | "custom">(
-    (editingRule?.split_type as "equal" | "custom") || "equal"
+    // 変動費ルールは常に equal（分割設定不要）
+    editingRule?.is_variable
+      ? "equal"
+      : (editingRule?.split_type as "equal" | "custom") || "equal"
   );
   const [intervalMonths, setIntervalMonths] = useState(
     String(editingRule?.interval_months ?? 1)
@@ -82,6 +85,11 @@ export default function RecurringRuleForm({
     });
     return initial;
   });
+
+  // 変動費に切り替えたら split 設定を均等にリセット
+  useEffect(() => {
+    if (isVariable) setSplitType("equal");
+  }, [isVariable]);
 
   // Validation state
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -488,87 +496,91 @@ export default function RecurringRuleForm({
             )}
           </div>
 
-          {/* Split Type */}
-          <div>
-            <label className="block text-sm font-medium text-theme-text mb-2">
-              {t("recurringRules.splitType")}
-            </label>
-            <div className="flex gap-4">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="splitType"
-                  checked={splitType === "equal"}
-                  onChange={() => setSplitType("equal")}
-                  className="mr-2"
-                />
-                <span className="text-sm text-theme-text">
-                  {t("recurringRules.splitEqual")}
-                </span>
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="splitType"
-                  checked={splitType === "custom"}
-                  onChange={() => setSplitType("custom")}
-                  className="mr-2"
-                />
-                <span className="text-sm text-theme-text">
-                  {t("recurringRules.splitCustom")}
-                </span>
-              </label>
-            </div>
-          </div>
-
-          {/* Custom Split Percentages */}
-          {splitType === "custom" && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="block text-sm font-medium text-theme-text">
-                  {t("recurringRules.splitPercentage")}
+          {/* Split Type — 変動費では不要なため非表示 */}
+          {!isVariable && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-theme-text mb-2">
+                  {t("recurringRules.splitType")}
                 </label>
-                <span
-                  className={`text-xs font-medium ${
-                    percentageTotal === 100
-                      ? "text-theme-text"
-                      : "text-theme-primary-text"
-                  }`}
-                >
-                  {t("recurringRules.percentageTotal", {
-                    total: String(percentageTotal),
-                  })}
-                  {percentageTotal === 100 && " ✓"}
-                </span>
-              </div>
-              {members.map((member) => (
-                <div key={member.id} className="flex items-center gap-3">
-                  <span className="text-sm text-theme-muted w-32 truncate">
-                    {member.display_name || member.email}
-                  </span>
-                  <div className="flex-1 relative">
+                <div className="flex gap-4">
+                  <label className="flex items-center">
                     <input
-                      type="number"
-                      value={percentages[member.id] || ""}
-                      onChange={(e) =>
-                        handlePercentageChange(member.id, e.target.value)
-                      }
-                      min="0"
-                      max="100"
-                      step="1"
-                      className="w-full px-3 py-2 border border-theme-card-border rounded-lg shadow-sm text-theme-headline placeholder:text-theme-muted/50 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
-                      placeholder="0"
+                      type="radio"
+                      name="splitType"
+                      checked={splitType === "equal"}
+                      onChange={() => setSplitType("equal")}
+                      className="mr-2"
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted/70">
-                      %
+                    <span className="text-sm text-theme-text">
+                      {t("recurringRules.splitEqual")}
+                    </span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="splitType"
+                      checked={splitType === "custom"}
+                      onChange={() => setSplitType("custom")}
+                      className="mr-2"
+                    />
+                    <span className="text-sm text-theme-text">
+                      {t("recurringRules.splitCustom")}
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Custom Split Percentages */}
+              {splitType === "custom" && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-sm font-medium text-theme-text">
+                      {t("recurringRules.splitPercentage")}
+                    </label>
+                    <span
+                      className={`text-xs font-medium ${
+                        percentageTotal === 100
+                          ? "text-theme-text"
+                          : "text-theme-primary-text"
+                      }`}
+                    >
+                      {t("recurringRules.percentageTotal", {
+                        total: String(percentageTotal),
+                      })}
+                      {percentageTotal === 100 && " ✓"}
                     </span>
                   </div>
+                  {members.map((member) => (
+                    <div key={member.id} className="flex items-center gap-3">
+                      <span className="text-sm text-theme-muted w-32 truncate">
+                        {member.display_name || member.email}
+                      </span>
+                      <div className="flex-1 relative">
+                        <input
+                          type="number"
+                          value={percentages[member.id] || ""}
+                          onChange={(e) =>
+                            handlePercentageChange(member.id, e.target.value)
+                          }
+                          min="0"
+                          max="100"
+                          step="1"
+                          className="w-full px-3 py-2 border border-theme-card-border rounded-lg shadow-sm text-theme-headline placeholder:text-theme-muted/50 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
+                          placeholder="0"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted/70">
+                          %
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                  {errors.percentages && (
+                    <p className="text-sm text-theme-accent">{errors.percentages}</p>
+                  )}
                 </div>
-              ))}
-              {errors.percentages && (
-                <p className="text-sm text-theme-accent">{errors.percentages}</p>
               )}
-            </div>
+            </>
           )}
 
           {/* Actions */}
