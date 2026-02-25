@@ -1,3 +1,4 @@
+import { NextResponse } from "next/server";
 import { t } from "@/lib/i18n";
 
 type RpcErrorRule = {
@@ -60,6 +61,53 @@ export function translateHttpError(status: number): string {
   if (status === 0) return t("common.networkError");
   if (status === 429) return t("common.rateLimited");
   return t("common.error");
+}
+
+/**
+ * RPC の整数エラーコードを NextResponse に変換するヘルパー
+ *
+ * 共通コード:
+ *   -1 → 404 (notFound)
+ *   -2 → 403 (グループメンバーでない — メッセージ固定)
+ *   -3 → 400 (wrongState)
+ *   -4 → 400 (noEntries)
+ *   その他負値 → 500
+ *
+ * @returns null (成功) または NextResponse (エラー)
+ */
+export function rpcCodeToResponse(
+  code: number | null | undefined,
+  messages: {
+    notFound?: string;
+    wrongState?: string;
+    noEntries?: string;
+  } = {}
+): NextResponse | null {
+  if (code === null || code === undefined || code >= 0) return null;
+  if (code === -1)
+    return NextResponse.json(
+      { error: messages.notFound ?? "リソースが見つかりません" },
+      { status: 404 }
+    );
+  if (code === -2)
+    return NextResponse.json(
+      { error: "このグループのメンバーではありません" },
+      { status: 403 }
+    );
+  if (code === -3)
+    return NextResponse.json(
+      { error: messages.wrongState ?? "セッションの状態が不正です" },
+      { status: 400 }
+    );
+  if (code === -4)
+    return NextResponse.json(
+      { error: messages.noEntries ?? "対象エントリがありません" },
+      { status: 400 }
+    );
+  return NextResponse.json(
+    { error: "サーバーエラーが発生しました" },
+    { status: 500 }
+  );
 }
 
 /**

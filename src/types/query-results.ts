@@ -120,28 +120,6 @@ export type MemberWithProfileResult<T> = {
   profiles: T | null;
 };
 
-/**
- * 残高計算の結果
- */
-export type Balance = {
-  id: string;
-  displayName: string;
-  totalPaid: number;
-  totalOwed: number;
-  balance: number;
-};
-
-/**
- * 清算提案の結果
- */
-export type SettlementSuggestion = {
-  from: string;
-  fromName: string;
-  to: string;
-  toName: string;
-  amount: number;
-};
-
 // ============================================================
 // 支払い一覧コンポーネント用型（旧 payment-list/types.ts から移行）
 // ============================================================

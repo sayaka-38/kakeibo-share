@@ -64,6 +64,48 @@ export const transferOwnerRequestSchema = z.object({
 // 認証操作スキーマ
 export const changePasswordRequestSchema = z.object({ newPassword: z.string().min(6) });
 
+// 清算エントリ更新スキーマ（PUT /api/settlement-entries/[id]）
+export const settlementEntryUpdateSchema = z
+  .object({
+    status: z.enum(["filled", "skipped", "pending"]),
+    actualAmount: z.number().int().min(0).nullable().optional(),
+    payerId: z.string().uuid().nullable().optional(),
+    paymentDate: dateStringSchema.nullable().optional(),
+    splitType: z.enum(["equal", "custom"]).optional(),
+    splits: z
+      .array(
+        z.object({
+          userId: z.string().uuid(),
+          amount: z.number().int().min(0),
+        })
+      )
+      .optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.status === "filled" && data.actualAmount == null) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "入力済みステータスには金額が必要です",
+        path: ["actualAmount"],
+      });
+    }
+    if (
+      data.status === "filled" &&
+      data.actualAmount != null &&
+      data.actualAmount <= 0
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "金額は1以上で入力してください",
+        path: ["actualAmount"],
+      });
+    }
+  });
+
+export type SettlementEntryUpdateRequest = z.infer<
+  typeof settlementEntryUpdateSchema
+>;
+
 // 型エクスポート
 export type PaymentRequest = z.infer<typeof paymentRequestSchema>;
 export type RecurringRuleRequest = z.infer<typeof recurringRuleRequestSchema>;
