@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
 import { t } from "@/lib/i18n";
 import { Button } from "@/components/ui/Button";
 import { AmountFieldWithKeypad } from "@/components/payment-form/fields/AmountFieldWithKeypad";
-import { validateRecurringRule } from "@/lib/validation/recurring-rule";
 import { getMemberDisplayName } from "@/lib/domain/member-utils";
+import { useRecurringRuleForm } from "./useRecurringRuleForm";
 import type { Category, Profile } from "@/types/database";
 import type { RuleWithRelations } from "@/types/domain";
 
@@ -20,245 +19,31 @@ type RecurringRuleFormProps = {
   onUpdated: (rule: RuleWithRelations) => void;
 };
 
-export default function RecurringRuleForm({
-  groupId,
-  members,
-  categories,
-  currentUserId,
-  editingRule,
-  onClose,
-  onCreated,
-  onUpdated,
-}: RecurringRuleFormProps) {
-  const isEditMode = !!editingRule;
-
-  // 新規作成時のデフォルト開始日：現在の月の1日
-  const defaultStartDate = (() => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
-  })();
-
-  // Form state
-  const [description, setDescription] = useState(editingRule?.description || "");
-  const [categoryId, setCategoryId] = useState(editingRule?.category_id || "");
-  const [isVariable, setIsVariable] = useState(editingRule?.is_variable ?? false);
-  const [amount, setAmount] = useState(
-    editingRule?.default_amount ? String(editingRule.default_amount) : ""
-  );
-  const [dayOfMonth, setDayOfMonth] = useState(
-    editingRule?.day_of_month ? String(editingRule.day_of_month) : ""
-  );
-  const [defaultPayerId, setDefaultPayerId] = useState(
-    editingRule?.default_payer_id || currentUserId
-  );
-  const [splitType, setSplitType] = useState<"equal" | "custom">(
-    // 変動費ルールは常に equal（分割設定不要）
-    editingRule?.is_variable
-      ? "equal"
-      : (editingRule?.split_type as "equal" | "custom") || "equal"
-  );
-  const [intervalMonths, setIntervalMonths] = useState(
-    String(editingRule?.interval_months ?? 1)
-  );
-  const [startDate, setStartDate] = useState(
-    editingRule?.start_date || defaultStartDate
-  );
-  const [endDate, setEndDate] = useState(editingRule?.end_date || "");
-
-  // カスタム分割: パーセンテージ（整数のみ）
-  const [percentages, setPercentages] = useState<{ [userId: string]: string }>(() => {
-    if (editingRule?.split_type === "custom" && editingRule.splits.length > 0) {
-      const initial: { [userId: string]: string } = {};
-      editingRule.splits.forEach((s) => {
-        if (s.percentage !== null) {
-          initial[s.user_id] = String(Math.round(Number(s.percentage)));
-        }
-      });
-      return initial;
-    }
-    // デフォルト: 均等割り（整数・端数は最後の人に加算）
-    if (members.length === 0) return {};
-    const perPerson = Math.floor(100 / members.length);
-    const remainder = 100 - perPerson * members.length;
-    const initial: { [userId: string]: string } = {};
-    members.forEach((m, i) => {
-      initial[m.id] = String(i === members.length - 1 ? perPerson + remainder : perPerson);
-    });
-    return initial;
-  });
-
-  // 変動費に切り替えたら split 設定を均等にリセット
-  useEffect(() => {
-    if (isVariable) setSplitType("equal");
-  }, [isVariable]);
-
-  // Validation state
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-
-  // パーセンテージ合計（整数）
-  const percentageTotal = Object.values(percentages).reduce((sum, val) => {
-    const parsed = parseInt(val);
-    return sum + (isNaN(parsed) ? 0 : parsed);
-  }, 0);
-
-  // 1人の％を変えたら残りを他のメンバーに均等配分（案Aロジック）
-  const handlePercentageChange = useCallback((userId: string, value: string) => {
-    // 整数のみ許可（0〜100 にクランプ）
-    const raw = parseInt(value);
-    const newVal = isNaN(raw) ? 0 : Math.min(100, Math.max(0, raw));
-    const newValStr = value === "" ? "" : String(newVal);
-
-    setPercentages((prev) => {
-      const updated = { ...prev, [userId]: newValStr };
-      const otherIds = members.filter((m) => m.id !== userId).map((m) => m.id);
-      if (otherIds.length === 0) return updated;
-
-      const remaining = 100 - newVal;
-      const perPerson = Math.floor(remaining / otherIds.length);
-      let distributed = 0;
-      otherIds.forEach((uid, i) => {
-        if (i === otherIds.length - 1) {
-          // 最後の人: 端数調整
-          updated[uid] = String(remaining - distributed);
-        } else {
-          updated[uid] = String(perPerson);
-          distributed += perPerson;
-        }
-      });
-      return updated;
-    });
-  }, [members]);
-
-  // Validation (shared with API)
-  const validate = (): boolean => {
-    const result = validateRecurringRule({
-      description,
-      dayOfMonth: dayOfMonth ? parseInt(dayOfMonth) : NaN,
-      defaultPayerId,
-      isVariable,
-      defaultAmount: isVariable ? undefined : (amount ? parseInt(amount) : undefined),
-      intervalMonths: parseInt(intervalMonths) || 1,
-      splitType,
-      percentageTotal: splitType === "custom" ? percentageTotal : undefined,
-    });
-    if (!result.success) {
-      setErrors(result.errors);
-      return false;
-    }
-    setErrors({});
-    return true;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isSubmitting) return;
-    setSubmitError(null);
-
-    if (!validate()) return;
-
-    setIsSubmitting(true);
-
-    try {
-      const body = {
-        groupId,
-        description: description.trim(),
-        categoryId: categoryId || null,
-        isVariable,
-        defaultAmount: isVariable ? null : parseInt(amount),
-        dayOfMonth: parseInt(dayOfMonth),
-        defaultPayerId,
-        splitType,
-        intervalMonths: parseInt(intervalMonths),
-        startDate,
-        endDate: endDate || null,
-        splits:
-          splitType === "custom"
-            ? members.map((m) => ({
-                userId: m.id,
-                percentage: parseInt(percentages[m.id] || "0"),
-              }))
-            : undefined,
-      };
-
-      const url = isEditMode
-        ? `/api/recurring-rules/${editingRule.id}`
-        : "/api/recurring-rules";
-
-      const res = await fetch(url, {
-        method: isEditMode ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setSubmitError(
-          data.error ||
-            t(
-              isEditMode
-                ? "recurringRules.errors.updateFailed"
-                : "recurringRules.errors.createFailed"
-            )
-        );
-        return;
-      }
-
-      const { rule } = await res.json();
-
-      // ルール単体で返ってくるので、関連データを追加してコールバック
-      // 実際のAPIレスポンスには関連データが含まれないので、再フェッチするか手動で構築
-      // ここでは簡易的に構築
-      const ruleWithRelations: RuleWithRelations = {
-        ...rule,
-        category: categories.find((c) => c.id === rule.category_id) || null,
-        default_payer: members.find((m) => m.id === rule.default_payer_id) || null,
-        splits:
-          splitType === "custom"
-            ? members.map((m) => ({
-                id: `temp-${m.id}`,
-                user_id: m.id,
-                amount: null,
-                percentage: parseInt(percentages[m.id] || "0"),
-                user: m,
-              }))
-            : [],
-      };
-
-      if (isEditMode) {
-        onUpdated(ruleWithRelations);
-      } else {
-        onCreated(ruleWithRelations);
-      }
-    } catch {
-      setSubmitError(
-        t(
-          isEditMode
-            ? "recurringRules.errors.updateFailed"
-            : "recurringRules.errors.createFailed"
-        )
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // ESC キーで閉じる
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !isSubmitting) {
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose, isSubmitting]);
+export default function RecurringRuleForm(props: RecurringRuleFormProps) {
+  const {
+    description, setDescription,
+    categoryId, setCategoryId,
+    isVariable, setIsVariable,
+    amount, setAmount,
+    dayOfMonth, setDayOfMonth,
+    defaultPayerId, setDefaultPayerId,
+    splitType, setSplitType,
+    intervalMonths, setIntervalMonths,
+    startDate, setStartDate,
+    endDate, setEndDate,
+    percentages, percentageTotal,
+    errors,
+    isSubmitting,
+    submitError,
+    isEditMode,
+    handlePercentageChange,
+    handleSubmit,
+  } = useRecurringRuleForm(props);
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
-      onClick={() => { if (!isSubmitting) onClose(); }}
+      onClick={() => { if (!isSubmitting) props.onClose(); }}
     >
       <div
         className="bg-theme-card-bg rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
@@ -271,7 +56,7 @@ export default function RecurringRuleForm({
           </h2>
           <button
             type="button"
-            onClick={onClose}
+            onClick={props.onClose}
             className="p-2.5 -m-2.5 text-theme-muted hover:text-theme-text transition-colors"
             aria-label="閉じる"
           >
@@ -291,10 +76,7 @@ export default function RecurringRuleForm({
 
           {/* Description */}
           <div>
-            <label
-              htmlFor="rule-description"
-              className="block text-sm font-medium text-theme-text mb-1"
-            >
+            <label htmlFor="rule-description" className="block text-sm font-medium text-theme-text mb-1">
               {t("recurringRules.form.description")}
             </label>
             <input
@@ -314,10 +96,7 @@ export default function RecurringRuleForm({
 
           {/* Category */}
           <div>
-            <label
-              htmlFor="rule-category"
-              className="block text-sm font-medium text-theme-text mb-1"
-            >
+            <label htmlFor="rule-category" className="block text-sm font-medium text-theme-text mb-1">
               {t("recurringRules.form.category")}
             </label>
             <select
@@ -327,7 +106,7 @@ export default function RecurringRuleForm({
               className="block w-full px-3 py-2 border border-theme-card-border rounded-lg shadow-sm text-theme-headline focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
             >
               <option value="">{t("recurringRules.form.selectCategory")}</option>
-              {categories.map((cat) => (
+              {props.categories.map((cat) => (
                 <option key={cat.id} value={cat.id}>
                   {cat.name}
                 </option>
@@ -349,9 +128,7 @@ export default function RecurringRuleForm({
                   onChange={() => setIsVariable(false)}
                   className="mr-2"
                 />
-                <span className="text-sm text-theme-text">
-                  {t("recurringRules.fixedAmount")}
-                </span>
+                <span className="text-sm text-theme-text">{t("recurringRules.fixedAmount")}</span>
               </label>
               <label className="flex items-center">
                 <input
@@ -361,14 +138,12 @@ export default function RecurringRuleForm({
                   onChange={() => setIsVariable(true)}
                   className="mr-2"
                 />
-                <span className="text-sm text-theme-text">
-                  {t("recurringRules.variableAmount")}
-                </span>
+                <span className="text-sm text-theme-text">{t("recurringRules.variableAmount")}</span>
               </label>
             </div>
           </div>
 
-          {/* Amount (固定額は入力可、変動は disabled で常時表示) */}
+          {/* Amount */}
           <AmountFieldWithKeypad
             id="rule-amount"
             value={amount}
@@ -379,10 +154,7 @@ export default function RecurringRuleForm({
 
           {/* Day of Month */}
           <div>
-            <label
-              htmlFor="rule-day"
-              className="block text-sm font-medium text-theme-text mb-1"
-            >
+            <label htmlFor="rule-day" className="block text-sm font-medium text-theme-text mb-1">
               {t("recurringRules.dayOfMonth")}
             </label>
             <select
@@ -412,10 +184,7 @@ export default function RecurringRuleForm({
 
           {/* Interval Months */}
           <div>
-            <label
-              htmlFor="rule-interval"
-              className="block text-sm font-medium text-theme-text mb-1"
-            >
+            <label htmlFor="rule-interval" className="block text-sm font-medium text-theme-text mb-1">
               {t("recurringRules.interval")}
             </label>
             <select
@@ -434,10 +203,7 @@ export default function RecurringRuleForm({
 
           {/* Start Date */}
           <div>
-            <label
-              htmlFor="rule-start-date"
-              className="block text-sm font-medium text-theme-text mb-1"
-            >
+            <label htmlFor="rule-start-date" className="block text-sm font-medium text-theme-text mb-1">
               {t("recurringRules.form.startDate")}
             </label>
             <input
@@ -451,10 +217,7 @@ export default function RecurringRuleForm({
 
           {/* End Date */}
           <div>
-            <label
-              htmlFor="rule-end-date"
-              className="block text-sm font-medium text-theme-text mb-1"
-            >
+            <label htmlFor="rule-end-date" className="block text-sm font-medium text-theme-text mb-1">
               {t("recurringRules.form.endDate")}
             </label>
             <input
@@ -471,10 +234,7 @@ export default function RecurringRuleForm({
 
           {/* Default Payer */}
           <div>
-            <label
-              htmlFor="rule-payer"
-              className="block text-sm font-medium text-theme-text mb-1"
-            >
+            <label htmlFor="rule-payer" className="block text-sm font-medium text-theme-text mb-1">
               {t("recurringRules.defaultPayer")}
             </label>
             <select
@@ -486,7 +246,7 @@ export default function RecurringRuleForm({
               }`}
             >
               <option value="">{t("recurringRules.form.selectPayer")}</option>
-              {members.map((member) => (
+              {props.members.map((member) => (
                 <option key={member.id} value={member.id}>
                   {getMemberDisplayName(member)}
                 </option>
@@ -497,7 +257,7 @@ export default function RecurringRuleForm({
             )}
           </div>
 
-          {/* Split Type — 変動費では不要なため非表示 */}
+          {/* Split Type — 変動費では不要 */}
           {!isVariable && (
             <>
               <div>
@@ -513,9 +273,7 @@ export default function RecurringRuleForm({
                       onChange={() => setSplitType("equal")}
                       className="mr-2"
                     />
-                    <span className="text-sm text-theme-text">
-                      {t("recurringRules.splitEqual")}
-                    </span>
+                    <span className="text-sm text-theme-text">{t("recurringRules.splitEqual")}</span>
                   </label>
                   <label className="flex items-center">
                     <input
@@ -525,9 +283,7 @@ export default function RecurringRuleForm({
                       onChange={() => setSplitType("custom")}
                       className="mr-2"
                     />
-                    <span className="text-sm text-theme-text">
-                      {t("recurringRules.splitCustom")}
-                    </span>
+                    <span className="text-sm text-theme-text">{t("recurringRules.splitCustom")}</span>
                   </label>
                 </div>
               </div>
@@ -541,18 +297,14 @@ export default function RecurringRuleForm({
                     </label>
                     <span
                       className={`text-xs font-medium ${
-                        percentageTotal === 100
-                          ? "text-theme-text"
-                          : "text-theme-primary-text"
+                        percentageTotal === 100 ? "text-theme-text" : "text-theme-primary-text"
                       }`}
                     >
-                      {t("recurringRules.percentageTotal", {
-                        total: String(percentageTotal),
-                      })}
+                      {t("recurringRules.percentageTotal", { total: String(percentageTotal) })}
                       {percentageTotal === 100 && " ✓"}
                     </span>
                   </div>
-                  {members.map((member) => (
+                  {props.members.map((member) => (
                     <div key={member.id} className="flex items-center gap-3">
                       <span className="text-sm text-theme-muted w-32 truncate">
                         {getMemberDisplayName(member)}
@@ -561,9 +313,7 @@ export default function RecurringRuleForm({
                         <input
                           type="number"
                           value={percentages[member.id] || ""}
-                          onChange={(e) =>
-                            handlePercentageChange(member.id, e.target.value)
-                          }
+                          onChange={(e) => handlePercentageChange(member.id, e.target.value)}
                           min="0"
                           max="100"
                           step="1"
@@ -589,16 +339,14 @@ export default function RecurringRuleForm({
             <Button
               type="button"
               variant="secondary"
-              onClick={onClose}
+              onClick={props.onClose}
               disabled={isSubmitting}
               fullWidth
             >
               {t("recurringRules.form.cancel")}
             </Button>
             <Button type="submit" loading={isSubmitting} fullWidth>
-              {isSubmitting
-                ? t("recurringRules.form.saving")
-                : t("recurringRules.form.save")}
+              {isSubmitting ? t("recurringRules.form.saving") : t("recurringRules.form.save")}
             </Button>
           </div>
         </form>

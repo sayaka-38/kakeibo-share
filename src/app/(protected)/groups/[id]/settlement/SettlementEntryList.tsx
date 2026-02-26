@@ -10,6 +10,7 @@ import type { SessionData, EntryData } from "@/types/domain";
 import EntryCard from "./EntryCard";
 import EntryEditModal from "./EntryEditModal";
 import SettlementResultCard from "./SettlementResultCard";
+import { useSettlementEntries } from "./useSettlementEntries";
 
 type Stats = {
   total: number;
@@ -53,15 +54,54 @@ export default function SettlementEntryList({
   const [editingEntry, setEditingEntry] = useState<EntryData | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const canConfirm = stats.pending === 0 && stats.filled > 0;
+  const { pendingEntries, filledEntries, skippedEntries, isEmpty, canConfirm } =
+    useSettlementEntries(entries, stats);
 
-  // ステータス別にエントリをグループ化
-  const pendingEntries = entries.filter((e) => e.status === "pending");
-  const filledEntries = entries.filter((e) => e.status === "filled");
-  const skippedEntries = entries.filter((e) => e.status === "skipped");
+  // エントリごとのスキップハンドラ（親が API コールを担当）
+  const buildSkipHandler = (entry: EntryData) => async () => {
+    const res = await fetch(`/api/settlement-entries/${entry.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "skipped" }),
+    });
 
-  // エントリが0件の場合
-  const isEmpty = entries.length === 0;
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || t("settlementSession.errors.updateFailed"));
+    }
+
+    onEntryUpdated({
+      ...entry,
+      status: "skipped",
+      actual_amount: null,
+      filled_by: currentUserId,
+      filled_at: new Date().toISOString(),
+    });
+  };
+
+  // エントリごとのクイック確定ハンドラ
+  const buildQuickConfirmHandler = (entry: EntryData) => async () => {
+    if (!entry.expected_amount) return;
+
+    const res = await fetch(`/api/settlement-entries/${entry.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ actualAmount: entry.expected_amount, status: "filled" }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || t("settlementSession.errors.updateFailed"));
+    }
+
+    onEntryUpdated({
+      ...entry,
+      status: "filled",
+      actual_amount: entry.expected_amount,
+      filled_by: currentUserId,
+      filled_at: new Date().toISOString(),
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -74,7 +114,6 @@ export default function SettlementEntryList({
             </h2>
           </div>
           <div className="flex items-center gap-2">
-            {/* リフレッシュボタン */}
             {onRefresh && !showDeleteConfirm && (
               <Button
                 variant="ghost"
@@ -98,21 +137,16 @@ export default function SettlementEntryList({
                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                   />
                 </svg>
-                <span className="ml-1 hidden sm:inline">
-                  {t("settlementSession.refresh")}
-                </span>
+                <span className="ml-1 hidden sm:inline">{t("settlementSession.refresh")}</span>
               </Button>
             )}
 
             {showDeleteConfirm ? (
               <>
-                <span className="text-xs text-theme-muted">{t("settlementSession.confirmPeriodReset")}</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onDelete}
-                  loading={isLoading}
-                >
+                <span className="text-xs text-theme-muted">
+                  {t("settlementSession.confirmPeriodReset")}
+                </span>
+                <Button variant="ghost" size="sm" onClick={onDelete} loading={isLoading}>
                   {t("settlementSession.confirmPeriodResetAction")}
                 </Button>
                 <Button
@@ -146,9 +180,7 @@ export default function SettlementEntryList({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
-          <h3 className="font-medium text-theme-headline mb-1">
-            対象の支払いがありません
-          </h3>
+          <h3 className="font-medium text-theme-headline mb-1">対象の支払いがありません</h3>
           <p className="text-sm text-theme-text">
             選択した期間に未清算の支払いや固定費ルールがありません。
           </p>
@@ -160,47 +192,35 @@ export default function SettlementEntryList({
 
       {/* Stats Summary */}
       {!isEmpty && (
-      <div className="bg-theme-card-bg rounded-lg shadow p-4">
-        <h3 className="text-sm font-medium text-theme-text mb-3">
-          {t("settlementSession.summary")}
-        </h3>
-        <div className="grid grid-cols-3 gap-4 text-center">
-          <div className="bg-theme-primary/10 rounded-lg p-3">
-            <p className="text-2xl font-semibold text-theme-primary-text">
-              {stats.pending}
-            </p>
-            <p className="text-xs text-theme-primary-text">
-              {t("settlementSession.statusPending")}
-            </p>
+        <div className="bg-theme-card-bg rounded-lg shadow p-4">
+          <h3 className="text-sm font-medium text-theme-text mb-3">
+            {t("settlementSession.summary")}
+          </h3>
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div className="bg-theme-primary/10 rounded-lg p-3">
+              <p className="text-2xl font-semibold text-theme-primary-text">{stats.pending}</p>
+              <p className="text-xs text-theme-primary-text">
+                {t("settlementSession.statusPending")}
+              </p>
+            </div>
+            <div className="bg-theme-text/10 rounded-lg p-3">
+              <p className="text-2xl font-semibold text-theme-text">{stats.filled}</p>
+              <p className="text-xs text-theme-text">{t("settlementSession.statusFilled")}</p>
+            </div>
+            <div className="bg-theme-bg rounded-lg p-3">
+              <p className="text-2xl font-semibold text-theme-muted">{stats.skipped}</p>
+              <p className="text-xs text-theme-muted">{t("settlementSession.statusSkipped")}</p>
+            </div>
           </div>
-          <div className="bg-theme-text/10 rounded-lg p-3">
-            <p className="text-2xl font-semibold text-theme-text">
-              {stats.filled}
-            </p>
-            <p className="text-xs text-theme-text">
-              {t("settlementSession.statusFilled")}
-            </p>
-          </div>
-          <div className="bg-theme-bg rounded-lg p-3">
-            <p className="text-2xl font-semibold text-theme-muted">
-              {stats.skipped}
-            </p>
-            <p className="text-xs text-theme-muted">
-              {t("settlementSession.statusSkipped")}
-            </p>
-          </div>
+          {stats.filled > 0 && (
+            <div className="mt-4 pt-4 border-t border-theme-card-border text-center">
+              <p className="text-sm text-theme-muted">{t("settlementSession.totalAmount")}</p>
+              <p className="text-2xl font-bold text-theme-headline">
+                {formatCurrency(stats.totalAmount)}
+              </p>
+            </div>
+          )}
         </div>
-        {stats.filled > 0 && (
-          <div className="mt-4 pt-4 border-t border-theme-card-border text-center">
-            <p className="text-sm text-theme-muted">
-              {t("settlementSession.totalAmount")}
-            </p>
-            <p className="text-2xl font-bold text-theme-headline">
-              {formatCurrency(stats.totalAmount)}
-            </p>
-          </div>
-        )}
-      </div>
       )}
 
       {error && (
@@ -224,6 +244,8 @@ export default function SettlementEntryList({
                 members={members}
                 onEdit={() => setEditingEntry(entry)}
                 onUpdated={onEntryUpdated}
+                onSkip={buildSkipHandler(entry)}
+                onQuickConfirm={buildQuickConfirmHandler(entry)}
                 currentUserId={currentUserId}
               />
             ))}
@@ -246,6 +268,8 @@ export default function SettlementEntryList({
                 members={members}
                 onEdit={() => setEditingEntry(entry)}
                 onUpdated={onEntryUpdated}
+                onSkip={buildSkipHandler(entry)}
+                onQuickConfirm={buildQuickConfirmHandler(entry)}
                 currentUserId={currentUserId}
               />
             ))}
@@ -268,6 +292,8 @@ export default function SettlementEntryList({
                 members={members}
                 onEdit={() => setEditingEntry(entry)}
                 onUpdated={onEntryUpdated}
+                onSkip={buildSkipHandler(entry)}
+                onQuickConfirm={buildQuickConfirmHandler(entry)}
                 currentUserId={currentUserId}
               />
             ))}
