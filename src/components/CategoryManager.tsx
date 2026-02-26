@@ -6,6 +6,7 @@ import { t } from "@/lib/i18n";
 import { getCategoryStyle } from "@/lib/format/color";
 import { ColorPicker } from "./ColorPicker";
 import type { Category } from "@/types/database";
+import { apiClient, ApiError } from "@/lib/api/api-client";
 
 type CategoryManagerProps = {
   groupId: string;
@@ -53,33 +54,17 @@ export function CategoryManager({ groupId, categories }: CategoryManagerProps) {
 
     try {
       const isEdit = !!editingId;
-      const url = isEdit ? `/api/categories/${editingId}` : "/api/categories";
-      const method = isEdit ? "PUT" : "POST";
-
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...(isEdit ? {} : { groupId }),
-          name: form.name,
-          icon: form.icon || null,
-          color: form.color,
-        }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setError(
-          data.error ||
-            t(isEdit ? "categories.management.updateFailed" : "categories.management.createFailed")
-        );
-        return;
+      const body = { ...(isEdit ? {} : { groupId }), name: form.name, icon: form.icon || null, color: form.color };
+      if (isEdit) {
+        await apiClient.put(`/api/categories/${editingId}`, body);
+      } else {
+        await apiClient.post("/api/categories", body);
       }
-
       resetForm();
       router.refresh();
-    } catch {
-      setError(t("categories.management.createFailed"));
+    } catch (err) {
+      const isEdit = !!editingId;
+      setError(err instanceof ApiError ? err.message : t(isEdit ? "categories.management.updateFailed" : "categories.management.createFailed"));
     } finally {
       setIsSubmitting(false);
     }
@@ -89,15 +74,10 @@ export function CategoryManager({ groupId, categories }: CategoryManagerProps) {
     if (!confirm(t("categories.management.deleteConfirm"))) return;
 
     try {
-      const res = await fetch(`/api/categories/${id}`, { method: "DELETE" });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setError(data.error || t("categories.management.deleteFailed"));
-        return;
-      }
+      await apiClient.delete(`/api/categories/${id}`);
       router.refresh();
-    } catch {
-      setError(t("categories.management.deleteFailed"));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : t("categories.management.deleteFailed"));
     }
   };
 

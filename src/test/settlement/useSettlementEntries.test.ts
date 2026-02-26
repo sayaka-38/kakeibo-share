@@ -26,7 +26,7 @@ const makeEntry = (id: string, status: "pending" | "filled" | "skipped"): EntryD
 
 describe("useSettlementEntries", () => {
   it("空のエントリ配列なら isEmpty=true、canConfirm=false", () => {
-    const result = useSettlementEntries([], { pending: 0, filled: 0 });
+    const result = useSettlementEntries([]);
     expect(result.isEmpty).toBe(true);
     expect(result.canConfirm).toBe(false);
     expect(result.pendingEntries).toHaveLength(0);
@@ -36,39 +36,39 @@ describe("useSettlementEntries", () => {
 
   it("pending エントリがあれば pendingEntries に含まれる", () => {
     const entries = [makeEntry("e1", "pending"), makeEntry("e2", "filled")];
-    const result = useSettlementEntries(entries, { pending: 1, filled: 1 });
+    const result = useSettlementEntries(entries);
     expect(result.pendingEntries).toHaveLength(1);
     expect(result.pendingEntries[0].id).toBe("e1");
   });
 
   it("filled エントリがあれば filledEntries に含まれる", () => {
     const entries = [makeEntry("e1", "filled"), makeEntry("e2", "filled")];
-    const result = useSettlementEntries(entries, { pending: 0, filled: 2 });
+    const result = useSettlementEntries(entries);
     expect(result.filledEntries).toHaveLength(2);
   });
 
   it("skipped エントリがあれば skippedEntries に含まれる", () => {
     const entries = [makeEntry("e1", "skipped")];
-    const result = useSettlementEntries(entries, { pending: 0, filled: 0 });
+    const result = useSettlementEntries(entries);
     expect(result.skippedEntries).toHaveLength(1);
     expect(result.skippedEntries[0].id).toBe("e1");
   });
 
   it("pending=0 かつ filled>0 のとき canConfirm=true", () => {
     const entries = [makeEntry("e1", "filled")];
-    const result = useSettlementEntries(entries, { pending: 0, filled: 1 });
+    const result = useSettlementEntries(entries);
     expect(result.canConfirm).toBe(true);
   });
 
   it("pending>0 のとき canConfirm=false", () => {
     const entries = [makeEntry("e1", "pending"), makeEntry("e2", "filled")];
-    const result = useSettlementEntries(entries, { pending: 1, filled: 1 });
+    const result = useSettlementEntries(entries);
     expect(result.canConfirm).toBe(false);
   });
 
   it("filled=0 のとき canConfirm=false（全スキップの場合）", () => {
     const entries = [makeEntry("e1", "skipped")];
-    const result = useSettlementEntries(entries, { pending: 0, filled: 0 });
+    const result = useSettlementEntries(entries);
     expect(result.canConfirm).toBe(false);
   });
 
@@ -79,7 +79,7 @@ describe("useSettlementEntries", () => {
       makeEntry("f1", "filled"),
       makeEntry("s1", "skipped"),
     ];
-    const result = useSettlementEntries(entries, { pending: 2, filled: 1 });
+    const result = useSettlementEntries(entries);
     expect(result.pendingEntries).toHaveLength(2);
     expect(result.filledEntries).toHaveLength(1);
     expect(result.skippedEntries).toHaveLength(1);

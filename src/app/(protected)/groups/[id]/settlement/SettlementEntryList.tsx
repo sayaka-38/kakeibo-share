@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { t } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format/currency";
 import { formatDateSmart } from "@/lib/format/date";
@@ -11,19 +11,12 @@ import EntryCard from "./EntryCard";
 import EntryEditModal from "./EntryEditModal";
 import SettlementResultCard from "./SettlementResultCard";
 import { useSettlementEntries } from "./useSettlementEntries";
-
-type Stats = {
-  total: number;
-  pending: number;
-  filled: number;
-  skipped: number;
-  totalAmount: number;
-};
+import { computeEntryStats } from "@/lib/domain/settlement-utils";
+import { apiClient, ApiError } from "@/lib/api/api-client";
 
 type SettlementEntryListProps = {
   session: SessionData;
   entries: EntryData[];
-  stats: Stats;
   members: Profile[];
   categories: { id: string; name: string; icon: string | null; color: string | null }[];
   currentUserId: string;
@@ -39,7 +32,6 @@ type SettlementEntryListProps = {
 export default function SettlementEntryList({
   session,
   entries,
-  stats,
   members,
   categories: _categories,
   currentUserId,
@@ -54,22 +46,17 @@ export default function SettlementEntryList({
   const [editingEntry, setEditingEntry] = useState<EntryData | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  const stats = useMemo(() => computeEntryStats(entries), [entries]);
   const { pendingEntries, filledEntries, skippedEntries, isEmpty, canConfirm } =
-    useSettlementEntries(entries, stats);
+    useSettlementEntries(entries);
 
   // エントリごとのスキップハンドラ（親が API コールを担当）
   const buildSkipHandler = (entry: EntryData) => async () => {
-    const res = await fetch(`/api/settlement-entries/${entry.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "skipped" }),
-    });
-
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new Error(data.error || t("settlementSession.errors.updateFailed"));
+    try {
+      await apiClient.put(`/api/settlement-entries/${entry.id}`, { status: "skipped" });
+    } catch (e) {
+      throw new Error(e instanceof ApiError ? e.message : t("settlementSession.errors.updateFailed"));
     }
-
     onEntryUpdated({
       ...entry,
       status: "skipped",
@@ -82,18 +69,14 @@ export default function SettlementEntryList({
   // エントリごとのクイック確定ハンドラ
   const buildQuickConfirmHandler = (entry: EntryData) => async () => {
     if (!entry.expected_amount) return;
-
-    const res = await fetch(`/api/settlement-entries/${entry.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ actualAmount: entry.expected_amount, status: "filled" }),
-    });
-
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new Error(data.error || t("settlementSession.errors.updateFailed"));
+    try {
+      await apiClient.put(`/api/settlement-entries/${entry.id}`, {
+        actualAmount: entry.expected_amount,
+        status: "filled",
+      });
+    } catch (e) {
+      throw new Error(e instanceof ApiError ? e.message : t("settlementSession.errors.updateFailed"));
     }
-
     onEntryUpdated({
       ...entry,
       status: "filled",

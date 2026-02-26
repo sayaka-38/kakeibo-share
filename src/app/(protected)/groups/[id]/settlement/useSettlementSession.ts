@@ -1,21 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { t } from "@/lib/i18n";
 import type { NetTransfer } from "@/types/database";
 
 import type { SessionData, EntryData, SuggestionData } from "@/types/domain";
-
-type StatsData = {
-  total: number;
-  pending: number;
-  filled: number;
-  skipped: number;
-  totalAmount: number;
-};
-
-const emptyStats: StatsData = { total: 0, pending: 0, filled: 0, skipped: 0, totalAmount: 0 };
+import { computeEntryStats } from "@/lib/domain/settlement-utils";
+import { apiClient, ApiError } from "@/lib/api/api-client";
 
 export function useSettlementSession({
   groupId,
@@ -33,9 +25,10 @@ export function useSettlementSession({
   // Draft session state
   const [session, setSession] = useState<SessionData | null>(existingSession);
   const [entries, setEntries] = useState<EntryData[]>([]);
-  const [stats, setStats] = useState<StatsData>(emptyStats);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const stats = useMemo(() => computeEntryStats(entries), [entries]);
 
   // Pending session state
   const [pendingSessionState, setPendingSessionState] = useState<SessionData | null>(pendingSession ?? null);
@@ -57,17 +50,13 @@ export function useSettlementSession({
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/settlement-sessions/${sessionId}`);
-      if (!res.ok) {
-        setError(t("settlementSession.errors.fetchFailed"));
-        return;
-      }
-      const data = await res.json();
+      const data = await apiClient.get<{ session: SessionData; entries: EntryData[] }>(
+        `/api/settlement-sessions/${sessionId}`
+      );
       setSession(data.session);
       setEntries(data.entries || []);
-      setStats(data.stats || emptyStats);
-    } catch {
-      setError(t("settlementSession.errors.fetchFailed"));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : t("settlementSession.errors.fetchFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -77,15 +66,12 @@ export function useSettlementSession({
     setPendingIsLoading(true);
     setPendingError(null);
     try {
-      const res = await fetch(`/api/settlement-sessions/${sessionId}`);
-      if (!res.ok) {
-        setPendingError(t("settlementSession.errors.fetchFailed"));
-        return;
-      }
-      const data = await res.json();
+      const data = await apiClient.get<{ session: SessionData }>(
+        `/api/settlement-sessions/${sessionId}`
+      );
       setPendingSessionState(data.session);
-    } catch {
-      setPendingError(t("settlementSession.errors.fetchFailed"));
+    } catch (err) {
+      setPendingError(err instanceof ApiError ? err.message : t("settlementSession.errors.fetchFailed"));
     } finally {
       setPendingIsLoading(false);
     }
@@ -111,21 +97,14 @@ export function useSettlementSession({
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/settlement-sessions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ groupId, periodStart, periodEnd }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setError(data.error || t("settlementSession.errors.createFailed"));
-        return;
-      }
-      const data = await res.json();
+      const data = await apiClient.post<{ session: SessionData }>(
+        "/api/settlement-sessions",
+        { groupId, periodStart, periodEnd }
+      );
       setSession(data.session);
       await fetchSessionDetails(data.session.id);
-    } catch {
-      setError(t("settlementSession.errors.createFailed"));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : t("settlementSession.errors.createFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -136,36 +115,18 @@ export function useSettlementSession({
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/settlement-sessions/${session.id}`, { method: "DELETE" });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setError(data.error || t("settlementSession.errors.deleteFailed"));
-        return;
-      }
+      await apiClient.delete(`/api/settlement-sessions/${session.id}`);
       setSession(null);
       setEntries([]);
-      setStats(emptyStats);
-    } catch {
-      setError(t("settlementSession.errors.deleteFailed"));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : t("settlementSession.errors.deleteFailed"));
     } finally {
       setIsLoading(false);
     }
   }, [session]);
 
   const handleEntryUpdated = useCallback((updatedEntry: EntryData) => {
-    setEntries((prev) => {
-      const newEntries = prev.map((e) => (e.id === updatedEntry.id ? updatedEntry : e));
-      setStats({
-        total: newEntries.length,
-        pending: newEntries.filter((e) => e.status === "pending").length,
-        filled: newEntries.filter((e) => e.status === "filled").length,
-        skipped: newEntries.filter((e) => e.status === "skipped").length,
-        totalAmount: newEntries
-          .filter((e) => e.status === "filled")
-          .reduce((sum, e) => sum + (e.actual_amount || 0), 0),
-      });
-      return newEntries;
-    });
+    setEntries((prev) => prev.map((e) => (e.id === updatedEntry.id ? updatedEntry : e)));
   }, []);
 
   const handleConfirm = useCallback(async () => {
@@ -173,13 +134,10 @@ export function useSettlementSession({
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/settlement-sessions/${session.id}/confirm`, { method: "POST" });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setError(data.error || t("settlementSession.errors.confirmFailed"));
-        return;
-      }
-      const data = await res.json();
+      const data = await apiClient.post<{ session?: SessionData }>(
+        `/api/settlement-sessions/${session.id}/confirm`,
+        {}
+      );
       if (data.session) {
         setSession(data.session);
         if (data.session.status === "settled") {
@@ -190,14 +148,13 @@ export function useSettlementSession({
           setPendingSessionState(data.session);
           setSession(null);
           setEntries([]);
-          setStats(emptyStats);
           router.refresh();
         }
       } else {
         await fetchSessionDetails(session.id);
       }
-    } catch {
-      setError(t("settlementSession.errors.confirmFailed"));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : t("settlementSession.errors.confirmFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -208,15 +165,10 @@ export function useSettlementSession({
     setPendingIsLoading(true);
     setPendingError(null);
     try {
-      const res = await fetch(`/api/settlement-sessions/${pendingSessionState.id}/report-payment`, { method: "POST" });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setPendingError(data.error || t("settlementSession.errors.reportPaymentFailed"));
-        return;
-      }
+      await apiClient.post(`/api/settlement-sessions/${pendingSessionState.id}/report-payment`, {});
       await fetchPendingSessionDetails(pendingSessionState.id);
-    } catch {
-      setPendingError(t("settlementSession.errors.reportPaymentFailed"));
+    } catch (err) {
+      setPendingError(err instanceof ApiError ? err.message : t("settlementSession.errors.reportPaymentFailed"));
     } finally {
       setPendingIsLoading(false);
     }
@@ -225,7 +177,6 @@ export function useSettlementSession({
   const handleSelectSession = useCallback(async (targetSession: SessionData) => {
     setSession(targetSession);
     setEntries([]);
-    setStats(emptyStats);
     await fetchSessionDetails(targetSession.id);
   }, [fetchSessionDetails]);
 
@@ -234,19 +185,11 @@ export function useSettlementSession({
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch(
-        `/api/settlement-sessions/${session.id}/refresh`,
-        { method: "POST" }
-      );
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setError(data.error || t("settlementSession.errors.refreshFailed"));
-        return;
-      }
+      await apiClient.post(`/api/settlement-sessions/${session.id}/refresh`, {});
       // 成功後: エントリを再取得
       await fetchSessionDetails(session.id);
-    } catch {
-      setError(t("settlementSession.errors.refreshFailed"));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : t("settlementSession.errors.refreshFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -257,18 +200,13 @@ export function useSettlementSession({
     setPendingIsLoading(true);
     setPendingError(null);
     try {
-      const res = await fetch(`/api/settlement-sessions/${pendingSessionState.id}/confirm-receipt`, { method: "POST" });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setPendingError(data.error || t("settlementSession.errors.confirmReceiptFailed"));
-        return;
-      }
+      await apiClient.post(`/api/settlement-sessions/${pendingSessionState.id}/confirm-receipt`, {});
       const completedSessionId = pendingSessionState.id;
       setPendingSessionState(null);
       router.push(`/groups/${groupId}/settlement/history/${completedSessionId}`);
       router.refresh();
-    } catch {
-      setPendingError(t("settlementSession.errors.confirmReceiptFailed"));
+    } catch (err) {
+      setPendingError(err instanceof ApiError ? err.message : t("settlementSession.errors.confirmReceiptFailed"));
     } finally {
       setPendingIsLoading(false);
     }

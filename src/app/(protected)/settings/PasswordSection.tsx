@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { t } from "@/lib/i18n";
 import { Button } from "@/components/ui/Button";
+import { apiClient, ApiError } from "@/lib/api/api-client";
 
 export function PasswordSection() {
   const [newPassword, setNewPassword] = useState("");
@@ -25,21 +26,16 @@ export function PasswordSection() {
 
     setSaving(true);
 
-    const res = await fetch("/api/auth/change-password", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ newPassword }),
-    });
-
-    if (res.ok) {
+    try {
+      await apiClient.post("/api/auth/change-password", { newPassword });
       setMessage(t("settings.password.changeSuccess"));
       setNewPassword("");
       setConfirmPassword("");
-    } else {
-      const data = await res.json();
-      setMessage(data.error || t("settings.password.changeFailed"));
+    } catch (err) {
+      setMessage(err instanceof ApiError ? err.message : t("settings.password.changeFailed"));
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   return (
