@@ -50,12 +50,12 @@ describe("DELETE /api/payments/[id] API Route", () => {
       ).toBe(true);
     });
 
-    it("authenticateRequest を使用している", () => {
+    it("withAuthHandler で認証チェックをしている", () => {
       if (!fs.existsSync(API_ROUTE_PATH)) {
         expect.fail("API Route ファイルが存在しない（Red フェーズ）");
       }
       const content = fs.readFileSync(API_ROUTE_PATH, "utf-8");
-      expect(content).toContain("authenticateRequest");
+      expect(content).toContain("withAuthHandler");
     });
 
     it("groupId をクライアントから受け取らず DB から導出している", () => {
@@ -202,7 +202,8 @@ describe("API Route 実装詳細", () => {
         expect.fail("API Route ファイルが存在しない（Red フェーズ）");
       }
       const content = fs.readFileSync(API_ROUTE_PATH, "utf-8");
-      expect(content).toContain("auth.response");
+      // withAuthHandler が認証失敗時に 401 を返す
+      expect(content).toContain("withAuthHandler");
     });
 
     it("存在しない支払い ID は 404 を返す仕様", () => {

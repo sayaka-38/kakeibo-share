@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/api/authenticate";
-import { withErrorHandler } from "@/lib/api/with-error-handler";
+import { withAuthHandler } from "@/lib/api/with-error-handler";
 import {
   validateDescription,
   validateDayOfMonth,
@@ -8,18 +7,12 @@ import {
   validateAmount,
 } from "@/lib/validation/recurring-rule";
 
-type RouteParams = { params: Promise<{ id: string }> };
-
 // =============================================================================
 // GET /api/recurring-rules/[id]
 // 個別の固定費ルールを取得
 // =============================================================================
-export const GET = withErrorHandler<RouteParams>(async (_request, context) => {
-  const auth = await authenticateRequest();
-  if (!auth.success) return auth.response;
-  const { user, supabase } = auth;
-
-  const { id } = await context.params;
+export const GET = withAuthHandler<Promise<{ id: string }>>(async (_request, { params, user, supabase }) => {
+  const { id } = await params;
 
   // ルールを取得（関連データも含む）
   const { data: rule, error } = await supabase
@@ -68,11 +61,7 @@ export const GET = withErrorHandler<RouteParams>(async (_request, context) => {
 // PUT /api/recurring-rules/[id]
 // 固定費ルールを更新
 // =============================================================================
-export const PUT = withErrorHandler<RouteParams>(async (request, { params }) => {
-  const auth = await authenticateRequest();
-  if (!auth.success) return auth.response;
-  const { user, supabase } = auth;
-
+export const PUT = withAuthHandler<Promise<{ id: string }>>(async (request, { params, user, supabase }) => {
   const { id } = await params;
 
   let body: Record<string, unknown>;
@@ -218,11 +207,7 @@ export const PUT = withErrorHandler<RouteParams>(async (request, { params }) => 
 // DELETE /api/recurring-rules/[id]
 // 固定費ルールを削除（オーナーのみ）
 // =============================================================================
-export const DELETE = withErrorHandler<RouteParams>(async (_request, { params }) => {
-  const auth = await authenticateRequest();
-  if (!auth.success) return auth.response;
-  const { user, supabase } = auth;
-
+export const DELETE = withAuthHandler<Promise<{ id: string }>>(async (_request, { params, user, supabase }) => {
   const { id } = await params;
 
   // 既存ルールを取得

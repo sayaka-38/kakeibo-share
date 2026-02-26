@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { AmountFieldWithKeypad } from "@/components/payment-form/fields/AmountFieldWithKeypad";
 import { formatCurrency } from "@/lib/format/currency";
 import { formatDateSmart } from "@/lib/format/date";
+import { getMemberDisplayName } from "@/lib/domain/member-utils";
 import type { Profile } from "@/types/database";
 import type { EntryData } from "@/types/domain";
 
@@ -233,7 +234,7 @@ export default function EntryEditModal({
             >
               {members.map((member) => (
                 <option key={member.id} value={member.id}>
-                  {member.display_name || member.email}
+                  {getMemberDisplayName(member)}
                 </option>
               ))}
             </select>
@@ -291,7 +292,7 @@ export default function EntryEditModal({
               {members.map((member) => (
                 <div key={member.id} className="flex items-center gap-3">
                   <span className="text-sm text-theme-muted w-28 truncate shrink-0">
-                    {member.display_name || member.email}
+                    {getMemberDisplayName(member)}
                   </span>
                   <div className="flex-1 relative">
                     <input

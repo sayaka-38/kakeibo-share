@@ -4,6 +4,7 @@ import { formatCurrency } from "@/lib/format/currency";
 import { formatDateSmart } from "@/lib/format/date";
 import { t } from "@/lib/i18n";
 import { Button } from "@/components/ui/Button";
+import { getMemberDisplayName } from "@/lib/domain/member-utils";
 import type { Profile } from "@/types/database";
 import type { SessionData } from "@/types/domain";
 
@@ -29,9 +30,7 @@ export default function PendingPaymentView({
   const transfers = session.net_transfers || [];
   const hasReported = !!session.payment_reported_at;
   const reporterName = session.payment_reported_by
-    ? members.find((m) => m.id === session.payment_reported_by)?.display_name ||
-      members.find((m) => m.id === session.payment_reported_by)?.email ||
-      "Unknown"
+    ? getMemberDisplayName(members.find((m) => m.id === session.payment_reported_by))
     : null;
 
   // 自分が送金する側か受取る側かを判定

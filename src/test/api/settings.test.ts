@@ -47,9 +47,9 @@ describe("PUT /api/profile", () => {
     ).toBe(true);
   });
 
-  it("authenticateRequest を使用している", () => {
+  it("withAuthHandler で認証チェックをしている", () => {
     const content = fs.readFileSync(PROFILE_API_PATH, "utf-8");
-    expect(content).toContain("authenticateRequest");
+    expect(content).toContain("withAuthHandler");
   });
 
   it("display_name の更新を行う", () => {
@@ -86,9 +86,9 @@ describe("POST /api/auth/change-password", () => {
     ).toBe(true);
   });
 
-  it("authenticateRequest を使用している", () => {
+  it("withAuthHandler で認証チェックをしている", () => {
     const content = fs.readFileSync(CHANGE_PASSWORD_API_PATH, "utf-8");
-    expect(content).toContain("authenticateRequest");
+    expect(content).toContain("withAuthHandler");
   });
 
   it("6文字以上のバリデーションがある", () => {
@@ -97,9 +97,9 @@ describe("POST /api/auth/change-password", () => {
     expect(
       content.includes("changePasswordRequestSchema") || content.includes("6")
     ).toBe(true);
-    // 400 は withErrorHandler または明示的な status: 400 のいずれかで担保
+    // 400 は withAuthHandler/withErrorHandler の ZodError ハンドリングで担保
     expect(
-      content.includes("400") || content.includes("withErrorHandler")
+      content.includes("400") || content.includes("withAuthHandler")
     ).toBe(true);
   });
 
@@ -127,9 +127,9 @@ describe("POST /api/auth/delete-account", () => {
     ).toBe(true);
   });
 
-  it("authenticateRequest を使用している", () => {
+  it("withAuthHandler で認証チェックをしている", () => {
     const content = fs.readFileSync(DELETE_ACCOUNT_API_PATH, "utf-8");
-    expect(content).toContain("authenticateRequest");
+    expect(content).toContain("withAuthHandler");
   });
 
   it("anonymize_user RPC を呼び出している", () => {

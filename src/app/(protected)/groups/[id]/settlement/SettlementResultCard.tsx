@@ -10,6 +10,7 @@ import {
 } from "@/lib/settlement/consolidate";
 import type { MemberBalance } from "@/lib/settlement/consolidate";
 import { calculateEntryBalances } from "@/lib/settlement/calculate-entry-balances";
+import { getMemberDisplayName } from "@/lib/domain/member-utils";
 import type { Profile, NetTransfer } from "@/types/database";
 import type { EntryData, SessionData } from "@/types/domain";
 
@@ -38,7 +39,7 @@ export default function SettlementResultCard({
   const balances: MemberBalance[] = useMemo(() => {
     const entryMembers = members.map((m) => ({
       id: m.id,
-      name: m.display_name || m.email || "Unknown",
+      name: getMemberDisplayName(m),
     }));
     return calculateEntryBalances(filledEntries, entryMembers);
   }, [filledEntries, members]);

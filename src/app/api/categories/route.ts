@@ -1,16 +1,12 @@
 import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/api/authenticate";
-import { withErrorHandler } from "@/lib/api/with-error-handler";
+import { withAuthHandler } from "@/lib/api/with-error-handler";
 import { createCategoryRequestSchema } from "@/lib/validation/schemas";
 import { t } from "@/lib/i18n";
 
 // =============================================================================
 // POST /api/categories — カスタムカテゴリ作成
 // =============================================================================
-export const POST = withErrorHandler(async (request: Request) => {
-  const auth = await authenticateRequest();
-  if (!auth.success) return auth.response;
-  const { user, supabase } = auth;
+export const POST = withAuthHandler(async (request, { user, supabase }) => {
 
   let body: Record<string, unknown>;
   try {

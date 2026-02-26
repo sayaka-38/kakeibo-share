@@ -27,9 +27,9 @@ describe("POST /api/categories", () => {
     ).toBe(true);
   });
 
-  it("authenticateRequest を使用している", () => {
+  it("withAuthHandler で認証チェックをしている", () => {
     const content = fs.readFileSync(POST_ROUTE, "utf-8");
-    expect(content).toContain("authenticateRequest");
+    expect(content).toContain("withAuthHandler");
   });
 
   it("Zod または validateCategory でバリデーションしている", () => {

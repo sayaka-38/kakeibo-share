@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/api/authenticate";
-import { withErrorHandler } from "@/lib/api/with-error-handler";
+import { withAuthHandler } from "@/lib/api/with-error-handler";
 import { groupIdRequestSchema } from "@/lib/validation/schemas";
 
 /**
@@ -11,13 +10,9 @@ import { groupIdRequestSchema } from "@/lib/validation/schemas";
  * RLS ポリシー: owner_id = auth.uid() の場合のみ DELETE 可能
  * CASCADE: group_members, payments, payment_splits, settlements, demo_sessions は自動削除
  */
-export const POST = withErrorHandler(async (request: Request) => {
+export const POST = withAuthHandler(async (request, { user, supabase }) => {
   const body = await request.json();
   const { groupId } = groupIdRequestSchema.parse(body);
-
-  const auth = await authenticateRequest();
-  if (!auth.success) return auth.response;
-  const { user, supabase } = auth;
 
   // グループの存在確認とオーナー確認
   const { data: group, error: groupError } = await supabase

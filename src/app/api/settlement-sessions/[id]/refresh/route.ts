@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/api/authenticate";
 import { refreshSettlementEntries } from "@/lib/settlement/refresh-entries";
-import { withErrorHandler } from "@/lib/api/with-error-handler";
-
-type RouteContext = { params: Promise<{ id: string }> };
+import { withAuthHandler } from "@/lib/api/with-error-handler";
 
 /**
  * POST /api/settlement-sessions/[id]/refresh
@@ -16,12 +13,8 @@ type RouteContext = { params: Promise<{ id: string }> };
  *
  * 認可: グループメンバーであること（draft状態のみ）
  */
-export const POST = withErrorHandler<RouteContext>(async (_request, context) => {
-  const auth = await authenticateRequest();
-  if (!auth.success) return auth.response;
-  const { user, supabase } = auth;
-
-  const { id: sessionId } = await context.params;
+export const POST = withAuthHandler<Promise<{ id: string }>>(async (_request, { params, user, supabase }) => {
+  const { id: sessionId } = await params;
 
   // セッションを取得
   const { data: session, error: sessionError } = await supabase

@@ -12,6 +12,7 @@ import { RecentPaymentList } from "@/components/payment-list/RecentPaymentList";
 import { PaymentListSkeleton } from "@/components/payment-list/PaymentListSkeleton";
 import { DeleteGroupButton } from "@/components/DeleteGroupButton";
 import { FlashMessage } from "@/components/FlashMessage";
+import { getMemberDisplayName } from "@/lib/domain/member-utils";
 import type {
   GroupResult,
   GroupMemberDetailResult,
@@ -229,7 +230,7 @@ export default async function GroupDetailPage({ params }: Props) {
               >
                 <div>
                   <p className="font-medium text-theme-headline">
-                    {member.profiles?.display_name || member.profiles?.email}
+                    {getMemberDisplayName(member.profiles)}
                   </p>
                   <p className="text-sm text-theme-text">
                     {t("groups.detail.joined")}{" "}

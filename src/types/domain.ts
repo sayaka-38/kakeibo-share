@@ -1,6 +1,25 @@
 import type { Profile, NetTransfer } from "./database";
 
 // =============================================================================
+// 共通参照型
+// =============================================================================
+
+/** カテゴリの軽量参照型（JOIN結果の部分選択） */
+export type CategoryRef = {
+  id: string;
+  name: string;
+  icon: string | null;
+  color: string | null;
+};
+
+/** メンバーの軽量参照型（JOIN結果の部分選択） */
+export type MemberRef = {
+  id: string;
+  display_name: string | null;
+  email: string | null;
+};
+
+// =============================================================================
 // Settlement Session / Entry 型
 // =============================================================================
 
@@ -47,8 +66,8 @@ export type EntryData = {
   filled_by: string | null;
   filled_at: string | null;
   source_payment_id: string | null;
-  category?: { id: string; name: string; icon: string | null; color: string | null } | null;
-  payer?: { id: string; display_name: string | null; email: string | null } | null;
+  category?: CategoryRef | null;
+  payer?: MemberRef | null;
   splits?: { id: string; user_id: string; amount: number; user?: Profile | null }[];
 };
 
@@ -72,13 +91,13 @@ export type RuleWithRelations = {
   end_date: string | null;
   created_at: string;
   updated_at: string;
-  category: { id: string; name: string; icon: string | null; color: string | null } | null;
-  default_payer: { id: string; display_name: string | null; email: string | null } | null;
+  category: CategoryRef | null;
+  default_payer: MemberRef | null;
   splits: {
     id: string;
     user_id: string;
     amount: number | null;
     percentage: number | null;
-    user: { id: string; display_name: string | null; email: string | null } | null;
+    user: MemberRef | null;
   }[];
 };

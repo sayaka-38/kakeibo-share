@@ -1,20 +1,13 @@
 import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/api/authenticate";
-import { withErrorHandler } from "@/lib/api/with-error-handler";
+import { withAuthHandler } from "@/lib/api/with-error-handler";
 import { rpcCodeToResponse } from "@/lib/api/translate-rpc-error";
 import { settlementEntryUpdateSchema } from "@/lib/validation/schemas";
-
-type RouteParams = { params: Promise<{ id: string }> };
 
 // =============================================================================
 // PUT /api/settlement-entries/[id]
 // 清算エントリを更新（金額入力など）
 // =============================================================================
-export const PUT = withErrorHandler<RouteParams>(async (request, { params }) => {
-  const auth = await authenticateRequest();
-  if (!auth.success) return auth.response;
-  const { user, supabase } = auth;
-
+export const PUT = withAuthHandler<Promise<{ id: string }>>(async (request, { params, user, supabase }) => {
   const { id } = await params;
 
   const raw = await request.json().catch(() => null);
@@ -102,11 +95,7 @@ export const PUT = withErrorHandler<RouteParams>(async (request, { params }) => 
 // DELETE /api/settlement-entries/[id]
 // 清算エントリを削除（手動追加のみ、draftセッションのみ）
 // =============================================================================
-export const DELETE = withErrorHandler<RouteParams>(async (request, { params }) => {
-  const auth = await authenticateRequest();
-  if (!auth.success) return auth.response;
-  const { user, supabase } = auth;
-
+export const DELETE = withAuthHandler<Promise<{ id: string }>>(async (request, { params, user, supabase }) => {
   const { id } = await params;
 
   // エントリを取得

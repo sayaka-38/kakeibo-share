@@ -1,21 +1,14 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { authenticateRequest } from "@/lib/api/authenticate";
-import { withErrorHandler } from "@/lib/api/with-error-handler";
+import { withAuthHandler } from "@/lib/api/with-error-handler";
 import { rpcCodeToResponse } from "@/lib/api/translate-rpc-error";
-
-type RouteContext = { params: Promise<{ id: string }> };
 
 // =============================================================================
 // POST /api/settlement-sessions/[id]/report-payment
 // 送金完了を報告する（pending_payment 状態でのみ実行可能）
 // =============================================================================
-export const POST = withErrorHandler<RouteContext>(async (_request, context) => {
-  const auth = await authenticateRequest();
-  if (!auth.success) return auth.response;
-  const { user, supabase } = auth;
-
-  const { id } = await context.params;
+export const POST = withAuthHandler<Promise<{ id: string }>>(async (_request, { params, user, supabase }) => {
+  const { id } = await params;
 
   const { data: result, error } = await supabase.rpc(
     "report_settlement_payment",

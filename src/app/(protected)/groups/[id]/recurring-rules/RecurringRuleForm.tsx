@@ -5,6 +5,7 @@ import { t } from "@/lib/i18n";
 import { Button } from "@/components/ui/Button";
 import { AmountFieldWithKeypad } from "@/components/payment-form/fields/AmountFieldWithKeypad";
 import { validateRecurringRule } from "@/lib/validation/recurring-rule";
+import { getMemberDisplayName } from "@/lib/domain/member-utils";
 import type { Category, Profile } from "@/types/database";
 import type { RuleWithRelations } from "@/types/domain";
 
@@ -487,7 +488,7 @@ export default function RecurringRuleForm({
               <option value="">{t("recurringRules.form.selectPayer")}</option>
               {members.map((member) => (
                 <option key={member.id} value={member.id}>
-                  {member.display_name || member.email}
+                  {getMemberDisplayName(member)}
                 </option>
               ))}
             </select>
@@ -554,7 +555,7 @@ export default function RecurringRuleForm({
                   {members.map((member) => (
                     <div key={member.id} className="flex items-center gap-3">
                       <span className="text-sm text-theme-muted w-32 truncate">
-                        {member.display_name || member.email}
+                        {getMemberDisplayName(member)}
                       </span>
                       <div className="flex-1 relative">
                         <input

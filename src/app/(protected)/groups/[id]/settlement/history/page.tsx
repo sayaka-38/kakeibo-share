@@ -4,6 +4,7 @@ import Link from "next/link";
 import { formatCurrency } from "@/lib/format/currency";
 import { formatDateSmart } from "@/lib/format/date";
 import { t } from "@/lib/i18n";
+import { getMemberDisplayName } from "@/lib/domain/member-utils";
 type PageProps = {
   params: Promise<{ id: string }>;
 };
@@ -189,7 +190,7 @@ export default async function SettlementHistoryPage({ params }: PageProps) {
                     {formatDateSmart(session.confirmed_at.slice(0, 10))} 確定
                     {session.confirmer && (
                       <span>
-                        （{session.confirmer.display_name || session.confirmer.email}）
+                        （{getMemberDisplayName(session.confirmer)}）
                       </span>
                     )}
                   </p>

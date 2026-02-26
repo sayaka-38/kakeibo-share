@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/api/authenticate";
-import { withErrorHandler } from "@/lib/api/with-error-handler";
+import { withAuthHandler } from "@/lib/api/with-error-handler";
 import { changePasswordRequestSchema } from "@/lib/validation/schemas";
 
 /**
@@ -9,10 +8,7 @@ import { changePasswordRequestSchema } from "@/lib/validation/schemas";
  * パスワードを変更する。
  * Supabase Auth の updateUser を使用（認証済みセッション必須）。
  */
-export const POST = withErrorHandler(async (request: Request) => {
-  const auth = await authenticateRequest();
-  if (!auth.success) return auth.response;
-  const { supabase } = auth;
+export const POST = withAuthHandler(async (request, { supabase }) => {
 
   const body = await request.json();
   const { newPassword } = changePasswordRequestSchema.parse(body);

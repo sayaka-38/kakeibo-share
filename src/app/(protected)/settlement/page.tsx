@@ -10,6 +10,7 @@ import {
   type Member,
   type Payment,
 } from "@/lib/settlement";
+import { getMemberDisplayName } from "@/lib/domain/member-utils";
 import type { GroupMembershipResult, MemberResult } from "@/types/query-results";
 
 type PaymentSplitRow = {
@@ -91,7 +92,7 @@ export default async function SettlementPage() {
     // Member を新ロジックの型に変換
     const memberList: Member[] = memberProfiles.map((p) => ({
       id: p.id,
-      displayName: p.display_name || p.email || "Unknown",
+      displayName: getMemberDisplayName(p),
     }));
 
     // Get all payments for this group with payer info + splits
@@ -389,9 +390,7 @@ export default async function SettlementPage() {
                                     )}
                                   </td>
                                   <td className="py-2 px-2 text-theme-muted">
-                                    {payment.payer?.display_name ||
-                                      payment.payer?.email ||
-                                      "-"}
+                                    {getMemberDisplayName(payment.payer, "-")}
                                   </td>
                                   <td className="py-2 px-2 text-right text-theme-headline font-medium">
                                     {formatCurrency(Number(payment.amount))}

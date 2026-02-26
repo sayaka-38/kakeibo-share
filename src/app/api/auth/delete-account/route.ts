@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/api/authenticate";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { withErrorHandler } from "@/lib/api/with-error-handler";
+import { withAuthHandler } from "@/lib/api/with-error-handler";
 
 /**
  * POST /api/auth/delete-account
@@ -17,10 +16,7 @@ import { withErrorHandler } from "@/lib/api/with-error-handler";
  *   - payments, payment_splits は一切変更しない
  *   - settlement 関連データも保持
  */
-export const POST = withErrorHandler(async () => {
-  const auth = await authenticateRequest();
-  if (!auth.success) return auth.response;
-  const { user, supabase } = auth;
+export const POST = withAuthHandler(async (_request, { user, supabase }) => {
 
   // 1. プロフィール匿名化 + 関連データ整理（RPC）
   const { data: anonymized, error: rpcError } = await supabase.rpc(

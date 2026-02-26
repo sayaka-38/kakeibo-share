@@ -1,24 +1,17 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { authenticateRequest } from "@/lib/api/authenticate";
 import { consolidateTransfers } from "@/lib/settlement/consolidate";
-import { withErrorHandler } from "@/lib/api/with-error-handler";
+import { withAuthHandler } from "@/lib/api/with-error-handler";
 import { rpcCodeToResponse } from "@/lib/api/translate-rpc-error";
 import type { NetTransfer } from "@/types/database";
-
-type RouteContext = { params: Promise<{ id: string }> };
 
 // =============================================================================
 // POST /api/settlement-sessions/[id]/confirm
 // 清算セッションを確定し、payments に書き込む
 // 既存の pending_payment セッションがあれば net_transfers を統合
 // =============================================================================
-export const POST = withErrorHandler<RouteContext>(async (_request, context) => {
-  const auth = await authenticateRequest();
-  if (!auth.success) return auth.response;
-  const { user, supabase } = auth;
-
-  const { id } = await context.params;
+export const POST = withAuthHandler<Promise<{ id: string }>>(async (_request, { params, user, supabase }) => {
+  const { id } = await params;
 
   // セッション情報を事前に取得（group_id が必要）
   const { data: sessionBefore } = await supabase

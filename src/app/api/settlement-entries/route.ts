@@ -1,15 +1,11 @@
 import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/api/authenticate";
-import { withErrorHandler } from "@/lib/api/with-error-handler";
+import { withAuthHandler } from "@/lib/api/with-error-handler";
 
 // =============================================================================
 // POST /api/settlement-entries
 // 手動で清算エントリを追加
 // =============================================================================
-export const POST = withErrorHandler(async (request: Request) => {
-  const auth = await authenticateRequest();
-  if (!auth.success) return auth.response;
-  const { user, supabase } = auth;
+export const POST = withAuthHandler(async (request, { user, supabase }) => {
 
   let body;
   try {
