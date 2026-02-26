@@ -2,7 +2,7 @@
 
 セッション間の文脈保持用。アーキテクチャ規約・DBスキーマは **CLAUDE.md** を参照。
 
-最終更新: 2026-02-24 (Phase 15C完 / #78)
+最終更新: 2026-02-26 (リファクタリング Part 13-16 完 / #91)
 
 ---
 
@@ -20,8 +20,12 @@
 | 15B''–B'''' | withErrorHandler全統一・Zod集約・domain.ts・formatDateSmart・schema.sql最新化 | #72–74 | 1166 |
 | 15C前編 | `calculateEntryBalances` 抽出・Group A/B分離・余り→最大payer加算・端数テスト | #75–76 | 1179 |
 | **15C完** | **refresh重複防止2層・6項目清算テスト・比率正規化テスト・期間再ドラフト後の二重エントリ根絶** | **#77–78** | **1184** |
+| 15D | 人間感覚清算・EntryEditModal 手動内訳・split_type 集約 | #85 | — |
+| リファクタリング前半 | rpcCodeToResponse・settlement-utils・settlementEntryUpdateSchema・デッドタイプ削除 | #86 | — |
+| リファクタリング Part 1-8 | getMemberDisplayName 統一・withAuthHandler 強化・CategoryRef/MemberRef 型・useRecurringRuleForm/useSettlementEntries フック抽出・EntryCard 表示専用化 | #88–89 | — |
+| **リファクタリング Part 9-16** | **apiClient 一元化・computeEntryStats 純粋関数化・StatusHandler・13 ファイル fetch 移行** | **#91** | **1211** |
 
-**現在**: Vitest **1184件** + Playwright E2E 1件 = **計1185テスト** / ビルド正常 / lint クリーン
+**現在**: Vitest **1211件** + Playwright E2E 1件 = **計1212テスト** / ビルド正常 / lint クリーン
 
 ---
 
@@ -47,9 +51,16 @@
 | 環境変数 | `src/lib/env.ts` | `getSupabaseEnv()` — `process.env.XXX!` 禁止 |
 | splits 更新 | DB RPC `replace_payment_splits` | 直接 UPDATE 禁止 |
 | スキップエントリ | `actual_amount CHECK (> 0)` 制約 | skip 時は必ず `null`（0 は DB 制約違反） |
-| withErrorHandler | `src/lib/api/with-error-handler.ts` | 全 API Route に適用済み |
+| withErrorHandler | `src/lib/api/with-error-handler.ts` | 認証込みルートラッパー（全22ルート）。ハンドラは `(req, { params, user, supabase })`。型パラメータあり: `withAuthHandler<Promise<{ id: string }>>` |
+| apiClient | `src/lib/api/api-client.ts` | fetch ボイラープレート集約。`get/post/put/delete` メソッド。エラー時 `ApiError(status, message)` スロー |
 | Zod スキーマ | `src/lib/validation/schemas.ts` | `paymentRequestSchema` / `recurringRuleRequestSchema` 等 |
-| domain.ts | `src/types/domain.ts` | `SessionData` / `EntryData` / `SuggestionData` / `RuleWithRelations` 集約 |
+| domain.ts | `src/types/domain.ts` | `SessionData` / `EntryData` / `SuggestionData` / `RuleWithRelations` + **CategoryRef / MemberRef** 共通参照型 |
+| getMemberDisplayName | `src/lib/domain/member-utils.ts` | `display_name \|\| email \|\| "Unknown"` の統一関数。全コンポーネントで使用 |
+| useRecurringRuleForm | `src/app/(protected)/groups/[id]/recurring-rules/useRecurringRuleForm.ts` | RecurringRuleForm の全ステート・バリデーション・送信ロジック |
+| useSettlementEntries | `src/app/(protected)/groups/[id]/settlement/useSettlementEntries.ts` | pending/filled/skipped フィルタリング・isEmpty・canConfirm の派生値 |
+| EntryCard 表示専用化 | `SettlementEntryList` + `EntryCard` | onSkip/onQuickConfirm を Props で受取。API コールは SettlementEntryList の buildSkipHandler/buildQuickConfirmHandler が担当 |
+| DB type overrides | `src/types/database.ts` | `Omit<Generated, "rpc_name"> & { rpc_name: ... }` で RPC 戻り値型を上書き |
+| Groups auto-redirect | `src/app/(protected)/groups/page.tsx` | groups >= 1 なら `redirect(/groups/${id})`。`?noRedirect=true` で一覧表示 |
 | formatDateSmart | `src/lib/format/date.ts` | 当年 → `M/D`、他年 → `YYYY/M/D`（先頭ゼロなし）。全画面統一済み |
 | useTimedMessage | `src/hooks/useTimedMessage.ts` | 5秒自動消去メッセージ hook |
 | RPC エラー翻訳 | `src/lib/api/translate-rpc-error.ts` | `translateRpcError` / `translateHttpError` |
