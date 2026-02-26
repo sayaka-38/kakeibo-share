@@ -9,6 +9,7 @@ import { formatDateSmart } from "@/lib/format/date";
 import { getMemberDisplayName } from "@/lib/domain/member-utils";
 import type { Profile } from "@/types/database";
 import type { EntryData } from "@/types/domain";
+import { apiClient, ApiError } from "@/lib/api/api-client";
 
 type EntryEditModalProps = {
   entry: EntryData;
@@ -119,24 +120,14 @@ export default function EntryEditModal({
       : [];
 
     try {
-      const res = await fetch(`/api/settlement-entries/${entry.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          actualAmount: parsedAmount,
-          payerId,
-          paymentDate,
-          status: "filled",
-          splitType: useCustomSplits ? "custom" : "equal",
-          splits: splitsPayload,
-        }),
+      await apiClient.put(`/api/settlement-entries/${entry.id}`, {
+        actualAmount: parsedAmount,
+        payerId,
+        paymentDate,
+        status: "filled",
+        splitType: useCustomSplits ? "custom" : "equal",
+        splits: splitsPayload,
       });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setError(data.error || t("settlementSession.errors.updateFailed"));
-        return;
-      }
 
       // 更新成功
       onUpdated({
@@ -157,8 +148,8 @@ export default function EntryEditModal({
             }))
           : [],
       });
-    } catch {
-      setError(t("settlementSession.errors.updateFailed"));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : t("settlementSession.errors.updateFailed"));
     } finally {
       setIsSubmitting(false);
     }

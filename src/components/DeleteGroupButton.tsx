@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { apiClient, ApiError } from "@/lib/api/api-client";
 
 type Props = {
   groupId: string;
@@ -26,27 +27,16 @@ export function DeleteGroupButton({ groupId, groupName }: Props) {
     setError(null);
 
     try {
-      const response = await fetch("/api/groups/delete", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ groupId }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        // 削除成功: グループ一覧へリダイレクト
+      const data = await apiClient.post<{ success: boolean }>("/api/groups/delete", { groupId });
+      if (data.success) {
         router.push("/groups");
         router.refresh();
       } else {
-        // エラー表示
-        setError(data.error || "削除に失敗しました");
+        setError("削除に失敗しました");
         setIsDeleting(false);
       }
-    } catch {
-      setError("ネットワークエラーが発生しました");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "ネットワークエラーが発生しました");
       setIsDeleting(false);
     }
   }, [groupId, router]);

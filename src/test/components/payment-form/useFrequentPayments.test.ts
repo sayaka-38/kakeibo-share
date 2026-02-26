@@ -4,6 +4,11 @@ import { useFrequentPayments } from "@/components/payment-form/hooks/useFrequent
 
 const mockFetch = vi.fn();
 
+/** fetch モックのヘルパー（apiClient は res.ok と status を参照するため必須） */
+function mockSuccess(body: unknown) {
+  return { ok: true, status: 200, json: () => Promise.resolve(body) };
+}
+
 describe("useFrequentPayments", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", mockFetch);
@@ -41,9 +46,7 @@ describe("useFrequentPayments", () => {
     });
 
     it("API が空配列を返した場合 suggestions は空になる", async () => {
-      mockFetch.mockResolvedValue({
-        json: () => Promise.resolve({ suggestions: [] }),
-      });
+      mockFetch.mockResolvedValue(mockSuccess({ suggestions: [] }));
 
       const { result } = renderHook(() => useFrequentPayments("group-1"));
 
@@ -60,29 +63,27 @@ describe("useFrequentPayments", () => {
   // ============================================
   describe("正常系", () => {
     it("groupId 指定時に正しいエンドポイントへフェッチする", async () => {
-      mockFetch.mockResolvedValue({
-        json: () => Promise.resolve({ suggestions: [] }),
-      });
+      mockFetch.mockResolvedValue(mockSuccess({ suggestions: [] }));
 
       renderHook(() => useFrequentPayments("group-abc"));
 
       await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(1));
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining("groupId=group-abc")
+        expect.stringContaining("groupId=group-abc"),
+        undefined
       );
     });
 
     it("フェッチした suggestions を返す", async () => {
-      mockFetch.mockResolvedValue({
-        json: () =>
-          Promise.resolve({
-            suggestions: [
-              { description: "スーパーで買い物", category_id: "cat-1" },
-              { description: "コンビニ", category_id: null },
-            ],
-          }),
-      });
+      mockFetch.mockResolvedValue(
+        mockSuccess({
+          suggestions: [
+            { description: "スーパーで買い物", category_id: "cat-1" },
+            { description: "コンビニ", category_id: null },
+          ],
+        })
+      );
 
       const { result } = renderHook(() => useFrequentPayments("group-1"));
 
@@ -101,9 +102,7 @@ describe("useFrequentPayments", () => {
     });
 
     it("groupId が変更されると再フェッチする", async () => {
-      mockFetch.mockResolvedValue({
-        json: () => Promise.resolve({ suggestions: [] }),
-      });
+      mockFetch.mockResolvedValue(mockSuccess({ suggestions: [] }));
 
       const { rerender } = renderHook(
         ({ groupId }: { groupId: string }) => useFrequentPayments(groupId),
@@ -117,7 +116,8 @@ describe("useFrequentPayments", () => {
       await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(2));
 
       expect(mockFetch).toHaveBeenLastCalledWith(
-        expect.stringContaining("groupId=group-2")
+        expect.stringContaining("groupId=group-2"),
+        undefined
       );
     });
 
@@ -133,9 +133,7 @@ describe("useFrequentPayments", () => {
 
       expect(result.current.isLoading).toBe(true);
 
-      resolveFetch({
-        json: () => Promise.resolve({ suggestions: [] }),
-      });
+      resolveFetch(mockSuccess({ suggestions: [] }));
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
     });
@@ -146,17 +144,16 @@ describe("useFrequentPayments", () => {
   // ============================================
   describe("filter（インクリメンタルサーチ）", () => {
     beforeEach(() => {
-      mockFetch.mockResolvedValue({
-        json: () =>
-          Promise.resolve({
-            suggestions: [
-              { description: "スーパーで買い物", category_id: "cat-1" },
-              { description: "コンビニ", category_id: null },
-              { description: "スーパー銭湯", category_id: "cat-2" },
-              { description: "電気代", category_id: "cat-3" },
-            ],
-          }),
-      });
+      mockFetch.mockResolvedValue(
+        mockSuccess({
+          suggestions: [
+            { description: "スーパーで買い物", category_id: "cat-1" },
+            { description: "コンビニ", category_id: null },
+            { description: "スーパー銭湯", category_id: "cat-2" },
+            { description: "電気代", category_id: "cat-3" },
+          ],
+        })
+      );
     });
 
     it("クエリが空の場合は全件返す", async () => {
@@ -181,16 +178,15 @@ describe("useFrequentPayments", () => {
     });
 
     it("大文字小文字を区別しない", async () => {
-      mockFetch.mockResolvedValue({
-        json: () =>
-          Promise.resolve({
-            suggestions: [
-              { description: "Netflix", category_id: "cat-1" },
-              { description: "netflixプレミアム", category_id: "cat-1" },
-              { description: "Spotify", category_id: "cat-2" },
-            ],
-          }),
-      });
+      mockFetch.mockResolvedValue(
+        mockSuccess({
+          suggestions: [
+            { description: "Netflix", category_id: "cat-1" },
+            { description: "netflixプレミアム", category_id: "cat-1" },
+            { description: "Spotify", category_id: "cat-2" },
+          ],
+        })
+      );
 
       const { result } = renderHook(() => useFrequentPayments("group-1"));
 

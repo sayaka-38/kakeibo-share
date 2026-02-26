@@ -21,6 +21,7 @@ import {
 } from "@/lib/calculation/split";
 import { getCategoryStyle } from "@/lib/format/color";
 import type { Category, Group, Profile } from "@/types/database";
+import { apiClient, ApiError } from "@/lib/api/api-client";
 
 /**
  * 編集モード用の初期データ（支払い + splits 情報）
@@ -257,24 +258,16 @@ export default function FullPaymentForm({
       }
 
       if (isEditMode) {
-        const res = await fetch(`/api/payments/${editData.paymentId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+        try {
+          await apiClient.put(`/api/payments/${editData.paymentId}`, {
             amount: formData.amount,
             description: formData.description,
             categoryId: categoryId || null,
             paymentDate: formData.paymentDate.toISOString().split("T")[0],
-            splits: splits.map((s) => ({
-              userId: s.user_id,
-              amount: s.amount,
-            })),
-          }),
-        });
-
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          setError(data.error || t("payments.errors.updateFailed"));
+            splits: splits.map((s) => ({ userId: s.user_id, amount: s.amount })),
+          });
+        } catch (e) {
+          setError(e instanceof ApiError ? e.message : t("payments.errors.updateFailed"));
           return false;
         }
       } else {
@@ -309,8 +302,8 @@ export default function FullPaymentForm({
       }
 
       return true;
-    } catch {
-      setError(t("payments.errors.updateFailed"));
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : t("payments.errors.updateFailed"));
       return false;
     } finally {
       setIsSubmitting(false);

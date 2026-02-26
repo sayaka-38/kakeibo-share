@@ -37,7 +37,6 @@ export default function SettlementSessionManager({
   const {
     session,
     entries,
-    stats,
     isLoading,
     error,
     pendingSessionState,
@@ -222,7 +221,6 @@ export default function SettlementSessionManager({
           <SettlementEntryList
             session={session}
             entries={entries}
-            stats={stats}
             members={members}
             categories={categories}
             currentUserId={currentUserId}

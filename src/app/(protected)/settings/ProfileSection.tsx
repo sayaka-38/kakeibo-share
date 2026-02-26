@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { t } from "@/lib/i18n";
 import { Button } from "@/components/ui/Button";
+import { apiClient, ApiError } from "@/lib/api/api-client";
 
 export function ProfileSection() {
   const router = useRouter();
@@ -43,21 +44,16 @@ export function ProfileSection() {
     setSaving(true);
     setMessage("");
 
-    const res = await fetch("/api/profile", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ displayName }),
-    });
-
-    if (res.ok) {
+    try {
+      await apiClient.put("/api/profile", { displayName });
       setMessage(t("settings.profile.updateSuccess"));
       setOriginalName(displayName);
       router.refresh();
-    } else {
-      const data = await res.json();
-      setMessage(data.error || t("settings.profile.updateFailed"));
+    } catch (err) {
+      setMessage(err instanceof ApiError ? err.message : t("settings.profile.updateFailed"));
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   return (

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { t } from "@/lib/i18n";
 import { Button } from "@/components/ui/Button";
+import { apiClient, ApiError } from "@/lib/api/api-client";
 
 const LP_URL = "https://kakeibo-share.vercel.app/";
 
@@ -21,16 +22,12 @@ export function DeleteAccountSection() {
     setDeleting(true);
     setError("");
 
-    const res = await fetch("/api/auth/delete-account", {
-      method: "POST",
-    });
-
-    if (res.ok) {
+    try {
+      await apiClient.post("/api/auth/delete-account", {});
       await supabase.auth.signOut();
       window.location.href = LP_URL;
-    } else {
-      const data = await res.json();
-      setError(data.error || t("settings.deleteAccount.deleteFailed"));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : t("settings.deleteAccount.deleteFailed"));
       setDeleting(false);
     }
   };

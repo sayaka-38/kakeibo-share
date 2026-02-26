@@ -12,6 +12,7 @@ import { t } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format/currency";
 import { isCustomSplit, isProxySplit } from "@/lib/calculation/split";
 import { ActionSheet, type ActionSheetItem } from "@/components/ui/ActionSheet";
+import { apiClient } from "@/lib/api/api-client";
 import { getMemberDisplayName } from "@/lib/domain/member-utils";
 import {
   SplitAccordionProvider,
@@ -68,9 +69,11 @@ export function PaymentRow({
 
   const handleDelete = async () => {
     if (!window.confirm(t("payments.deleteConfirm"))) return;
-    const res = await fetch(`/api/payments/${payment.id}`, { method: "DELETE" });
-    if (res.ok) {
+    try {
+      await apiClient.delete(`/api/payments/${payment.id}`);
       router.refresh();
+    } catch {
+      // サイレントフェイル — 現在の動作と同じ
     }
   };
 

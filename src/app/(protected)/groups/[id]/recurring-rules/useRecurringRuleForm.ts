@@ -5,6 +5,7 @@ import { t } from "@/lib/i18n";
 import { validateRecurringRule } from "@/lib/validation/recurring-rule";
 import type { Category, Profile } from "@/types/database";
 import type { RuleWithRelations } from "@/types/domain";
+import { apiClient, ApiError } from "@/lib/api/api-client";
 
 type UseRecurringRuleFormArgs = {
   groupId: string;
@@ -184,30 +185,9 @@ export function useRecurringRuleForm({
             : undefined,
       };
 
-      const url = isEditMode
-        ? `/api/recurring-rules/${editingRule.id}`
-        : "/api/recurring-rules";
-
-      const res = await fetch(url, {
-        method: isEditMode ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setSubmitError(
-          data.error ||
-            t(
-              isEditMode
-                ? "recurringRules.errors.updateFailed"
-                : "recurringRules.errors.createFailed"
-            )
-        );
-        return;
-      }
-
-      const { rule } = await res.json();
+      const { rule } = isEditMode
+        ? await apiClient.put<{ rule: RuleWithRelations }>(`/api/recurring-rules/${editingRule.id}`, body)
+        : await apiClient.post<{ rule: RuleWithRelations }>("/api/recurring-rules", body);
       const ruleWithRelations: RuleWithRelations = {
         ...rule,
         category: categories.find((c) => c.id === rule.category_id) || null,
@@ -229,13 +209,11 @@ export function useRecurringRuleForm({
       } else {
         onCreated(ruleWithRelations);
       }
-    } catch {
+    } catch (err) {
       setSubmitError(
-        t(
-          isEditMode
-            ? "recurringRules.errors.updateFailed"
-            : "recurringRules.errors.createFailed"
-        )
+        err instanceof ApiError
+          ? err.message
+          : t(isEditMode ? "recurringRules.errors.updateFailed" : "recurringRules.errors.createFailed")
       );
     } finally {
       setIsSubmitting(false);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { apiClient } from "@/lib/api/api-client";
 
 export type FrequentPayment = {
   description: string;
@@ -25,10 +26,9 @@ export function useFrequentPayments(groupId: string | undefined) {
     const fetchSuggestions = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch(
+        const data = await apiClient.get<{ suggestions: FrequentPayment[] }>(
           `/api/payments/frequent?groupId=${encodeURIComponent(groupId)}&limit=6`
         );
-        const data = await res.json();
         if (!cancelled) setSuggestions(data.suggestions ?? []);
       } catch {
         // サイレントフェイル — UI への影響なし

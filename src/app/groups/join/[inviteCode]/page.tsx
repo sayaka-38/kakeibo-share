@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { t } from "@/lib/i18n";
+import { apiClient, ApiError } from "@/lib/api/api-client";
 
 type Props = {
   params: Promise<{ inviteCode: string }>;
@@ -68,47 +69,26 @@ export default function JoinGroupPage({ params }: Props) {
       const { inviteCode } = await params;
 
       try {
-        // API Route 経由でグループに参加
-        // RLS をバイパスするため、サーバーサイドで service role を使用
-        const response = await fetch("/api/groups/join", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ inviteCode }),
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.success) {
-          setState({
-            status: "success",
-            groupId: data.groupId,
-            groupName: data.groupName,
-          });
-
+        const data = await apiClient.post<{ success: boolean; groupId: string; groupName: string }>(
+          "/api/groups/join",
+          { inviteCode }
+        );
+        if (data.success) {
+          setState({ status: "success", groupId: data.groupId, groupName: data.groupName });
           // 3秒後に自動でグループダッシュボードへリダイレクト
           setTimeout(() => {
             router.push(`/groups/${data.groupId}`);
           }, 3000);
         } else {
-          const { message, needsLogin } = getErrorMessageByStatus(
-            response.status,
-            data.error
-          );
-          setState({
-            status: "error",
-            message,
-            needsLogin,
-          });
+          setState({ status: "error", message: "グループへの参加に失敗しました。", needsLogin: false });
         }
-      } catch {
-        // ネットワークエラーなど
-        setState({
-          status: "error",
-          message: "ネットワークエラーが発生しました。接続を確認してください。",
-          needsLogin: false,
-        });
+      } catch (err) {
+        if (err instanceof ApiError) {
+          const { message, needsLogin } = getErrorMessageByStatus(err.status, err.message);
+          setState({ status: "error", message, needsLogin });
+        } else {
+          setState({ status: "error", message: "ネットワークエラーが発生しました。接続を確認してください。", needsLogin: false });
+        }
       }
     };
 
