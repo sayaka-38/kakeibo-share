@@ -13,6 +13,7 @@ import { AmountField, DescriptionField, DateField } from "./fields";
 import type { SmartChip } from "./fields/DescriptionField";
 import { Button } from "@/components/ui/Button";
 import { SuccessBanner } from "@/components/ui/SuccessBanner";
+import { getMemberDisplayName } from "@/lib/domain/member-utils";
 import {
   calculateEqualSplit,
   calculateCustomSplits,
@@ -567,7 +568,7 @@ export default function FullPaymentForm({
             return (
               <div key={member.id} className="flex items-center gap-3">
                 <span className="text-sm text-theme-muted w-32 truncate">
-                  {member.display_name || member.email}
+                  {getMemberDisplayName(member)}
                 </span>
                 <div className="flex-1 relative">
                   <input
@@ -603,7 +604,7 @@ export default function FullPaymentForm({
         otherMembers.length === 1 ? (
           <p className="text-sm text-theme-text bg-theme-secondary/20 rounded-lg px-3 py-2">
             {t("payments.form.proxyAutoConfirm", {
-              name: otherMembers[0].display_name || otherMembers[0].email || "Unknown",
+              name: getMemberDisplayName(otherMembers[0]),
             })}
           </p>
         ) : (
@@ -635,7 +636,7 @@ export default function FullPaymentForm({
               </option>
               {otherMembers.map((member) => (
                 <option key={member.id} value={member.id}>
-                  {member.display_name || member.email}
+                  {getMemberDisplayName(member)}
                 </option>
               ))}
             </select>

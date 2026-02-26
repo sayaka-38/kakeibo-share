@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format/currency";
 import { formatDateSmart } from "@/lib/format/date";
+import { getMemberDisplayName } from "@/lib/domain/member-utils";
 import type {
   GroupMembershipWithDescriptionResult,
   DashboardPaymentResult,
@@ -168,8 +169,7 @@ export default async function DashboardPage() {
                           {payment.description}
                         </p>
                         <p className="text-sm text-theme-text">
-                          {payment.profiles?.display_name ||
-                            payment.profiles?.email}{" "}
+                          {getMemberDisplayName(payment.profiles)}{" "}
                           - {formatDateSmart(payment.payment_date)}
                         </p>
                       </div>

@@ -12,6 +12,7 @@ import { t } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format/currency";
 import { isCustomSplit, isProxySplit } from "@/lib/calculation/split";
 import { ActionSheet, type ActionSheetItem } from "@/components/ui/ActionSheet";
+import { getMemberDisplayName } from "@/lib/domain/member-utils";
 import {
   SplitAccordionProvider,
   SplitBadge,
@@ -114,7 +115,7 @@ export function PaymentRow({
             </span>
             <div className="flex items-center gap-1 mt-0.5 text-xs text-theme-muted overflow-hidden">
               <span className="min-w-0 truncate">
-                {payment.profiles?.display_name || payment.profiles?.email}
+                {getMemberDisplayName(payment.profiles)}
               </span>
               {groupName && (
                 <>

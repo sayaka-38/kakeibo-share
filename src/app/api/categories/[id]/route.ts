@@ -1,22 +1,13 @@
 import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/api/authenticate";
-import { withErrorHandler } from "@/lib/api/with-error-handler";
+import { withAuthHandler } from "@/lib/api/with-error-handler";
 import { validateCategory } from "@/lib/validation/category";
 import { t } from "@/lib/i18n";
-
-type RouteContext = {
-  params: Promise<{ id: string }>;
-};
 
 // =============================================================================
 // PUT /api/categories/[id] — カスタムカテゴリ更新
 // =============================================================================
-export const PUT = withErrorHandler<RouteContext>(async (request, context) => {
-  const auth = await authenticateRequest();
-  if (!auth.success) return auth.response;
-  const { supabase } = auth;
-
-  const { id } = await context.params;
+export const PUT = withAuthHandler<Promise<{ id: string }>>(async (request, { params, supabase }) => {
+  const { id } = await params;
 
   let body: Record<string, unknown>;
   try {
@@ -99,12 +90,8 @@ export const PUT = withErrorHandler<RouteContext>(async (request, context) => {
 // =============================================================================
 // DELETE /api/categories/[id] — カスタムカテゴリ削除
 // =============================================================================
-export const DELETE = withErrorHandler<RouteContext>(async (_request, context) => {
-  const auth = await authenticateRequest();
-  if (!auth.success) return auth.response;
-  const { supabase } = auth;
-
-  const { id } = await context.params;
+export const DELETE = withAuthHandler<Promise<{ id: string }>>(async (_request, { params, supabase }) => {
+  const { id } = await params;
 
   // カテゴリ取得 + is_default ガード
   const { data: existing } = await supabase

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/format/currency";
 import { formatDateSmart } from "@/lib/format/date";
+import { getMemberDisplayName } from "@/lib/domain/member-utils";
 import type { Profile } from "@/types/database";
 import SettlementResultCard from "../../SettlementResultCard";
 import type { EntryData, SessionData } from "@/types/domain";
@@ -260,7 +261,7 @@ export default async function SettlementHistoryDetailPage({ params }: PageProps)
               {formatDateSmart(session.confirmed_at.slice(0, 10))}
               {confirmer && (
                 <span className="text-theme-muted">
-                  （{confirmer.display_name || confirmer.email}）
+                  （{getMemberDisplayName(confirmer)}）
                 </span>
               )}
             </p>
@@ -312,12 +313,9 @@ export default async function SettlementHistoryDetailPage({ params }: PageProps)
         </h3>
         <ul className="divide-y divide-theme-card-border">
           {filledEntries.map((entry) => {
-            const payerName =
-              entry.payer?.display_name ||
-              entry.payer?.email ||
-              members.find((m) => m.id === entry.payer_id)?.display_name ||
-              members.find((m) => m.id === entry.payer_id)?.email ||
-              "Unknown";
+            const payerName = getMemberDisplayName(
+              entry.payer || members.find((m) => m.id === entry.payer_id)
+            );
 
             const hasSplits = entry.splits && entry.splits.length > 0;
 
@@ -348,11 +346,9 @@ export default async function SettlementHistoryDetailPage({ params }: PageProps)
                 {hasSplits && (
                   <div className="mt-2 ml-2 space-y-1">
                     {entry.splits!.map((split) => {
-                      const splitUserName =
-                        split.user?.display_name ||
-                        split.user?.email ||
-                        members.find((m) => m.id === split.user_id)?.display_name ||
-                        "Unknown";
+                      const splitUserName = getMemberDisplayName(
+                        split.user || members.find((m) => m.id === split.user_id)
+                      );
                       return (
                         <div key={split.id} className="flex justify-between text-xs text-theme-muted">
                           <span>{splitUserName}</span>
@@ -400,9 +396,7 @@ export default async function SettlementHistoryDetailPage({ params }: PageProps)
                   {sessionEntries.map((entry, idx) => {
                     const payerName =
                       entry.payer_display_name ||
-                      members.find((m) => m.id === entry.payer_id)?.display_name ||
-                      members.find((m) => m.id === entry.payer_id)?.email ||
-                      "Unknown";
+                      getMemberDisplayName(members.find((m) => m.id === entry.payer_id));
 
                     return (
                       <li key={`${entry.session_id}-${idx}`} className="px-4 py-2">

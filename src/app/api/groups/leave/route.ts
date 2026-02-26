@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/api/authenticate";
 import { translateRpcError } from "@/lib/api/translate-rpc-error";
-import { withErrorHandler } from "@/lib/api/with-error-handler";
+import { withAuthHandler } from "@/lib/api/with-error-handler";
 import { groupIdRequestSchema } from "@/lib/validation/schemas";
 
 /**
@@ -9,13 +8,9 @@ import { groupIdRequestSchema } from "@/lib/validation/schemas";
  *
  * グループから退出する（RPC leave_group 経由）
  */
-export const POST = withErrorHandler(async (request: Request) => {
+export const POST = withAuthHandler(async (request, { supabase }) => {
   const body = await request.json();
   const { groupId } = groupIdRequestSchema.parse(body);
-
-  const auth = await authenticateRequest();
-  if (!auth.success) return auth.response;
-  const { supabase } = auth;
 
   const { error } = await supabase.rpc("leave_group", {
     p_group_id: groupId,

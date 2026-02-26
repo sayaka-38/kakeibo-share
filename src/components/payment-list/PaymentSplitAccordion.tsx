@@ -18,6 +18,7 @@ import {
 } from "react";
 import { formatCurrency } from "@/lib/format/currency";
 import { t } from "@/lib/i18n";
+import { getMemberDisplayName } from "@/lib/domain/member-utils";
 
 // --------------------------------------------------
 // Types
@@ -113,7 +114,7 @@ export function SplitContent({ splits }: { splits: SplitWithProfile[] }) {
               key={`${split.user_id}-${index}`}
               className="flex justify-between text-xs text-theme-muted"
             >
-              <span>{split.display_name || split.email}</span>
+              <span>{getMemberDisplayName(split)}</span>
               <span className="font-medium">
                 {formatCurrency(split.amount)}
               </span>

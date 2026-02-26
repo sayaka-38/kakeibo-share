@@ -5,6 +5,7 @@ import { t } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format/currency";
 import { formatDateSmart } from "@/lib/format/date";
 import { Button } from "@/components/ui/Button";
+import { getMemberDisplayName } from "@/lib/domain/member-utils";
 import type { Profile } from "@/types/database";
 import type { EntryData } from "@/types/domain";
 
@@ -42,12 +43,9 @@ export default function EntryCard({
   }[entry.status] || "";
 
   // 支払者名
-  const payerName =
-    entry.payer?.display_name ||
-    entry.payer?.email ||
-    members.find((m) => m.id === entry.payer_id)?.display_name ||
-    members.find((m) => m.id === entry.payer_id)?.email ||
-    "Unknown";
+  const payerName = getMemberDisplayName(
+    entry.payer || members.find((m) => m.id === entry.payer_id)
+  );
 
   // payer_id が自分のエントリのみ編集・スキップ可
   const isOwner = entry.payer_id === currentUserId;
@@ -56,7 +54,7 @@ export default function EntryCard({
   const filledByMember = entry.filled_by
     ? members.find((m) => m.id === entry.filled_by)
     : null;
-  const filledByName = filledByMember?.display_name || filledByMember?.email;
+  const filledByName = getMemberDisplayName(filledByMember, "");
 
   // クイック確定: expected_amount をそのまま actual_amount として保存
   const handleQuickConfirm = async () => {

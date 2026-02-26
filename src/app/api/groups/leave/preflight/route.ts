@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/api/authenticate";
-import { withErrorHandler } from "@/lib/api/with-error-handler";
+import { withAuthHandler } from "@/lib/api/with-error-handler";
 
 /**
  * GET /api/groups/leave/preflight?groupId=xxx
@@ -8,7 +7,7 @@ import { withErrorHandler } from "@/lib/api/with-error-handler";
  * 退出可否と破壊的警告の判定
  * Returns: { canLeave, willDeleteGroup, reason? }
  */
-export const GET = withErrorHandler(async (request: Request) => {
+export const GET = withAuthHandler(async (request, { user, supabase }) => {
   const groupId = new URL(request.url).searchParams.get("groupId");
 
   if (!groupId) {
@@ -17,10 +16,6 @@ export const GET = withErrorHandler(async (request: Request) => {
       { status: 400 }
     );
   }
-
-  const auth = await authenticateRequest();
-  if (!auth.success) return auth.response;
-  const { user, supabase } = auth;
 
   // メンバーシップ確認
   const { data: membership } = await supabase

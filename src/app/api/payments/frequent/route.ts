@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/api/authenticate";
-import { withErrorHandler } from "@/lib/api/with-error-handler";
+import { withAuthHandler } from "@/lib/api/with-error-handler";
 
 /**
  * GET /api/payments/frequent?groupId=xxx&limit=6
@@ -10,7 +9,7 @@ import { withErrorHandler } from "@/lib/api/with-error-handler";
  *
  * RPC: get_frequent_payments — グループメンバーのみ結果を受け取る (SECURITY DEFINER)
  */
-export const GET = withErrorHandler(async (request: Request) => {
+export const GET = withAuthHandler(async (request, { supabase }) => {
   const { searchParams } = new URL(request.url);
   const groupId = searchParams.get("groupId");
   const limit = Math.min(
@@ -24,10 +23,6 @@ export const GET = withErrorHandler(async (request: Request) => {
       { status: 400 }
     );
   }
-
-  const auth = await authenticateRequest();
-  if (!auth.success) return auth.response;
-  const { supabase } = auth;
 
   const { data, error } = await supabase.rpc("get_frequent_payments", {
     p_group_id: groupId,

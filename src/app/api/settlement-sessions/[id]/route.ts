@@ -1,19 +1,12 @@
 import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/api/authenticate";
-import { withErrorHandler } from "@/lib/api/with-error-handler";
-
-type RouteContext = { params: Promise<{ id: string }> };
+import { withAuthHandler } from "@/lib/api/with-error-handler";
 
 // =============================================================================
 // GET /api/settlement-sessions/[id]
 // 清算セッションの詳細（エントリ一覧含む）を取得
 // =============================================================================
-export const GET = withErrorHandler<RouteContext>(async (request, context) => {
-  const auth = await authenticateRequest();
-  if (!auth.success) return auth.response;
-  const { user, supabase } = auth;
-
-  const { id } = await context.params;
+export const GET = withAuthHandler<Promise<{ id: string }>>(async (request, { params, user, supabase }) => {
+  const { id } = await params;
 
   // セッションを取得
   const { data: session, error } = await supabase
@@ -93,12 +86,8 @@ export const GET = withErrorHandler<RouteContext>(async (request, context) => {
 // DELETE /api/settlement-sessions/[id]
 // 清算セッションを削除（draftのみ、作成者のみ）
 // =============================================================================
-export const DELETE = withErrorHandler<RouteContext>(async (_request, context) => {
-  const auth = await authenticateRequest();
-  if (!auth.success) return auth.response;
-  const { user, supabase } = auth;
-
-  const { id } = await context.params;
+export const DELETE = withAuthHandler<Promise<{ id: string }>>(async (_request, { params, user, supabase }) => {
+  const { id } = await params;
 
   // セッションを取得
   const { data: session, error: fetchError } = await supabase

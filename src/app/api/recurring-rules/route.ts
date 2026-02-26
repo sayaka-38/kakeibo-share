@@ -1,17 +1,12 @@
 import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/api/authenticate";
 import { validateRecurringRule } from "@/lib/validation/recurring-rule";
-import { withErrorHandler } from "@/lib/api/with-error-handler";
+import { withAuthHandler } from "@/lib/api/with-error-handler";
 
 // =============================================================================
 // GET /api/recurring-rules?groupId=xxx
 // グループの固定費ルール一覧を取得
 // =============================================================================
-export const GET = withErrorHandler(async (request: Request) => {
-  const auth = await authenticateRequest();
-  if (!auth.success) return auth.response;
-  const { user, supabase } = auth;
-
+export const GET = withAuthHandler(async (request, { user, supabase }) => {
   const groupId = new URL(request.url).searchParams.get("groupId");
   if (!groupId) {
     return NextResponse.json(
@@ -69,11 +64,7 @@ export const GET = withErrorHandler(async (request: Request) => {
 // POST /api/recurring-rules
 // 新規固定費ルールを作成
 // =============================================================================
-export const POST = withErrorHandler(async (request: Request) => {
-  const auth = await authenticateRequest();
-  if (!auth.success) return auth.response;
-  const { user, supabase } = auth;
-
+export const POST = withAuthHandler(async (request, { user, supabase }) => {
   let body;
   try {
     body = await request.json();

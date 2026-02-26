@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
+import type { User, SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/database";
+import { authenticateRequest } from "./authenticate";
 
 type Handler<TContext = unknown> = (
   request: Request,
@@ -34,4 +37,41 @@ export function withErrorHandler<TContext = unknown>(
       );
     }
   };
+}
+
+/**
+ * 認証付き API Route ハンドラのラッパー
+ *
+ * withErrorHandler の機能に加え、authenticateRequest() を内包する。
+ * 認証失敗時は自動的に 401 を返す。
+ * ハンドラは (request, { params, user, supabase }) を受け取る。
+ *
+ * 使用例（パラメータなし）:
+ * export const GET = withAuthHandler(async (req, { user, supabase }) => { ... }, "GET /api/route");
+ *
+ * 使用例（パラメータあり）:
+ * export const GET = withAuthHandler<Promise<{ id: string }>>(
+ *   async (req, { params, user, supabase }) => {
+ *     const { id } = await params;
+ *     ...
+ *   },
+ *   "GET /api/route/[id]"
+ * );
+ */
+export type AuthedContext<TParams = unknown> = {
+  params: TParams;
+  user: User;
+  supabase: SupabaseClient<Database>;
+};
+
+export function withAuthHandler<TParams = unknown>(
+  handler: (request: Request, context: AuthedContext<TParams>) => Promise<NextResponse>,
+  routeName: string
+): (request: Request, context: { params: TParams }) => Promise<NextResponse> {
+  return withErrorHandler<{ params: TParams }>(async (request, context) => {
+    const auth = await authenticateRequest();
+    if (!auth.success) return auth.response;
+    const { user, supabase } = auth;
+    return handler(request, { params: context.params, user, supabase });
+  }, routeName);
 }

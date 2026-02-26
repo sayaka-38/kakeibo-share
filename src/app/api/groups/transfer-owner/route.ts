@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/api/authenticate";
 import { translateRpcError } from "@/lib/api/translate-rpc-error";
-import { withErrorHandler } from "@/lib/api/with-error-handler";
+import { withAuthHandler } from "@/lib/api/with-error-handler";
 import { transferOwnerRequestSchema } from "@/lib/validation/schemas";
 
 /**
@@ -9,13 +8,9 @@ import { transferOwnerRequestSchema } from "@/lib/validation/schemas";
  *
  * オーナー権限を別メンバーに移譲する（RPC transfer_group_ownership 経由）
  */
-export const POST = withErrorHandler(async (request: Request) => {
+export const POST = withAuthHandler(async (request, { supabase }) => {
   const body = await request.json();
   const { groupId, newOwnerId } = transferOwnerRequestSchema.parse(body);
-
-  const auth = await authenticateRequest();
-  if (!auth.success) return auth.response;
-  const { supabase } = auth;
 
   const { error } = await supabase.rpc("transfer_group_ownership", {
     p_group_id: groupId,

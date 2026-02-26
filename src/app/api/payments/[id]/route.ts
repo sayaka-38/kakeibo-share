@@ -1,17 +1,12 @@
 import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/api/authenticate";
 import { translateRpcError } from "@/lib/api/translate-rpc-error";
-import { withErrorHandler } from "@/lib/api/with-error-handler";
+import { withAuthHandler } from "@/lib/api/with-error-handler";
 import { paymentRequestSchema } from "@/lib/validation/schemas";
 import type { Json } from "@/types/database.generated";
 
 // UUID v4 フォーマット検証
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-type RouteContext = {
-  params: Promise<{ id: string }>;
-};
 
 /**
  * DELETE /api/payments/[id]
@@ -25,9 +20,9 @@ type RouteContext = {
  * 移動後に payments を物理削除する。
  * アプリ層の事前チェックは二重防御として残す。
  */
-export const DELETE = withErrorHandler<RouteContext>(async (_request, context) => {
+export const DELETE = withAuthHandler<Promise<{ id: string }>>(async (_request, { params, user, supabase }) => {
   // 1. パスパラメータ取得 + UUID バリデーション
-  const { id } = await context.params;
+  const { id } = await params;
 
   if (!id || !UUID_REGEX.test(id)) {
     return NextResponse.json(
@@ -35,11 +30,6 @@ export const DELETE = withErrorHandler<RouteContext>(async (_request, context) =
       { status: 400 }
     );
   }
-
-  // 2. 認証
-  const auth = await authenticateRequest();
-  if (!auth.success) return auth.response;
-  const { user, supabase } = auth;
 
   // 3. 支払い情報を取得
   const { data: payment, error: fetchError } = await supabase
@@ -111,9 +101,9 @@ export const DELETE = withErrorHandler<RouteContext>(async (_request, context) =
  *
  * groupId / payer_id はクライアントから受け取らず、DB から導出（改ざん防止）。
  */
-export const PUT = withErrorHandler<RouteContext>(async (request, context) => {
+export const PUT = withAuthHandler<Promise<{ id: string }>>(async (request, { params, user, supabase }) => {
   // 1. パスパラメータ取得 + UUID バリデーション
-  const { id } = await context.params;
+  const { id } = await params;
 
   if (!id || !UUID_REGEX.test(id)) {
     return NextResponse.json(
@@ -121,11 +111,6 @@ export const PUT = withErrorHandler<RouteContext>(async (request, context) => {
       { status: 400 }
     );
   }
-
-  // 2. 認証
-  const auth = await authenticateRequest();
-  if (!auth.success) return auth.response;
-  const { user, supabase } = auth;
 
   // 3. リクエストボディのパース + Zod バリデーション
   // ZodError は withErrorHandler が 400 で捕捉する

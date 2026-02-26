@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { authenticateRequest } from "@/lib/api/authenticate";
-import { withErrorHandler } from "@/lib/api/with-error-handler";
+import { withAuthHandler } from "@/lib/api/with-error-handler";
 import { joinGroupRequestSchema } from "@/lib/validation/schemas";
 
 // グループメンバー上限
@@ -13,14 +12,10 @@ const MAX_GROUP_MEMBERS = 20;
  * 招待コードでグループに参加する
  * RLS が厳格なため、グループ検索は service role を使用
  */
-export const POST = withErrorHandler(async (request: Request) => {
+export const POST = withAuthHandler(async (request, { user }) => {
   const body = await request.json();
   const { inviteCode } = joinGroupRequestSchema.parse(body);
   const trimmedCode = inviteCode.trim();
-
-  const auth = await authenticateRequest();
-  if (!auth.success) return auth.response;
-  const { user } = auth;
 
   // 招待コードでグループを検索（admin クライアント = RLS バイパス）
   const adminClient = createAdminClient();

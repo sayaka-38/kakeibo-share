@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/api/authenticate";
-import { withErrorHandler } from "@/lib/api/with-error-handler";
+import { withAuthHandler } from "@/lib/api/with-error-handler";
 
 /**
  * PUT /api/profile
@@ -8,10 +7,7 @@ import { withErrorHandler } from "@/lib/api/with-error-handler";
  * 自分のプロフィール（表示名）を更新する。
  * RLS: profiles_update_policy により id = auth.uid() のみ許可。
  */
-export const PUT = withErrorHandler(async (request: Request) => {
-  const auth = await authenticateRequest();
-  if (!auth.success) return auth.response;
-  const { user, supabase } = auth;
+export const PUT = withAuthHandler(async (request, { user, supabase }) => {
 
   let body: { displayName?: unknown };
   try {

@@ -1,16 +1,12 @@
 import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/api/authenticate";
 import { generateSettlementEntries } from "@/lib/settlement/generate-entries";
-import { withErrorHandler } from "@/lib/api/with-error-handler";
+import { withAuthHandler } from "@/lib/api/with-error-handler";
 
 // =============================================================================
 // GET /api/settlement-sessions?groupId=xxx
 // グループの清算セッション一覧を取得
 // =============================================================================
-export const GET = withErrorHandler(async (request: Request) => {
-  const auth = await authenticateRequest();
-  if (!auth.success) return auth.response;
-  const { user, supabase } = auth;
+export const GET = withAuthHandler(async (request, { user, supabase }) => {
 
   const groupId = new URL(request.url).searchParams.get("groupId");
   if (!groupId) {
@@ -61,10 +57,7 @@ export const GET = withErrorHandler(async (request: Request) => {
 // POST /api/settlement-sessions
 // 新規清算セッションを作成し、エントリを自動生成
 // =============================================================================
-export const POST = withErrorHandler(async (request: Request) => {
-  const auth = await authenticateRequest();
-  if (!auth.success) return auth.response;
-  const { user, supabase } = auth;
+export const POST = withAuthHandler(async (request, { user, supabase }) => {
 
   let body;
   try {
