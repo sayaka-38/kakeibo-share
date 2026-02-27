@@ -2,7 +2,7 @@
 
 セッション間の文脈保持用。アーキテクチャ規約・DBスキーマは **CLAUDE.md** を参照。
 
-最終更新: 2026-02-26 (リファクタリング Part 13-16 完 / #91)
+最終更新: 2026-02-27 (リファクタリング Part 17-20 完 / #93)
 
 ---
 
@@ -23,9 +23,12 @@
 | 15D | 人間感覚清算・EntryEditModal 手動内訳・split_type 集約 | #85 | — |
 | リファクタリング前半 | rpcCodeToResponse・settlement-utils・settlementEntryUpdateSchema・デッドタイプ削除 | #86 | — |
 | リファクタリング Part 1-8 | getMemberDisplayName 統一・withAuthHandler 強化・CategoryRef/MemberRef 型・useRecurringRuleForm/useSettlementEntries フック抽出・EntryCard 表示専用化 | #88–89 | — |
-| **リファクタリング Part 9-16** | **apiClient 一元化・computeEntryStats 純粋関数化・StatusHandler・13 ファイル fetch 移行** | **#91** | **1211** |
+| リファクタリング Part 9-16 | apiClient 一元化・computeEntryStats 純粋関数化・StatusHandler・13 ファイル fetch 移行 | #91 | 1211 |
+| **リファクタリング Part 17-20** | **定数化(constants.ts)・テストファクトリ・dateSchema・SaveButton/CancelButton** | **#93** | **1211** |
 
 **現在**: Vitest **1211件** + Playwright E2E 1件 = **計1212テスト** / ビルド正常 / lint クリーン
+
+**リファクタリング完了**: Part 1-20 全完了。
 
 ---
 
@@ -56,6 +59,11 @@
 | Zod スキーマ | `src/lib/validation/schemas.ts` | `paymentRequestSchema` / `recurringRuleRequestSchema` 等 |
 | domain.ts | `src/types/domain.ts` | `SessionData` / `EntryData` / `SuggestionData` / `RuleWithRelations` + **CategoryRef / MemberRef** 共通参照型 |
 | getMemberDisplayName | `src/lib/domain/member-utils.ts` | `display_name \|\| email \|\| "Unknown"` の統一関数。全コンポーネントで使用 |
+| ドメイン定数 | `src/lib/domain/constants.ts` | SESSION_STATUS / ENTRY_STATUS / ENTRY_SPLIT_TYPE / PAYMENT_SPLIT_TYPE |
+| テストファクトリ | `src/test/factories/` | createMockEntry/FilledEntry/SkippedEntry / createMockPayment / createMockMember / createMockRule |
+| dateSchema | `src/lib/validation/schemas.ts` | `z.string().transform(val => new Date(val))` — Date 変換自動化 |
+| SaveButton | `src/components/ui/SaveButton.tsx` | saving prop でスピナー自動。common.save/saving i18n 内包 |
+| CancelButton | `src/components/ui/CancelButton.tsx` | common.cancel i18n 内包 |
 | useRecurringRuleForm | `src/app/(protected)/groups/[id]/recurring-rules/useRecurringRuleForm.ts` | RecurringRuleForm の全ステート・バリデーション・送信ロジック |
 | useSettlementEntries | `src/app/(protected)/groups/[id]/settlement/useSettlementEntries.ts` | pending/filled/skipped フィルタリング・isEmpty・canConfirm の派生値 |
 | EntryCard 表示専用化 | `SettlementEntryList` + `EntryCard` | onSkip/onQuickConfirm を Props で受取。API コールは SettlementEntryList の buildSkipHandler/buildQuickConfirmHandler が担当 |
