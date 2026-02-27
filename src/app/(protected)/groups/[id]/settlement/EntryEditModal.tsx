@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { t } from "@/lib/i18n";
-import { Button } from "@/components/ui/Button";
+import { SaveButton } from "@/components/ui/SaveButton";
+import { CancelButton } from "@/components/ui/CancelButton";
 import { AmountFieldWithKeypad } from "@/components/payment-form/fields/AmountFieldWithKeypad";
 import { formatCurrency } from "@/lib/format/currency";
 import { formatDateSmart } from "@/lib/format/date";
@@ -312,18 +313,8 @@ export default function EntryEditModal({
 
           {/* Actions */}
           <div className="flex gap-3 pt-4 border-t border-theme-card-border">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={onClose}
-              disabled={isSubmitting}
-              fullWidth
-            >
-              {t("common.cancel")}
-            </Button>
-            <Button type="submit" loading={isSubmitting} disabled={splitMismatch} fullWidth>
-              {isSubmitting ? "保存中..." : t("common.save")}
-            </Button>
+            <CancelButton onClick={onClose} disabled={isSubmitting} fullWidth />
+            <SaveButton saving={isSubmitting} disabled={splitMismatch} fullWidth />
           </div>
         </form>
       </div>

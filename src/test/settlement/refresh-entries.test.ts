@@ -12,6 +12,7 @@ import { describe, it, expect, vi } from "vitest";
 import { refreshSettlementEntries } from "@/lib/settlement/refresh-entries";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
+import type { MockRule, MockPayment } from "@/test/factories";
 
 // ============================================
 // 型定義
@@ -26,33 +27,6 @@ type ExistingEntry = {
   expected_amount: number | null;
   payer_id: string;
   category_id: string | null;
-};
-
-type MockRule = {
-  id: string;
-  description: string;
-  category_id: string | null;
-  default_amount: number | null;
-  default_payer_id: string;
-  day_of_month: number;
-  interval_months: number;
-  split_type: string;
-  is_active: boolean;
-  start_date: string;
-  end_date?: string | null;
-  created_at: string;
-  splits: Array<{ user_id: string; amount: number | null; percentage: number | null }>;
-};
-
-type MockPayment = {
-  id: string;
-  description: string;
-  category_id: string | null;
-  amount: number;
-  payer_id: string;
-  payment_date: string;
-  created_at: string;
-  payment_splits: Array<{ user_id: string; amount: number }>;
 };
 
 // ============================================

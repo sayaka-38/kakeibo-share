@@ -15,6 +15,7 @@ import type { Database } from "@/types/database";
 import { computeRuleDatesInPeriod } from "./recurring-schedule";
 import { formatDateLocal } from "@/lib/format/date";
 import { ruleHasCustomSplitsToInsert, resolveEntrySplitType } from "@/lib/domain/settlement-utils";
+import { SESSION_STATUS, ENTRY_STATUS, ENTRY_SPLIT_TYPE } from "@/lib/domain/constants";
 
 type Supabase = SupabaseClient<Database>;
 
@@ -104,7 +105,7 @@ async function reconcileExistingEntries(
 
       if (expectedRuleKeys.has(key)) {
         handledRuleKeys.add(key);
-        if (entry.status === "pending") {
+        if (entry.status === ENTRY_STATUS.PENDING) {
           // pending → 最新ルール設定で同期
           const { rule } = expectedRuleKeys.get(key)!;
           await supabase
@@ -118,7 +119,7 @@ async function reconcileExistingEntries(
             .eq("id", entry.id);
         }
         // filled / skipped → 保持（何もしない）
-      } else if (entry.status === "pending") {
+      } else if (entry.status === ENTRY_STATUS.PENDING) {
         // ルール廃止 or 期間外 → pending のみ削除
         await supabase.from("settlement_entries").delete().eq("id", entry.id);
         // filled / skipped → 保持（ユーザー入力を守る）
@@ -175,7 +176,7 @@ async function insertNewRuleEntries(
         expected_amount: r.default_amount,
         payer_id: r.default_payer_id,
         payment_date: paymentDate,
-        status: "pending",
+        status: ENTRY_STATUS.PENDING,
         split_type: r.split_type,
         entry_type: "rule",
       })
@@ -231,7 +232,7 @@ async function insertNewPaymentEntries(
         actual_amount: payment.amount,
         payer_id: payment.payer_id,
         payment_date: payment.payment_date,
-        status: "filled",
+        status: ENTRY_STATUS.FILLED,
         split_type: splitType,
         entry_type: "existing",
         source_payment_id: payment.id,
@@ -244,7 +245,7 @@ async function insertNewPaymentEntries(
     if (entry) {
       added++;
       // カスタム split のみ splits テーブルにコピー（equal は不要）
-      if (splitType === "custom" && hasSplits) {
+      if (splitType === ENTRY_SPLIT_TYPE.CUSTOM && hasSplits) {
         await supabase.from("settlement_entry_splits").insert(
           payment.payment_splits.map((s) => ({
             entry_id: entry.id,
@@ -293,7 +294,7 @@ export async function refreshSettlementEntries(
     .single();
 
   if (!session) return -1;
-  if (session.status !== "draft") return -3;
+  if (session.status !== SESSION_STATUS.DRAFT) return -3;
 
   // 3. 既存エントリを取得
   const { data: existingEntries } = await supabase

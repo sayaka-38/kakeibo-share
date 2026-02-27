@@ -10,6 +10,7 @@ import type { Database } from "@/types/database";
 import { computeRuleDatesInPeriod } from "./recurring-schedule";
 import { formatDateLocal } from "@/lib/format/date";
 import { ruleHasCustomSplitsToInsert, resolveEntrySplitType } from "@/lib/domain/settlement-utils";
+import { SESSION_STATUS, ENTRY_STATUS, ENTRY_SPLIT_TYPE } from "@/lib/domain/constants";
 
 /**
  * 清算セッションにエントリを生成
@@ -45,7 +46,7 @@ export async function generateSettlementEntries(
     .single();
 
   if (!session) return -1;
-  if (session.status !== "draft") return -3;
+  if (session.status !== SESSION_STATUS.DRAFT) return -3;
 
   // 既存エントリを削除（再生成のため）
   await supabase.from("settlement_entries").delete().eq("session_id", sessionId);
@@ -109,7 +110,7 @@ export async function generateSettlementEntries(
             expected_amount: rule.default_amount,
             payer_id: rule.default_payer_id,
             payment_date: paymentDate,
-            status: "pending",
+            status: ENTRY_STATUS.PENDING,
             split_type: rule.split_type,
             entry_type: "rule",
           })
@@ -170,7 +171,7 @@ export async function generateSettlementEntries(
           actual_amount: payment.amount,
           payer_id: payment.payer_id,
           payment_date: payment.payment_date,
-          status: "filled",
+          status: ENTRY_STATUS.FILLED,
           split_type: splitType,
           entry_type: "existing",
           source_payment_id: payment.id,
@@ -184,7 +185,7 @@ export async function generateSettlementEntries(
         entryCount++;
 
         // カスタム split のみ splits テーブルにコピー（equal は不要）
-        if (splitType === "custom" && hasSplits) {
+        if (splitType === ENTRY_SPLIT_TYPE.CUSTOM && hasSplits) {
           const splitsToInsert = payment.payment_splits.map(
             (s: { user_id: string; amount: number }) => ({
               entry_id: entry.id,
