@@ -2,7 +2,7 @@
 
 セッション間の文脈保持用。アーキテクチャ規約・DBスキーマは **CLAUDE.md** を参照。
 
-最終更新: 2026-02-26 (リファクタリング Part 13-16 完 / #91)
+最終更新: 2026-02-27 (Part 17-20 定数化・ファクトリ化 / #93) → (Part 21-25 セキュリティ要塞化 / #94)
 
 ---
 
@@ -24,6 +24,8 @@
 | リファクタリング前半 | rpcCodeToResponse・settlement-utils・settlementEntryUpdateSchema・デッドタイプ削除 | #86 | — |
 | リファクタリング Part 1-8 | getMemberDisplayName 統一・withAuthHandler 強化・CategoryRef/MemberRef 型・useRecurringRuleForm/useSettlementEntries フック抽出・EntryCard 表示専用化 | #88–89 | — |
 | **リファクタリング Part 9-16** | **apiClient 一元化・computeEntryStats 純粋関数化・StatusHandler・13 ファイル fetch 移行** | **#91** | **1211** |
+| **リファクタリング Part 17-20** | **constants.ts 定数集約・テストファクトリ・dateSchema・SaveButton/CancelButton** | **#93** | **1211** |
+| **セキュリティ要塞化 Part 21-25** | **オープンリダイレクト修正・エラー漏洩対策・ミドルウェア追加・validatedGet・Next.js CVE修正・GHA SHA ピン** | **#94** | **1211** |
 
 **現在**: Vitest **1211件** + Playwright E2E 1件 = **計1212テスト** / ビルド正常 / lint クリーン
 
@@ -52,9 +54,12 @@
 | splits 更新 | DB RPC `replace_payment_splits` | 直接 UPDATE 禁止 |
 | スキップエントリ | `actual_amount CHECK (> 0)` 制約 | skip 時は必ず `null`（0 は DB 制約違反） |
 | withErrorHandler | `src/lib/api/with-error-handler.ts` | 認証込みルートラッパー（全22ルート）。ハンドラは `(req, { params, user, supabase })`。型パラメータあり: `withAuthHandler<Promise<{ id: string }>>` |
-| apiClient | `src/lib/api/api-client.ts` | fetch ボイラープレート集約。`get/post/put/delete` メソッド。エラー時 `ApiError(status, message)` スロー |
+| apiClient | `src/lib/api/api-client.ts` | fetch ボイラープレート集約。`get/post/put/delete/validatedGet` メソッド。`validatedGet(url, zodSchema)` で型安全 GET。エラー時 `ApiError(status, message)` スロー |
 | Zod スキーマ | `src/lib/validation/schemas.ts` | `paymentRequestSchema` / `recurringRuleRequestSchema` 等 |
 | domain.ts | `src/types/domain.ts` | `SessionData` / `EntryData` / `SuggestionData` / `RuleWithRelations` + **CategoryRef / MemberRef** 共通参照型 |
+| 表示メタレジストリ | `src/lib/domain/constants.ts` | `ENTRY_STATUS_META` / `ENTRY_TYPE_I18N` / `SESSION_STATUS_META` — コンポーネントのインライン判定をここに集約 |
+| ミドルウェア | `src/middleware.ts` | `updateSession()` 経由で集中認証・セッションリフレッシュ（`src/lib/supabase/middleware.ts` にロジック） |
+| オープンリダイレクト対策 | `src/app/auth/callback/route.ts` | `next` パラメータを `/^\/(?!\/)` で検証。外部 URL へのリダイレクトをブロック |
 | getMemberDisplayName | `src/lib/domain/member-utils.ts` | `display_name \|\| email \|\| "Unknown"` の統一関数。全コンポーネントで使用 |
 | useRecurringRuleForm | `src/app/(protected)/groups/[id]/recurring-rules/useRecurringRuleForm.ts` | RecurringRuleForm の全ステート・バリデーション・送信ロジック |
 | useSettlementEntries | `src/app/(protected)/groups/[id]/settlement/useSettlementEntries.ts` | pending/filled/skipped フィルタリング・isEmpty・canConfirm の派生値 |
