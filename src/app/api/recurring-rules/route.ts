@@ -161,7 +161,7 @@ export const POST = withAuthHandler(async (request, { user, supabase }) => {
   if (error) {
     console.error("Failed to create recurring rule:", error.message, error.details, error.hint);
     return NextResponse.json(
-      { error: "ルールの作成に失敗しました", details: error.message },
+      { error: "ルールの作成に失敗しました" },
       { status: 500 }
     );
   }

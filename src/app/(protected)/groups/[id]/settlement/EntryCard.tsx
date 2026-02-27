@@ -6,6 +6,7 @@ import { formatCurrency } from "@/lib/format/currency";
 import { formatDateSmart } from "@/lib/format/date";
 import { Button } from "@/components/ui/Button";
 import { getMemberDisplayName } from "@/lib/domain/member-utils";
+import { ENTRY_STATUS_META, ENTRY_TYPE_I18N, ENTRY_STATUS } from "@/lib/domain/constants";
 import type { Profile } from "@/types/database";
 import type { EntryData } from "@/types/domain";
 
@@ -36,19 +37,11 @@ export default function EntryCard({
   const [isConfirming, setIsConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const entryTypeLabel =
-    {
-      rule: t("settlementSession.entryTypeRule"),
-      manual: t("settlementSession.entryTypeManual"),
-      existing: t("settlementSession.entryTypeExisting"),
-    }[entry.entry_type] || entry.entry_type;
-
-  const statusBg =
-    {
-      pending: "border-l-theme-primary bg-theme-primary/5",
-      filled: "border-l-theme-text",
-      skipped: "border-l-theme-muted bg-theme-bg",
-    }[entry.status] || "";
+  // 表示メタデータレジストリ参照（constants.ts で一元管理）
+  const entryTypeI18nKey = ENTRY_TYPE_I18N[entry.entry_type];
+  const entryTypeLabel = entryTypeI18nKey ? t(entryTypeI18nKey) : entry.entry_type;
+  const statusMeta = ENTRY_STATUS_META[entry.status as keyof typeof ENTRY_STATUS_META];
+  const statusBg = statusMeta?.borderClass ?? "";
 
   const payerName = getMemberDisplayName(
     entry.payer || members.find((m) => m.id === entry.payer_id)
@@ -114,7 +107,7 @@ export default function EntryCard({
         </div>
 
         <div className="text-right shrink-0">
-          {entry.status === "filled" ? (
+          {entry.status === ENTRY_STATUS.FILLED ? (
             <div>
               <div className="text-lg font-semibold text-theme-text">
                 {formatCurrency(entry.actual_amount || 0)}
@@ -123,9 +116,9 @@ export default function EntryCard({
                 <div className="text-xs text-theme-text mt-0.5">入力: {filledByName}</div>
               )}
             </div>
-          ) : entry.status === "skipped" ? (
+          ) : entry.status === ENTRY_STATUS.SKIPPED ? (
             <div className="text-sm text-theme-muted">
-              {t("settlementSession.statusSkipped")}
+              {t(ENTRY_STATUS_META[ENTRY_STATUS.SKIPPED].i18nKey)}
             </div>
           ) : entry.expected_amount ? (
             /* pending + 予定金額あり */
@@ -169,15 +162,15 @@ export default function EntryCard({
       {error && <div className="mt-2 text-sm text-theme-accent">{error}</div>}
 
       {/* Actions — 自分の支払いのみ */}
-      {entry.status !== "skipped" && isOwner && (
+      {entry.status !== ENTRY_STATUS.SKIPPED && isOwner && (
         <div className="mt-3 flex items-center justify-end gap-2">
-          {entry.status === "pending" && (
+          {entry.status === ENTRY_STATUS.PENDING && (
             <Button variant="ghost" size="sm" onClick={handleSkipClick} loading={isSkipping}>
               {t("settlementSession.skipEntry")}
             </Button>
           )}
           <Button variant="secondary" size="sm" onClick={onEdit}>
-            {entry.status === "pending"
+            {entry.status === ENTRY_STATUS.PENDING
               ? t("settlementSession.fillAmount")
               : t("common.edit")}
           </Button>
