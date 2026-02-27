@@ -1,29 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { computeEntryStats } from "@/lib/domain/settlement-utils";
-import type { EntryData } from "@/types/domain";
-
-const makeEntry = (
-  id: string,
-  status: "pending" | "filled" | "skipped",
-  actual_amount?: number
-): EntryData => ({
-  id,
-  session_id: "s1",
-  rule_id: null,
-  payment_id: null,
-  source_payment_id: null,
-  entry_type: "manual",
-  description: `Entry ${id}`,
-  payer_id: "user-1",
-  expected_amount: 1000,
-  actual_amount: actual_amount ?? (status === "filled" ? 1000 : null),
-  status,
-  split_type: "equal",
-  category_id: null,
-  payment_date: "2026-01-01",
-  filled_by: null,
-  filled_at: null,
-});
+import { createMockEntry, createFilledEntry, createSkippedEntry } from "@/test/factories";
 
 describe("computeEntryStats", () => {
   it("空配列 → すべて 0", () => {
@@ -38,10 +15,10 @@ describe("computeEntryStats", () => {
 
   it("mixed エントリ → 各カウント正確", () => {
     const entries = [
-      makeEntry("p1", "pending"),
-      makeEntry("p2", "pending"),
-      makeEntry("f1", "filled"),
-      makeEntry("s1", "skipped"),
+      createMockEntry({ id: "p1", description: "Entry p1" }),
+      createMockEntry({ id: "p2", description: "Entry p2" }),
+      createFilledEntry({ id: "f1", description: "Entry f1" }),
+      createSkippedEntry({ id: "s1", description: "Entry s1" }),
     ];
     const result = computeEntryStats(entries);
     expect(result.total).toBe(4);
@@ -52,17 +29,17 @@ describe("computeEntryStats", () => {
 
   it("filled エントリの actual_amount を totalAmount に集計", () => {
     const entries = [
-      makeEntry("f1", "filled", 3000),
-      makeEntry("f2", "filled", 2000),
-      makeEntry("p1", "pending"),
-      makeEntry("s1", "skipped"),
+      createFilledEntry({ id: "f1", description: "Entry f1", actual_amount: 3000 }),
+      createFilledEntry({ id: "f2", description: "Entry f2", actual_amount: 2000 }),
+      createMockEntry({ id: "p1", description: "Entry p1" }),
+      createSkippedEntry({ id: "s1", description: "Entry s1" }),
     ];
     const result = computeEntryStats(entries);
     expect(result.totalAmount).toBe(5000);
   });
 
   it("actual_amount が null の filled エントリは totalAmount に加算しない", () => {
-    const entries = [makeEntry("f1", "filled", 0)];
+    const entries = [createFilledEntry({ id: "f1", actual_amount: 0 })];
     // actual_amount=0 → 加算しない
     expect(computeEntryStats(entries).totalAmount).toBe(0);
   });

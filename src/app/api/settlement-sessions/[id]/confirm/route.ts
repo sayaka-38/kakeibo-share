@@ -4,6 +4,7 @@ import { consolidateTransfers } from "@/lib/settlement/consolidate";
 import { withAuthHandler } from "@/lib/api/with-error-handler";
 import { rpcCodeToResponse } from "@/lib/api/translate-rpc-error";
 import type { NetTransfer } from "@/types/database";
+import { SESSION_STATUS } from "@/lib/domain/constants";
 
 // =============================================================================
 // POST /api/settlement-sessions/[id]/confirm
@@ -59,12 +60,12 @@ export const POST = withAuthHandler<Promise<{ id: string }>>(async (_request, { 
   // =========================================================================
   // 相殺統合: 既存の pending_payment セッションがあれば net_transfers を合算
   // =========================================================================
-  if (updatedSession && updatedSession.status === "pending_payment") {
+  if (updatedSession && updatedSession.status === SESSION_STATUS.PENDING_PAYMENT) {
     const { data: pendingSessions } = await supabase
       .from("settlement_sessions")
       .select("id, net_transfers")
       .eq("group_id", sessionBefore.group_id)
-      .eq("status", "pending_payment")
+      .eq("status", SESSION_STATUS.PENDING_PAYMENT)
       .neq("id", id);
 
     if (pendingSessions && pendingSessions.length > 0) {
@@ -101,7 +102,7 @@ export const POST = withAuthHandler<Promise<{ id: string }>>(async (_request, { 
           .update({
             net_transfers: consolidated.transfers,
             is_zero_settlement: true,
-            status: "settled",
+            status: SESSION_STATUS.SETTLED,
             settled_at: new Date().toISOString(),
             settled_by: user.id,
           })

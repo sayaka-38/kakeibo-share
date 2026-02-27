@@ -1,4 +1,10 @@
 import { z } from "zod";
+import {
+  ENTRY_STATUS_VALUES,
+  ENTRY_SPLIT_TYPE_VALUES,
+  PAYMENT_SPLIT_TYPE_VALUES,
+  ENTRY_STATUS,
+} from "@/lib/domain/constants";
 
 // 金額: 整数、1〜1,000,000
 export const amountSchema = z.number().int().min(1).max(1_000_000);
@@ -6,8 +12,14 @@ export const amountSchema = z.number().int().min(1).max(1_000_000);
 // 説明: トリム後 1〜100 文字
 export const descriptionSchema = z.string().trim().min(1).max(100);
 
-// 日付文字列 (YYYY-MM-DD)
+// 日付文字列 (YYYY-MM-DD) — API Route 向け（DB はそのまま文字列で受け取る）
 export const dateStringSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+
+// 日付変換スキーマ — ビジネスロジック向け（Date オブジェクトに変換）
+export const dateSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .transform((val) => new Date(val));
 
 // 支払いリクエスト body スキーマ（API Route 用）
 export const paymentRequestSchema = z.object({
@@ -15,7 +27,7 @@ export const paymentRequestSchema = z.object({
   description: descriptionSchema,
   paymentDate: dateStringSchema,
   categoryId: z.string().uuid().nullable().optional(),
-  splitType: z.enum(["equal", "ratio", "proxy"]).default("equal"),
+  splitType: z.enum(PAYMENT_SPLIT_TYPE_VALUES).default("equal"),
   splits: z
     .array(
       z.object({
@@ -34,7 +46,7 @@ export const recurringRuleRequestSchema = z.object({
   isVariable: z.boolean(),
   defaultAmount: amountSchema.nullable().optional(),
   defaultPayerId: z.string().uuid(),
-  splitType: z.enum(["equal", "ratio", "proxy"]).default("equal"),
+  splitType: z.enum(PAYMENT_SPLIT_TYPE_VALUES).default("equal"),
 });
 
 // カテゴリスキーマ（API Route body: name/icon/color フィールド）
@@ -64,14 +76,31 @@ export const transferOwnerRequestSchema = z.object({
 // 認証操作スキーマ
 export const changePasswordRequestSchema = z.object({ newPassword: z.string().min(6) });
 
+// 清算セッション作成スキーマ（POST /api/settlement-sessions）
+// YYYY-MM-DD 文字列の検証 + 開始日 <= 終了日の制約（文字列辞書順で比較可能）
+export const settlementSessionRequestSchema = z
+  .object({
+    groupId: z.string().uuid(),
+    periodStart: dateStringSchema,
+    periodEnd: dateStringSchema,
+  })
+  .refine((data) => data.periodStart <= data.periodEnd, {
+    message: "開始日は終了日以前に指定してください",
+    path: ["periodEnd"],
+  });
+
+export type SettlementSessionRequest = z.infer<
+  typeof settlementSessionRequestSchema
+>;
+
 // 清算エントリ更新スキーマ（PUT /api/settlement-entries/[id]）
 export const settlementEntryUpdateSchema = z
   .object({
-    status: z.enum(["filled", "skipped", "pending"]),
+    status: z.enum(ENTRY_STATUS_VALUES),
     actualAmount: z.number().int().min(0).nullable().optional(),
     payerId: z.string().uuid().nullable().optional(),
     paymentDate: dateStringSchema.nullable().optional(),
-    splitType: z.enum(["equal", "custom"]).optional(),
+    splitType: z.enum(ENTRY_SPLIT_TYPE_VALUES).optional(),
     splits: z
       .array(
         z.object({
@@ -82,7 +111,7 @@ export const settlementEntryUpdateSchema = z
       .optional(),
   })
   .superRefine((data, ctx) => {
-    if (data.status === "filled" && data.actualAmount == null) {
+    if (data.status === ENTRY_STATUS.FILLED && data.actualAmount == null) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "入力済みステータスには金額が必要です",
@@ -90,7 +119,7 @@ export const settlementEntryUpdateSchema = z
       });
     }
     if (
-      data.status === "filled" &&
+      data.status === ENTRY_STATUS.FILLED &&
       data.actualAmount != null &&
       data.actualAmount <= 0
     ) {

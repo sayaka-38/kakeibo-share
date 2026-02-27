@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { generateSettlementEntries } from "@/lib/settlement/generate-entries";
 import { withAuthHandler } from "@/lib/api/with-error-handler";
+import { SESSION_STATUS } from "@/lib/domain/constants";
+import { settlementSessionRequestSchema } from "@/lib/validation/schemas";
 
 // =============================================================================
 // GET /api/settlement-sessions?groupId=xxx
@@ -59,41 +61,14 @@ export const GET = withAuthHandler(async (request, { user, supabase }) => {
 // =============================================================================
 export const POST = withAuthHandler(async (request, { user, supabase }) => {
 
-  let body;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json(
-      { error: "リクエストボディが不正です" },
-      { status: 400 }
-    );
+  const raw = await request.json().catch(() => null);
+  const parsed = settlementSessionRequestSchema.safeParse(raw);
+  if (!parsed.success) {
+    const message = parsed.error.issues[0]?.message ?? "リクエストボディが不正です";
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 
-  const { groupId, periodStart, periodEnd } = body;
-
-  // バリデーション
-  if (!groupId || !periodStart || !periodEnd) {
-    return NextResponse.json(
-      { error: "グループID・開始日・終了日は必須です" },
-      { status: 400 }
-    );
-  }
-
-  // 日付バリデーション
-  const start = new Date(periodStart);
-  const end = new Date(periodEnd);
-  if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-    return NextResponse.json(
-      { error: "日付の形式が不正です" },
-      { status: 400 }
-    );
-  }
-  if (start > end) {
-    return NextResponse.json(
-      { error: "開始日は終了日以前に指定してください" },
-      { status: 400 }
-    );
-  }
+  const { groupId, periodStart, periodEnd } = parsed.data;
 
   // メンバーシップ確認
   const { data: membership } = await supabase
@@ -116,7 +91,7 @@ export const POST = withAuthHandler(async (request, { user, supabase }) => {
     .from("settlement_sessions")
     .select("id, period_start, period_end")
     .eq("group_id", groupId)
-    .eq("status", "draft")
+    .eq("status", SESSION_STATUS.DRAFT)
     .lte("period_start", periodEnd)   // draft.period_start <= new.period_end
     .gte("period_end", periodStart);  // draft.period_end >= new.period_start
 
@@ -134,7 +109,7 @@ export const POST = withAuthHandler(async (request, { user, supabase }) => {
       group_id: groupId,
       period_start: periodStart,
       period_end: periodEnd,
-      status: "draft",
+      status: SESSION_STATUS.DRAFT,
       created_by: user.id,
     })
     .select()

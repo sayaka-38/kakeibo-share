@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { withAuthHandler } from "@/lib/api/with-error-handler";
 import { rpcCodeToResponse } from "@/lib/api/translate-rpc-error";
 import { settlementEntryUpdateSchema } from "@/lib/validation/schemas";
+import { SESSION_STATUS, ENTRY_STATUS, ENTRY_SPLIT_TYPE } from "@/lib/domain/constants";
 
 // =============================================================================
 // PUT /api/settlement-entries/[id]
@@ -16,7 +17,7 @@ export const PUT = withAuthHandler<Promise<{ id: string }>>(async (request, { pa
   const { actualAmount, payerId, paymentDate, status, splitType, splits } = body;
 
   // スキップ時は actual_amount を null にして DB constraint (> 0) を回避
-  const resolvedAmount = status === "skipped" ? null : (actualAmount ?? null);
+  const resolvedAmount = status === ENTRY_STATUS.SKIPPED ? null : (actualAmount ?? null);
 
   // rule_id を取得（固定費エントリか判定するため）
   const { data: entry, error: entryError } = await supabase
@@ -66,7 +67,7 @@ export const PUT = withAuthHandler<Promise<{ id: string }>>(async (request, { pa
   // split_type と splits の更新（提供された場合）
   if (splitType !== undefined || (splits !== undefined && Array.isArray(splits))) {
     // split_type を DB に反映
-    if (splitType === "custom" || splitType === "equal") {
+    if (splitType === ENTRY_SPLIT_TYPE.CUSTOM || splitType === ENTRY_SPLIT_TYPE.EQUAL) {
       await supabase
         .from("settlement_entries")
         .update({ split_type: splitType })
@@ -134,7 +135,7 @@ export const DELETE = withAuthHandler<Promise<{ id: string }>>(async (request, {
     }
 
     // draft状態確認
-    if (session.status !== "draft") {
+    if (session.status !== SESSION_STATUS.DRAFT) {
       return NextResponse.json(
         { error: "確定済みセッションのエントリは削除できません" },
         { status: 400 }

@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { validatePayment, type ValidationErrors } from "@/lib/validation/payment";
 import { t } from "@/lib/i18n";
+import { dateSchema } from "@/lib/validation/schemas";
 
 /** 割り勘タイプ */
 export type SplitType = "equal" | "custom" | "proxy";
@@ -110,7 +111,7 @@ export function usePaymentForm(initialData?: PaymentFormInitialData): UsePayment
     const input = {
       amount: amount === "" ? 0 : parseFloat(amount),
       description,
-      paymentDate: new Date(paymentDate),
+      paymentDate: dateSchema.parse(paymentDate),
     };
 
     const result = validatePayment(input);
@@ -154,7 +155,7 @@ export function usePaymentForm(initialData?: PaymentFormInitialData): UsePayment
     return {
       amount: parseFloat(amount) || 0,
       description: description.trim(),
-      paymentDate: new Date(paymentDate),
+      paymentDate: dateSchema.parse(paymentDate),
       categoryId: categoryId || null,
       splitType,
       proxyBeneficiaryId: splitType === "proxy" ? proxyBeneficiaryId || null : null,
