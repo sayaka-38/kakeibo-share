@@ -76,3 +76,59 @@ export const PAYMENT_SPLIT_TYPE_VALUES = [
 ] as const;
 
 export type PaymentSplitType = (typeof PAYMENT_SPLIT_TYPE_VALUES)[number];
+
+// =============================================================================
+// 表示メタデータレジストリ（Part 21）
+//
+// ステータス・タイプごとの表示設定（Tailwind クラス・i18n キー）を一元管理する。
+// コンポーネント内のインライン判定をこのレジストリ参照に置き換えること。
+// =============================================================================
+
+/** 清算エントリ ステータス → 表示設定マップ */
+export const ENTRY_STATUS_META: Record<
+  EntryStatus,
+  { borderClass: string; i18nKey: string }
+> = {
+  [ENTRY_STATUS.PENDING]: {
+    borderClass: "border-l-theme-primary bg-theme-primary/5",
+    i18nKey: "settlementSession.statusPending",
+  },
+  [ENTRY_STATUS.FILLED]: {
+    borderClass: "border-l-theme-text",
+    i18nKey: "settlementSession.statusFilled",
+  },
+  [ENTRY_STATUS.SKIPPED]: {
+    borderClass: "border-l-theme-muted bg-theme-bg",
+    i18nKey: "settlementSession.statusSkipped",
+  },
+} as const;
+
+/** 清算エントリ タイプ → i18n キーマップ */
+export const ENTRY_TYPE_I18N: Record<string, string> = {
+  rule: "settlementSession.entryTypeRule",
+  manual: "settlementSession.entryTypeManual",
+  existing: "settlementSession.entryTypeExisting",
+} as const;
+
+/** 清算セッション ステータス → 表示設定マップ */
+export const SESSION_STATUS_META: Record<
+  SessionStatus,
+  { badgeClass: string; i18nKey: string }
+> = {
+  [SESSION_STATUS.DRAFT]: {
+    badgeClass: "bg-theme-primary/10 text-theme-primary-text",
+    i18nKey: "settlementSession.statusDraft",
+  },
+  [SESSION_STATUS.CONFIRMED]: {
+    badgeClass: "bg-theme-text/10 text-theme-text",
+    i18nKey: "settlementSession.statusConfirmed",
+  },
+  [SESSION_STATUS.PENDING_PAYMENT]: {
+    badgeClass: "bg-theme-primary/15 text-theme-primary-text",
+    i18nKey: "settlementSession.statusPendingPayment",
+  },
+  [SESSION_STATUS.SETTLED]: {
+    badgeClass: "bg-theme-muted/10 text-theme-muted",
+    i18nKey: "settlementSession.statusSettled",
+  },
+} as const;

@@ -1,3 +1,5 @@
+import type { z } from "zod";
+
 export class ApiError extends Error {
   constructor(
     public readonly status: number,
@@ -23,6 +25,14 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
 
 export const apiClient = {
   get: <T>(url: string) => request<T>(url),
+  /** レスポンスを Zod スキーマでパースして型安全に返す */
+  validatedGet: async <S extends z.ZodTypeAny>(
+    url: string,
+    schema: S
+  ): Promise<z.infer<S>> => {
+    const data = await request<unknown>(url);
+    return schema.parse(data);
+  },
   post: <T>(url: string, body: unknown) =>
     request<T>(url, {
       method: "POST",
