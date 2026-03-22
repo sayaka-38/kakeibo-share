@@ -39,6 +39,29 @@ export const PUT = withAuthHandler<Promise<{ id: string }>>(async (request, { pa
     ? "fill_settlement_entry_with_payment"
     : "update_settlement_entry";
 
+  // rule エントリ（fill RPC）かつ splits が提供された場合:
+  // fill RPC が settlement_entry_splits を参照して payment_splits を生成するため、
+  // replace_settlement_entry_splits を先に呼んで DB を最新状態にしておく。
+  if (entry.rule_id && (splitType !== undefined || (splits !== undefined && Array.isArray(splits)))) {
+    if (splitType === ENTRY_SPLIT_TYPE.CUSTOM || splitType === ENTRY_SPLIT_TYPE.EQUAL) {
+      await supabase
+        .from("settlement_entries")
+        .update({ split_type: splitType })
+        .eq("id", id);
+    }
+    if (splits !== undefined && Array.isArray(splits)) {
+      const splitsJson = splits.map((s: { userId: string; amount: number }) => ({
+        user_id: s.userId,
+        amount: s.amount,
+      }));
+      await supabase.rpc("replace_settlement_entry_splits", {
+        p_entry_id: id,
+        p_user_id: user.id,
+        p_splits: splitsJson,
+      });
+    }
+  }
+
   const { data: result, error } = await supabase.rpc(rpcName, {
     p_entry_id: id,
     p_user_id: user.id,
@@ -64,23 +87,19 @@ export const PUT = withAuthHandler<Promise<{ id: string }>>(async (request, { pa
   });
   if (rpcError) return rpcError;
 
-  // split_type と splits の更新（提供された場合）
-  if (splitType !== undefined || (splits !== undefined && Array.isArray(splits))) {
-    // split_type を DB に反映
+  // 非rule エントリの split_type / splits 更新（rule エントリは RPC 呼び出し前に処理済み）
+  if (!entry.rule_id && (splitType !== undefined || (splits !== undefined && Array.isArray(splits)))) {
     if (splitType === ENTRY_SPLIT_TYPE.CUSTOM || splitType === ENTRY_SPLIT_TYPE.EQUAL) {
       await supabase
         .from("settlement_entries")
         .update({ split_type: splitType })
         .eq("id", id);
     }
-
-    // splits を置き換え（空配列の場合は全削除して equal 扱い）
     if (splits !== undefined && Array.isArray(splits)) {
       const splitsJson = splits.map((s: { userId: string; amount: number }) => ({
         user_id: s.userId,
         amount: s.amount,
       }));
-
       await supabase.rpc("replace_settlement_entry_splits", {
         p_entry_id: id,
         p_user_id: user.id,
