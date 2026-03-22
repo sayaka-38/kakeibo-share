@@ -58,7 +58,7 @@ export const GET = withAuthHandler<Promise<{ id: string }>>(async (request, { pa
       )
     `)
     .eq("session_id", id)
-    .order("created_at", { ascending: false });
+    .order("payment_date", { ascending: true });
 
   if (entriesError) {
     console.error("Failed to fetch settlement entries:", entriesError);
