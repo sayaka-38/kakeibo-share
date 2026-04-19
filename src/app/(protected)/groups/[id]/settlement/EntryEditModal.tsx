@@ -35,22 +35,31 @@ export default function EntryEditModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // percentage を持つ custom split ルールエントリか
+  const hasPercentageSplits =
+    entry.split_type === "custom" &&
+    entry.rule_id != null &&
+    (entry.splits ?? []).some((s) => (s.percentage ?? 0) > 0);
+
   // 手動内訳入力の状態
   const [useCustomSplits, setUseCustomSplits] = useState(
     entry.split_type === "custom"
   );
   const [splitAmounts, setSplitAmounts] = useState<Record<string, string>>(
     () => {
+      const parsedAmt =
+        parseInt(entry.actual_amount?.toString() || entry.expected_amount?.toString() || "0") || 0;
       if (entry.split_type === "custom" && entry.splits && entry.splits.length > 0) {
+        // percentage ベースのルールエントリは実績額から再計算する
+        if (hasPercentageSplits) {
+          return buildPercentageSplitAmounts(entry.splits, parsedAmt);
+        }
         const initial: Record<string, string> = {};
         for (const s of entry.splits) {
           initial[s.user_id] = String(s.amount);
         }
         return initial;
       }
-      // 均等に初期配分
-      const parsedAmt =
-        parseInt(entry.actual_amount?.toString() || entry.expected_amount?.toString() || "0") || 0;
       return buildEqualSplitAmounts(members, parsedAmt);
     }
   );
@@ -66,12 +75,15 @@ export default function EntryEditModal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose, isSubmitting]);
 
-  // 金額が変わったら均等配分を再計算（手動調整していない場合のみ）
+  // 金額が変わったら内訳を再計算
   const handleAmountChange = (newAmount: string) => {
     setAmount(newAmount);
+    const parsed = parseInt(newAmount) || 0;
     if (!useCustomSplits) {
-      const parsed = parseInt(newAmount) || 0;
       setSplitAmounts(buildEqualSplitAmounts(members, parsed));
+    } else if (hasPercentageSplits && entry.splits) {
+      // percentage ベースのルールエントリは比率で自動再計算
+      setSplitAmounts(buildPercentageSplitAmounts(entry.splits, parsed));
     }
   };
 
@@ -320,6 +332,33 @@ export default function EntryEditModal({
       </div>
     </div>
   );
+}
+
+/**
+ * percentage ベースの内訳を実績額で再計算する。
+ * 余りは最大比率メンバーに加算する。
+ */
+function buildPercentageSplitAmounts(
+  splits: NonNullable<import("@/types/domain").EntryData["splits"]>,
+  totalAmount: number
+): Record<string, string> {
+  const result: Record<string, string> = {};
+  if (totalAmount <= 0 || splits.length === 0) {
+    splits.forEach((s) => { result[s.user_id] = "0"; });
+    return result;
+  }
+  let allocated = 0;
+  for (const s of splits) {
+    const amt = Math.floor((totalAmount * (s.percentage ?? 0)) / 100);
+    result[s.user_id] = String(amt);
+    allocated += amt;
+  }
+  const remainder = totalAmount - allocated;
+  if (remainder > 0) {
+    const maxSplit = [...splits].sort((a, b) => (b.percentage ?? 0) - (a.percentage ?? 0))[0];
+    result[maxSplit.user_id] = String(parseInt(result[maxSplit.user_id]) + remainder);
+  }
+  return result;
 }
 
 /** 均等配分の初期 splitAmounts を生成する */

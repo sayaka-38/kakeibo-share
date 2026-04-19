@@ -155,9 +155,9 @@ export async function generateSettlementEntries(
       const hasSplits =
         payment.payment_splits && payment.payment_splits.length > 0;
 
-      // payment の split_type ラベルを第一優先で使用（equal 以外はすべて custom に集約）
+      // payments.split_type を SSOT として参照（equal 以外はすべて custom エントリに集約）
       const splitType = resolveEntrySplitType(
-        (payment as { split_type?: string }).split_type,
+        (payment as { split_type: string }).split_type,
         hasSplits
       );
 

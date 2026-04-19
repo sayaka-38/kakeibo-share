@@ -264,6 +264,7 @@ export default function FullPaymentForm({
             description: formData.description,
             categoryId: categoryId || null,
             paymentDate: formData.paymentDate.toISOString().split("T")[0],
+            splitType: formData.splitType,
             splits: splits.map((s) => ({ userId: s.user_id, amount: s.amount })),
           });
         } catch (e) {
@@ -273,31 +274,29 @@ export default function FullPaymentForm({
       } else {
         const supabase = createClient();
 
-        const { data: payment, error: paymentError } = await supabase
-          .from("payments")
-          .insert({
-            group_id: groupId,
-            payer_id: currentUserId,
-            amount: formData.amount,
-            description: formData.description,
-            category_id: categoryId || null,
-            payment_date: formData.paymentDate.toISOString().split("T")[0],
-          })
-          .select()
-          .single();
-
-        if (paymentError || !payment) {
-          setError(paymentError?.message || t("payments.errors.createFailed"));
-          return false;
-        }
-
-        const splitsToInsert = splits.map((s) => ({
-          ...s,
-          payment_id: payment.id,
+        // payments + payment_splits を原子的に作成（RPC）
+        const splitsForRpc = splits.map((s) => ({
+          user_id: s.user_id,
+          amount: s.amount,
         }));
 
-        if (splitsToInsert.length > 0) {
-          await supabase.from("payment_splits").insert(splitsToInsert);
+        const { data: newPaymentId, error: rpcError } = await supabase.rpc(
+          "create_payment_with_splits",
+          {
+            p_group_id: groupId,
+            p_payer_id: currentUserId,
+            p_amount: formData.amount,
+            p_description: formData.description.trim(),
+            p_category_id: categoryId || null,
+            p_payment_date: formData.paymentDate.toISOString().split("T")[0],
+            p_split_type: formData.splitType,
+            p_splits: splitsForRpc,
+          }
+        );
+
+        if (rpcError || !newPaymentId) {
+          setError(rpcError?.message || t("payments.errors.createFailed"));
+          return false;
         }
       }
 

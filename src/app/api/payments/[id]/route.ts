@@ -115,9 +115,9 @@ export const PUT = withAuthHandler<Promise<{ id: string }>>(async (request, { pa
   // 3. リクエストボディのパース + Zod バリデーション
   // ZodError は withErrorHandler が 400 で捕捉する
   const rawBody = await request.json();
-  const { amount, description, paymentDate: paymentDateStr, categoryId } =
+  const { amount, description, paymentDate: paymentDateStr, categoryId, splitType } =
     paymentRequestSchema
-      .pick({ amount: true, description: true, paymentDate: true, categoryId: true })
+      .pick({ amount: true, description: true, paymentDate: true, categoryId: true, splitType: true })
       .parse(rawBody);
   const splits = Array.isArray(rawBody.splits) ? rawBody.splits : [];
 
@@ -201,6 +201,7 @@ export const PUT = withAuthHandler<Promise<{ id: string }>>(async (request, { pa
       description: description.trim(),
       category_id: categoryId || null,
       payment_date: paymentDateStr,
+      split_type: splitType,
     })
     .eq("id", id);
 

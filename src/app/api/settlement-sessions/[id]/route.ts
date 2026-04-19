@@ -54,6 +54,7 @@ export const GET = withAuthHandler<Promise<{ id: string }>>(async (request, { pa
         id,
         user_id,
         amount,
+        percentage,
         user:profiles(id, display_name, email)
       )
     `)

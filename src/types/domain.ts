@@ -68,7 +68,7 @@ export type EntryData = {
   source_payment_id: string | null;
   category?: CategoryRef | null;
   payer?: MemberRef | null;
-  splits?: { id: string; user_id: string; amount: number; user?: Profile | null }[];
+  splits?: { id: string; user_id: string; amount: number; percentage?: number | null; user?: Profile | null }[];
 };
 
 // =============================================================================

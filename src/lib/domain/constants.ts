@@ -65,13 +65,13 @@ export type EntrySplitType = (typeof ENTRY_SPLIT_TYPE_VALUES)[number];
 
 export const PAYMENT_SPLIT_TYPE = {
   EQUAL: "equal",
-  RATIO: "ratio",
+  CUSTOM: "custom",
   PROXY: "proxy",
 } as const;
 
 export const PAYMENT_SPLIT_TYPE_VALUES = [
   PAYMENT_SPLIT_TYPE.EQUAL,
-  PAYMENT_SPLIT_TYPE.RATIO,
+  PAYMENT_SPLIT_TYPE.CUSTOM,
   PAYMENT_SPLIT_TYPE.PROXY,
 ] as const;
 
