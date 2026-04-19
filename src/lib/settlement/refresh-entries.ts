@@ -50,6 +50,7 @@ type PaymentQueryResult = {
   payer_id: string;
   payment_date: string;
   created_at: string;
+  split_type: string;
   payment_splits: { user_id: string; amount: number }[];
 };
 
@@ -216,11 +217,8 @@ async function insertNewPaymentEntries(
 
     const hasSplits = (payment.payment_splits?.length ?? 0) > 0;
 
-    // payment の split_type ラベルを第一優先で使用（equal 以外はすべて custom に集約）
-    const splitType = resolveEntrySplitType(
-      (payment as { split_type?: string }).split_type,
-      hasSplits
-    );
+    // payments.split_type を SSOT として参照（equal 以外はすべて custom エントリに集約）
+    const splitType = resolveEntrySplitType(payment.split_type, hasSplits);
 
     const { data: entry } = await supabase
       .from("settlement_entries")

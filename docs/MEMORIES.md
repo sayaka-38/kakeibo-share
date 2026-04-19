@@ -26,6 +26,8 @@
 | **リファクタリング Part 9-16** | **apiClient 一元化・computeEntryStats 純粋関数化・StatusHandler・13 ファイル fetch 移行** | **#91** | **1211** |
 | **リファクタリング Part 17-20** | **constants.ts 定数集約・テストファクトリ・dateSchema・SaveButton/CancelButton** | **#93** | **1211** |
 | **セキュリティ要塞化 Part 21-25** | **オープンリダイレクト修正・エラー漏洩対策・ミドルウェア追加・validatedGet・Next.js CVE修正・GHA SHA ピン** | **#94** | **1211** |
+| **Part 26-28: 支払い登録堅牢化** | **payments.split_type カラム追加・create_payment_with_splits RPC（原子的作成）・edit ページ SSOT 化** | **未マージ** | **1211** |
+| **fix: カスタム内訳再計算** | **金額変動型固定費ルール填記時に percentage ベースで内訳を自動再計算・EntryData.splits に percentage 追加** | **未マージ** | **1211** |
 
 **現在**: Vitest **1211件** + Playwright E2E 1件 = **計1212テスト** / ビルド正常 / lint クリーン
 
@@ -74,7 +76,10 @@
 | スマート再計算 | `src/lib/settlement/refresh-entries.ts` | filled/skipped 絶対保護・pending のみ更新/削除対象 |
 | 連続入力 | `usePaymentForm` + `FullPaymentForm` / `InlinePaymentForm` | `resetForNext()` で amount/description/errors のみクリア |
 | ActionSheet | `src/components/ui/ActionSheet.tsx` | ボトムドロワー。PaymentRow 三点リーダーから呼出し |
-| 填記即時登録 | `fill_settlement_entry_with_payment` RPC (Mig. 041) | `rule_id IS NOT NULL` → payments 即時作成。API Route が振り分け |
+| 支払い原子作成 | `create_payment_with_splits` RPC (Mig. 044) | FullPaymentForm 新規作成はこの RPC 経由。payments + payment_splits をトランザクションで INSERT。サイレントフェイル根絶 |
+| payments.split_type | `payments` テーブル (Mig. 043) | `'equal' \| 'custom' \| 'proxy'`。SSOT。バックフィル: proxy 自動判定 → custom → equal DEFAULT。`PAYMENT_SPLIT_TYPE.CUSTOM = "custom"`（旧 RATIO="ratio" を改名） |
+| カスタム内訳自動再計算 | `EntryEditModal.tsx` + `EntryData.splits.percentage` | 金額変動型固定費ルール（percentage > 0）の填記時、金額変更に追従して各メンバー負担額を自動再計算。余りは最大比率メンバーに加算 |
+| 填記即時登録 | `fill_settlement_entry_with_payment` RPC (Mig. 041/043) | `rule_id IS NOT NULL` → payments 即時作成。Mig.043 で split_type をエントリから継承するよう更新 |
 | confirm 冪等性 | `confirm_settlement` RPC (Mig. 041) | `source_payment_id IS NOT NULL` は二重作成しない |
 | 並行清算 | `api/settlement-sessions` POST | 期間重複 draft のみ 409 ブロック |
 | i18n 定数 | `src/lib/i18n/index.ts` | `LOCALE_COOKIE_KEY` / `DEFAULT_LOCALE` 等 |

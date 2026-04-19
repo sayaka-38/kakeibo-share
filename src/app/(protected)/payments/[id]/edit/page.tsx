@@ -4,7 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
 import { FullPaymentForm } from "@/components/payment-form";
 import type { EditPaymentData } from "@/components/payment-form";
-import { isProxySplit, isCustomSplit, getProxyBeneficiaryId } from "@/lib/calculation/split";
+import { getProxyBeneficiaryId } from "@/lib/calculation/split";
+import { PAYMENT_SPLIT_TYPE } from "@/lib/domain/constants";
 import type { Profile, Group, Category } from "@/types/database";
 import type {
   GroupMembershipWithGroupResult,
@@ -40,6 +41,7 @@ export default async function EditPaymentPage({ params }: PageProps) {
       category_id,
       payment_date,
       settlement_id,
+      split_type,
       payment_splits (
         user_id,
         amount
@@ -105,16 +107,16 @@ export default async function EditPaymentPage({ params }: PageProps) {
         .filter((p): p is NonNullable<typeof p> => p !== null) || [];
   }
 
-  // splitType を判定
+  // payments.split_type を SSOT として splitType を決定
   const splits = payment.payment_splits || [];
   const totalAmount = Number(payment.amount);
   let splitType: "equal" | "custom" | "proxy" = "equal";
   let proxyBeneficiaryId: string | null = null;
 
-  if (isProxySplit(splits, payment.payer_id)) {
+  if (payment.split_type === PAYMENT_SPLIT_TYPE.PROXY) {
     splitType = "proxy";
     proxyBeneficiaryId = getProxyBeneficiaryId(splits, payment.payer_id);
-  } else if (isCustomSplit(splits, payment.payer_id, totalAmount)) {
+  } else if (payment.split_type === PAYMENT_SPLIT_TYPE.CUSTOM) {
     splitType = "custom";
   }
 
