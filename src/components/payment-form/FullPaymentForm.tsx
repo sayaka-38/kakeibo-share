@@ -287,7 +287,7 @@ export default function FullPaymentForm({
             p_payer_id: currentUserId,
             p_amount: formData.amount,
             p_description: formData.description.trim(),
-            p_category_id: categoryId || null,
+            p_category_id: categoryId || undefined,
             p_payment_date: formData.paymentDate.toISOString().split("T")[0],
             p_split_type: formData.splitType,
             p_splits: splitsForRpc,

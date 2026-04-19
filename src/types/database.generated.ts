@@ -273,6 +273,7 @@ export type Database = {
           payer_id: string
           payment_date: string
           settlement_id: string | null
+          split_type: string
           updated_at: string
         }
         Insert: {
@@ -285,6 +286,7 @@ export type Database = {
           payer_id: string
           payment_date: string
           settlement_id?: string | null
+          split_type?: string
           updated_at?: string
         }
         Update: {
@@ -297,6 +299,7 @@ export type Database = {
           payer_id?: string
           payment_date?: string
           settlement_id?: string | null
+          split_type?: string
           updated_at?: string
         }
         Relationships: [
@@ -794,6 +797,19 @@ export type Database = {
       create_demo_bot_partner: {
         Args: { p_demo_user_id: string; p_group_id: string }
         Returns: Json
+      }
+      create_payment_with_splits: {
+        Args: {
+          p_amount: number
+          p_category_id?: string
+          p_description: string
+          p_group_id: string
+          p_payer_id: string
+          p_payment_date: string
+          p_split_type: string
+          p_splits: Json
+        }
+        Returns: string
       }
       delete_expired_demo_data: { Args: never; Returns: number }
       delete_payment_splits_for_payer: {
